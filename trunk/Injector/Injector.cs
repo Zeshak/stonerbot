@@ -10,15 +10,15 @@ namespace Injector
 {
     class Injector
     {
-        static string appOrigPath = @"D:\StonerBot\NewVersion\ext\Assembly-CSharp.orig.dll";
-        static string injPath = @"D:\StonerBot\NewVersion\ext\StonerBot.dll";
-        static string appPatchedPath = @"D:\StonerBot\NewVersion\ext\Assembly-CSharp.dll";
+        static string appOrigPath = @"D:\StonerBot\ext\Assembly-CSharp.orig.dll";
+        static string injPath = @"D:\StonerBot\ext\StonerBot.dll";
+        static string appPatchedPath = @"D:\StonerBot\ext\Assembly-CSharp.dll";
 
         static string appTypeName = "SceneMgr";
         static string appMethodName = "Start";
         static string injTypeName = "Main";
         static string injMethodName = "Start";
-        
+
         static void Main(string[] args)
         {
             var app = AssemblyDefinition.ReadAssembly(appOrigPath);

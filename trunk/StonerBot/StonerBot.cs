@@ -18,13 +18,29 @@ namespace StonerBot
             var w = new Watchdog();
             w.startWatch();
             Log.log("StonerBot online");
-            //w.RunPlugin("TestPlugin"); // temp for testing
+            string fileName = @"D:\StonerBot\sada.txt";
+
+            // Check if file already exists. If yes, delete it. 
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+
+            // Create a new file 
+            using (FileStream fs = File.Create(fileName))
+            {
+                // Add some text to file
+                Byte[] title = new UTF8Encoding(true).GetBytes("New Text File");
+                fs.Write(title, 0, title.Length);
+                byte[] author = new UTF8Encoding(true).GetBytes("Mahesh Chand");
+                fs.Write(author, 0, author.Length);
+            }
         }
     }
 
     public class Watchdog
     {
-        static string pluginDirectory = @"D:\StonerBot\NewVersion\plugins";
+        static string pluginDirectory = @"D:\StonerBot\plugins";
         Loader loader;
         Hashtable mtimeDb = new Hashtable();
         public void startWatch()
@@ -100,7 +116,7 @@ namespace StonerBot
 
             // load assembly and run the init
             var a = Assembly.LoadFile(tempPath);
-            runAssembly( a, name );
+            runAssembly(a, name);
         }
 
         public void runAssembly(Assembly a, string trueName)
@@ -109,23 +125,6 @@ namespace StonerBot
             var c = Activator.CreateInstance(t);
             t.InvokeMember("init", BindingFlags.InvokeMethod, null, c, new object[] { });
             Log.debug("Loader.runAssembly ran Plugin.Plugin.init for " + trueName);
-        }
-    }
-
-    public class Log
-    {
-        public static void debug(string msg)
-        {
-            log(msg);
-        }
-        public static void log(string msg)
-        {
-            Console.WriteLine(msg);
-        }
-        public static void say(string msg)
-        {
-            UIStatus.Get().AddInfo( msg );
-            log(msg);
         }
     }
 }

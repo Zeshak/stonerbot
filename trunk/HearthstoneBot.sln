@@ -8,7 +8,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Injector", "Injector\Inject
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StonerBot", "StonerBot\StonerBot.csproj", "{007A96FA-BFF6-4622-BC76-D9D7BF4D066E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot", "..\Bot\Bot.csproj", "{9B9C6F8A-3AE3-4E79-976A-C12925713F46}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot", "Bot\Bot.csproj", "{9B9C6F8A-3AE3-4E79-976A-C12925713F46}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

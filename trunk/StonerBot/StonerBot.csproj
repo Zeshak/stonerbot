@@ -7,8 +7,8 @@
     <ProjectGuid>{007A96FA-BFF6-4622-BC76-D9D7BF4D066E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Sigmund</RootNamespace>
-    <AssemblyName>Sigmund</AssemblyName>
+    <RootNamespace>StonerBot</RootNamespace>
+    <AssemblyName>StonerBot</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -59,6 +59,12 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StonerBot.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Bot\Bot.csproj">
+      <Project>{9b9c6f8a-3ae3-4e79-976a-c12925713f46}</Project>
+      <Name>Bot</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
