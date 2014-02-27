@@ -23,7 +23,7 @@ namespace Sigmund
     }
     public class Watchdog
     {
-        static string pluginDirectory = @"C:\Users\Spood\Documents\GitHub\Sigmund\plugins";
+        static string pluginDirectory = @"D:\StonerBot\2nd Chance\plugins";
         Loader loader;
         Hashtable mtimeDb = new Hashtable();
         public void startWatch()
