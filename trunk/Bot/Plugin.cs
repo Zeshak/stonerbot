@@ -38,7 +38,7 @@ namespace StonerBot
         public static void init()
         {
             GameObject gameObject = SceneMgr.Get().gameObject;
-            Plugin.run = true;
+            Plugin.run = false;
             Plugin.finishAfterThisGame = false;
             Log.newLog();
             Log.module = "BOT";
@@ -93,12 +93,10 @@ namespace StonerBot
             Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 2.0;
             try
             {
-                if (Plugin.run) { }
-                //this.Mainloop();
-                //Log.say("asd");
+                if (Plugin.run) 
+                    this.Mainloop();
                 else
                     Plugin.socketSendStatus("S");
-                    //Log.say("zxc");
             }
             catch (Exception ex)
             {

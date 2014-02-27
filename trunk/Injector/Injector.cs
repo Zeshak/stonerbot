@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using System.IO;
 
 namespace Injector
 {
