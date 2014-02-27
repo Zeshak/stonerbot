@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,9 +11,21 @@ namespace Plugin
 {
     public class Plugin : MonoBehaviour
     {
-        static float minTimeBetweenRuns = 3;
-        float timeLastRun;
-        System.Random rng;
+        private static double minTimeBetweenRuns = 1.0;
+        private static string laststatus = "";
+        public static float maxQueueTime = 120f;
+        public static bool playVsHumans = true;
+        public static bool playRanked = false;
+        public static bool playExpert = false;
+        private float timeLastRun;
+        private System.Random rng;
+        private static bool run;
+        private static bool finishAfterThisGame;
+        public static float timeLastQueued;
+        public static bool statisticsAdded;
+        public static bool mulliganDone;
+        public static long currentDeckId;
+        public static int modulo;
 
         public static void init()
         {
@@ -28,24 +41,162 @@ namespace Plugin
 
             go.AddComponent<Plugin>();
         }
+
         public void Awake()     // This is called after loading the DLL, before the loader gives back control to Unity
         {
+            CheatMgr.Get().RegisterCheatHandler("startbot", new CheatMgr.ProcessCheatCallback(Plugin.startBot));
+            CheatMgr.Get().RegisterCheatHandler("startvsai", new CheatMgr.ProcessCheatCallback(Plugin.startBotVsAi));
+            CheatMgr.Get().RegisterCheatHandler("startvsaiexpert", new CheatMgr.ProcessCheatCallback(Plugin.startBotVsAiExpert));
+            CheatMgr.Get().RegisterCheatHandler("startbotranked", new CheatMgr.ProcessCheatCallback(Plugin.startBotRanked));
+            CheatMgr.Get().RegisterCheatHandler("stopbot", new CheatMgr.ProcessCheatCallback(Plugin.stopBot));
+            CheatMgr.Get().RegisterCheatHandler("analyze", new CheatMgr.ProcessCheatCallback(Plugin.analyzeCards));
+            CheatMgr.Get().RegisterCheatHandler("deckid", new CheatMgr.ProcessCheatCallback(Plugin.getDeckId));
+            CheatMgr.Get().RegisterCheatHandler("finishthisgame", new CheatMgr.ProcessCheatCallback(Plugin.finishThisGame));
+            CheatMgr.Get().RegisterCheatHandler("help", new CheatMgr.ProcessCheatCallback(Plugin.help));
         }
+
+        #region -[ Cheat Handlers ]-
+
+        public static bool help(string func, string[] args, string rawArgs)
+        {
+            Log.say("'startbot'-'startvsai'-'startvsaiexpert'-'startbotranked'-'stopbot'-'analyze'-'deckid'-'finishthisgame'-'help'");
+            return true;
+        }
+
+        public static bool startBot(string func, string[] args, string rawArgs)
+        {
+            Log.say("Bot started");
+            Plugin.playVsHumans = true;
+            Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
+            Plugin.run = true;
+            Plugin.playRanked = false;
+            return true;
+        }
+
+        public static bool startBotVsAi(string func, string[] args, string rawArgs)
+        {
+            Log.say("Bot started VS AI");
+            Plugin.playVsHumans = false;
+            Plugin.playExpert = false;
+            Plugin.run = true;
+            return true;
+        }
+
+        public static bool startBotVsAiExpert(string func, string[] args, string rawArgs)
+        {
+            Log.say("Bot started VS AI");
+            Plugin.playVsHumans = false;
+            Plugin.playExpert = true;
+            Plugin.run = true;
+            return true;
+        }
+
+        public static bool getDeckId(string func, string[] args, string rawArgs)
+        {
+            Log.say("Deck id : " + DeckPickerTrayDisplay.Get().GetSelectedDeckID().ToString());
+            return true;
+        }
+
+        public static bool analyzeCards(string func, string[] args, string rawArgs)
+        {
+            Log.say("-------------------------- ANALYSIS -----------------------");
+            Log.say("-------------- My hand --------------");
+            foreach (Card card in Enumerable.ToList<Card>((IEnumerable<Card>)GameState.Get().GetLocalPlayer().GetHandZone().GetCards()))
+            {
+                Entity entity = card.GetEntity();
+                Log.debug("Card : " + card.ToString());
+                Log.debug("Type : " + entity.GetType().ToString());
+                if (entity.HasBattlecry())
+                    Log.debug("Battlecry : " + card.GetBattlecrySpell().GetType().ToString());
+                Log.debug("ActorState : " + ((object)card.GetActor().GetActorStateType()).ToString());
+                Log.debug("Rarity : " + (object)entity.GetTag(GAME_TAG.RARITY));
+                Log.debug("EntityID : " + (object)entity.GetTag(GAME_TAG.ENTITY_ID));
+            }
+            Log.say("-------------- My battlefield --------------");
+            foreach (Card card in Enumerable.ToList<Card>((IEnumerable<Card>)GameState.Get().GetLocalPlayer().GetBattlefieldZone().GetCards()))
+            {
+                Entity entity = card.GetEntity();
+                Log.debug("Card : " + card.ToString());
+                Log.debug("Type : " + entity.GetType().ToString());
+                if (entity.HasBattlecry())
+                    Log.debug("Battlecry : " + card.GetBattlecrySpell().GetType().ToString());
+                Log.debug("ActorState : " + ((object)card.GetActor().GetActorStateType()).ToString());
+            }
+            Log.say("-------------- My hero Power --------------");
+            Card heroPowerCard = GameState.Get().GetLocalPlayer().GetHeroPowerCard();
+            Entity entity1 = heroPowerCard.GetEntity();
+            Log.debug("Card : " + heroPowerCard.ToString());
+            Log.debug("Type : " + entity1.GetType().ToString());
+            Log.debug("ActorState : " + ((object)heroPowerCard.GetActor().GetActorStateType()).ToString());
+            Log.say("-------------- My hero --------------");
+            Card heroCard1 = GameState.Get().GetLocalPlayer().GetHeroCard();
+            Entity entity2 = heroCard1.GetEntity();
+            Log.debug("Card : " + heroCard1.ToString());
+            Log.debug("Type : " + entity2.GetType().ToString());
+            Log.debug("ActorState : " + ((object)heroCard1.GetActor().GetActorStateType()).ToString());
+            Log.say("-------------- E battlefield --------------");
+            foreach (Card card in Enumerable.ToList<Card>((IEnumerable<Card>)GameFunctions.ePlayer.GetBattlefieldZone().GetCards()))
+            {
+                Entity entity3 = card.GetEntity();
+                Log.debug("Card : " + card.ToString());
+                Log.debug("Type : " + entity3.GetType().ToString());
+                Log.debug("ActorState : " + ((object)card.GetActor().GetActorStateType()).ToString());
+            }
+            Log.say("-------------- E hero --------------");
+            Card heroCard2 = GameFunctions.ePlayer.GetHeroCard();
+            Entity entity4 = heroCard2.GetEntity();
+            Log.debug("Card : " + heroCard2.ToString());
+            Log.debug("Type : " + entity4.GetType().ToString());
+            Log.debug("ActorState : " + ((object)heroCard2.GetActor().GetActorStateType()).ToString());
+            Log.say("-----------------------------------------------------------------");
+            return true;
+        }
+
+        public static bool finishThisGame(string func, string[] args, string rawArgs)
+        {
+            Log.say("Bot will stop after this game");
+            Plugin.finishAfterThisGame = true;
+            return true;
+        }
+
+        public static bool startBotRanked(string func, string[] args, string rawArgs)
+        {
+            Log.say("Bot started in ranked mode");
+            Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
+            Plugin.run = true;
+            Plugin.playVsHumans = true;
+            Plugin.playRanked = true;
+            return true;
+        }
+
+        public static bool stopBot(string func, string[] args, string rawArgs)
+        {
+            Log.say("Bot stopped");
+            Plugin.run = false;
+            return true;
+        }
+
+        #endregion
+
         public void Update()    // This is called every frame from Unity's main thread
         {
-            // Wait a few seconds between runs
-            if (Time.realtimeSinceStartup - timeLastRun < minTimeBetweenRuns) { return; }
-            timeLastRun = Time.realtimeSinceStartup;
-
+            if ((double)UnityEngine.Time.realtimeSinceStartup - (double)this.timeLastRun < Plugin.minTimeBetweenRuns)
+                return;
+            this.timeLastRun = UnityEngine.Time.realtimeSinceStartup;
+            Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 2.0;
             try
             {
-                Mainloop();
+                if (Plugin.run)
+                    this.Mainloop();/*
+                else
+                    Plugin.socketSendStatus("S");*/
             }
             catch (Exception ex)
             {
-                Log.log(ex.StackTrace.ToString());
+                Log.error("ERROR IN MAIN LOOP : " + ((object)ex.StackTrace).ToString());
             }
         }
+
         public void Start()     // This is called after control is given back to Unity
         {
             rng = new System.Random();
@@ -54,34 +205,31 @@ namespace Plugin
             Log.log("Plugin started");
         }
 
-        GameState gs;
-        Player myPlayer;
-        Player ePlayer;
-        float timeLastQueued;
-        static float maxQueueTime = 60 * 3;
-        static bool playVsHumans = false;
-        static bool playRanked = false;
-
         public void Init_Game()
         {
-            gs = GameState.Get();
-            myPlayer = gs.GetLocalPlayer();
-            ePlayer = gs.GetFirstOpponentPlayer(myPlayer);
-
-            InactivePlayerKicker.Get().SetShouldCheckForInactivity(false); // prevent getting kicked for being idle
+            try
+            {
+                GameFunctions.gs = GameState.Get();
+                GameFunctions.myPlayer = GameFunctions.gs.GetLocalPlayer();
+                GameFunctions.ePlayer = GameFunctions.gs.GetFirstOpponentPlayer(GameFunctions.myPlayer);
+                InactivePlayerKicker.Get().SetShouldCheckForInactivity(false);
+            }
+            catch (Exception ex)
+            {
+                Log.error("Error in initgame function... " + ex.StackTrace);
+            }
         }
+
         public void Mainloop()
         {
-            var curMode = SceneMgr.Get().GetMode();
-
+            SceneMgr.Mode curMode = SceneMgr.Get().GetMode();
             switch (curMode)
             {
                 case SceneMgr.Mode.LOGIN:
-                    if (WelcomeQuests.Get() != null)
-                    {
-                        Log.say("Clicking through welcome quest");
-                        WelcomeQuests.Get().m_clickCatcher.TriggerRelease();
-                    }
+                    if (!((UnityEngine.Object)WelcomeQuests.Get() != (UnityEngine.Object)null))
+                        break;
+                    Log.say("Clicking through welcome quest");
+                    WelcomeQuests.Get().m_clickCatcher.TriggerRelease();
                     break;
                 case SceneMgr.Mode.HUB:
                     if (playVsHumans)
@@ -90,647 +238,195 @@ namespace Plugin
                     }
                     else
                     {
-                        Log.say("Playing game against practice AI");
                         SceneMgr.Get().SetNextMode(SceneMgr.Mode.PRACTICE);
-                    }
-                    break;
-                case SceneMgr.Mode.TOURNAMENT:
-                    var timeSinceQueued = Time.realtimeSinceStartup - timeLastQueued;
-                    // We want to wait if we're in queue or the game has started but we haven't changed scene yet
-                    // However, IsMatching() falsely reports true after returning here after a game, so we add a timeout
-                    if (!SceneMgr.Get().IsInGame() && !Network.IsMatching() || timeSinceQueued > maxQueueTime)
-                    {
-                        Log.say("Queuing for game against human");
-                        long myDeckId = DeckPickerTrayDisplay.Get().GetSelectedDeckID();
-
-                        // queue
-                        GameMgr.Get().SetNextGame(GameMode.PLAY, MissionID.MULTIPLAYER_1v1);
-                        if (playRanked)
-                        {
-                            var what = Network.TrackWhat.TRACK_PLAY_TOURNAMENT_WITH_CUSTOM_DECK;
-                            Network.TrackClient(Network.TrackLevel.LEVEL_INFO, what);
-                            Network.RankedMatch(myDeckId);
-                        }
-                        else
-                        {
-                            var what = Network.TrackWhat.TRACK_PLAY_CASUAL_WITH_CUSTOM_DECK;
-                            Network.TrackClient(Network.TrackLevel.LEVEL_INFO, what);
-                            Network.UnrankedMatch(myDeckId);
-                        }
-                        timeLastQueued = Time.realtimeSinceStartup;
-
-                        // set status
-                        FriendChallengeMgr.Get().OnEnteredMatchmakerQueue();
-                        PresenceMgr.Get().SetStatus(new Enum[] { PresenceStatus.PLAY_QUEUE });
-                        Log.log("    queued");
-                    }
-                    else
-                    {
-                        Log.say("In tournament mode and in queue or launching game. Time since queued: " + timeSinceQueued);
-                    }
-                    break;
-                case SceneMgr.Mode.PRACTICE:
-                    if (!SceneMgr.Get().IsInGame())
-                    {
-                        //TODO: make deck and mission id configurable
-                        long myDeckId = DeckPickerTrayDisplay.Get().GetSelectedDeckID();
-                        GameMgr.Get().StartGame(GameMode.PRACTICE, MissionID.AI_NORMAL_MAGE, myDeckId);
                     }
                     break;
                 case SceneMgr.Mode.GAMEPLAY:
                     Init_Game();
-                    if (gs.IsMulliganPhase())
+                    if (GameFunctions.gs.IsMulliganPhase())
                     {
-                        DoMulligan();
-                    }
-                    else if (gs.IsGameOver())
-                    {
-                        if (EndGameScreen.Get() != null)
+                        if (!Plugin.mulliganDone)
                         {
-                            Log.say("Game over");
-                            EndGameScreen.Get().ContinueEvents();
+                            try
+                            {
+                                Plugin.mulliganDone = GameFunctions.doMulligan();
+                                break;
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.error("Error in mulligan function... " + ex.StackTrace);
+                                break;
+                            }
                         }
                     }
-                    else if (gs.IsLocalPlayerTurn())
+                    if (GameFunctions.gs.IsGameOver())
                     {
-                        bool stop = false;      // flag if we should stop at this step (and cont. next tick) instead of moving on
-
-                        stop = BruteMinion();     // drops minions until out of mana
-                        if (stop) { return; }
-
-                        stop = BruteSpell();
-                        if (stop) { return; }
-
-                        stop = BruteAttack();   // attacks enemies with minions randomly
-                        if (stop) { return; }
-
-                        DoEndTurn();
+                        try
+                        {
+                            if (GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 0)
+                            {
+                                Log.say("Defeat...");
+                                /*if (!Plugin.statisticsAdded)
+                                    Plugin.addStatistics(Plugin.currentDeckId, false);*/
+                            }
+                            else
+                            {
+                                Log.say("Victory!");
+                                /*if (!Plugin.statisticsAdded)
+                                    Plugin.addStatistics(Plugin.currentDeckId, true);*/
+                            }
+                            //Plugin.statisticsAdded = true;
+                            if (!((UnityEngine.Object)EndGameScreen.Get() != (UnityEngine.Object)null))
+                                break;
+                            EndGameScreen.Get().ContinueEvents();
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.error("Error in endgame function... " + ex.StackTrace);
+                            break;
+                        }
+                    }
+                    if (!GameFunctions.gs.IsLocalPlayerTurn())
+                        break;
+                    try
+                    {
+                        if (GameState.Get().IsBlockingServer())
+                            Thread.Sleep(500);
+                        GameFunctions.populateZones();
+                        if (BruteAI.BruteHand())
+                        {
+                            ++BruteAI.loops;
+                        }
+                        else
+                        {
+                            if (BruteAI.BruteAttack())
+                                break;
+                            GameFunctions.doEndTurn();
+                            BruteAI.loops = 0;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.error("Error in playerturn function... " + ex.StackTrace);
+                    }
+                    break;
+                case SceneMgr.Mode.PRACTICE:
+                    if (SceneMgr.Get().IsInGame())
+                        break;
+                    Plugin.statisticsAdded = false;
+                    Plugin.mulliganDone = false;
+                    long selectedDeckId = DeckPickerTrayDisplay.Get().GetSelectedDeckID();
+                    double num2 = new System.Random().NextDouble();
+                    MissionID mission1;
+                    MissionID mission2;
+                    if (num2 < 0.1)
+                    {
+                        mission1 = MissionID.AI_NORMAL_MAGE;
+                        mission2 = MissionID.AI_EXPERT_MAGE;
+                    }
+                    else if (num2 >= 0.1 && num2 < 0.2)
+                    {
+                        mission1 = MissionID.AI_NORMAL_DRUID;
+                        mission2 = MissionID.AI_EXPERT_DRUID;
+                    }
+                    else if (num2 >= 0.2 && num2 < 0.3)
+                    {
+                        mission1 = MissionID.AI_NORMAL_HUNTER;
+                        mission2 = MissionID.AI_EXPERT_HUNTER;
+                    }
+                    else if (num2 >= 0.3 && num2 < 0.4)
+                    {
+                        mission1 = MissionID.AI_NORMAL_PALADIN;
+                        mission2 = MissionID.AI_EXPERT_PALADIN;
+                    }
+                    else if (num2 >= 0.4 && num2 < 0.5)
+                    {
+                        mission1 = MissionID.AI_NORMAL_PRIEST;
+                        mission2 = MissionID.AI_EXPERT_PRIEST;
+                    }
+                    else if (num2 >= 0.5 && num2 < 0.6)
+                    {
+                        mission1 = MissionID.AI_NORMAL_ROGUE;
+                        mission2 = MissionID.AI_EXPERT_ROGUE;
+                    }
+                    else if (num2 >= 0.6 && num2 < 0.7)
+                    {
+                        mission1 = MissionID.AI_NORMAL_SHAMAN;
+                        mission2 = MissionID.AI_EXPERT_SHAMAN;
+                    }
+                    else if (num2 >= 0.7 && num2 < 0.8)
+                    {
+                        mission1 = MissionID.AI_NORMAL_WARLOCK;
+                        mission2 = MissionID.AI_EXPERT_WARLOCK;
                     }
                     else
                     {
-                        //Log.log("Unimplemented game state");
+                        mission1 = MissionID.AI_NORMAL_WARRIOR;
+                        mission2 = MissionID.AI_EXPERT_WARRIOR;
+                    }
+                    if (!Plugin.playExpert)
+                    {
+                        GameMgr.Get().StartGame(GameMode.PRACTICE, mission1, selectedDeckId);
+                        break;
+                    }
+                    else
+                    {
+                        GameMgr.Get().StartGame(GameMode.PRACTICE, mission2, selectedDeckId);
+                        break;
+                    }
+                    break;
+                case SceneMgr.Mode.TOURNAMENT:
+                    float num1 = UnityEngine.Time.realtimeSinceStartup - Plugin.timeLastQueued;
+                    if (!Plugin.finishAfterThisGame)
+                    {
+                        try
+                        {
+                            if (!SceneMgr.Get().IsInGame() && !Network.IsMatching() || (double)num1 > (double)Plugin.maxQueueTime)
+                            {
+                                Plugin.statisticsAdded = false;
+                                Plugin.mulliganDone = false;
+                                Plugin.currentDeckId = DeckPickerTrayDisplay.Get().GetSelectedDeckID();
+                                Log.say("Queuing for game against human with deck " + (object)Plugin.currentDeckId);
+                                GameMgr.Get().SetNextGame(GameMode.PLAY, MissionID.MULTIPLAYER_1v1);
+                                if (Plugin.playRanked)
+                                {
+                                    Network.TrackClient(Network.TrackLevel.LEVEL_INFO, Network.TrackWhat.TRACK_PLAY_TOURNAMENT_WITH_CUSTOM_DECK);
+                                    Network.RankedMatch(Plugin.currentDeckId);
+                                }
+                                else
+                                {
+                                    Network.TrackClient(Network.TrackLevel.LEVEL_INFO, Network.TrackWhat.TRACK_PLAY_CASUAL_WITH_CUSTOM_DECK);
+                                    Network.UnrankedMatch(Plugin.currentDeckId);
+                                }
+                                Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
+                                FriendChallengeMgr.Get().OnEnteredMatchmakerQueue();
+                                PresenceMgr.Get().SetStatus(new Enum[1]
+                                    {
+                                      (Enum) PresenceStatus.PLAY_QUEUE
+                                    });
+                            }
+                            else
+                            {
+                                //Plugin.socketSendStatus("Q");
+                                Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.error("Error in tournament loop... " + ex.StackTrace);
+                        }
+                    }
+                    else
+                    {
+                        Plugin.run = false;
+                        Plugin.finishAfterThisGame = false;
                     }
                     break;
                 default:
                     Log.say("Mainloop failed over to default. Mode: " + curMode.ToString());
                     break;
             }
-        }
-        public void DoMulligan()
-        {
-            if (MulliganManager.Get().IsMulliganActive())
-            { 
-                var myCards = myPlayer.GetHandZone().GetCards().ToList();
-                foreach (Card c in myCards)
-                {
-                    var e = c.GetEntity();
-                    Log.log("card " + e.GetName() + " has cost: " + e.GetCost());
-                    if (e.GetCost() >= 4)
-                    {
-                        // toggle them to false
-                        MulliganManager.Get().ToggleHoldState(c);
-                    }
-                }
-                MulliganManager.Get().BeginDealNewCards();
-                //InputManager.Get().DoEndTurnButton();
-                //TurnStartManager.Get().BeginListeningForTurnEvents();
-                //MulliganManager.Get().EndMulligan();
-            }
-
-        }
-        public void DoEndTurn()
-        {
-            InputManager im = InputManager.Get();
-            im.DoEndTurnButton();
-        }
-        public bool BruteSpell()
-        {
-            var spell = NextBestSpell();
-            if (spell == null)
-            {
-                return false;
-            }
-            if (DoCastSpell(spell))
-            {
-                return true;    // successfully casted spell. stop here and continue next update
-            }
-            return true;
-        }
-        public Card NextBestSpell()
-        {
-            var myCards = myPlayer.GetHandZone().GetCards().ToList();
-
-            // get first valid spell we can afford
-            foreach (Card c in myCards)
-            {
-                var e = c.GetEntity();
-                Log.log("card " + e.GetName() + " has type: " + e.GetCardType());
-                // skip if not the right type, mana cost, etc
-                if (e.GetCardType() != TAG_CARDTYPE.ABILITY || e.GetCost() > myPlayer.GetNumAvailableResources())
-                {
-                    continue;
-                }
-                return c;
-            }
-            return null;
-        }
-        public bool DoCastSpell(Card c)
-        {
-            Log.log("DoCastSpell " + c.GetEntity().GetName());
-            try
-            {
-                // stop stuff
-                PegCursor.Get().SetMode(PegCursor.Mode.STOPDRAG);
-                c.SetDoNotSort(true);
-                iTween.Stop(c.gameObject);
-                KeywordHelpPanelManager.Get().HideKeywordHelp();
-                CardTypeBanner.Hide();
-
-                // pick up card
-                c.NotifyPickedUp();
-                gs.GetGameEntity().NotifyOfCardGrabbed(c.GetEntity());
-                Log.log("    picked card up");
-
-                // cast spell
-                c.SetDoNotSort(false);
-                
-
-                bool doTargetting = false;
-
-                gs.GetGameEntity().NotifyOfCardDropped(c.GetEntity());
-                if (InputManager.Get().DoNetworkResponse(c.GetEntity()))
-                {
-                    Log.log("    Response mode post: " + gs.GetResponseMode().ToString());
-
-                    // InputManager.ForceManaUpdate
-                    myPlayer.NotifyOfSpentMana(c.GetEntity().GetRealTimeCost());
-                    myPlayer.UpdateManaCounter();
-                    ManaCrystalMgr.Get().UpdateSpentMana(c.GetEntity().GetRealTimeCost());
-
-                    // TODO: entityhastargets didnt have targets with a sheep on an empty board, find a better fix
-                    // handle spell targets
-                    if (gs.EntityHasTargets(c.GetEntity()))
-                    {
-                        doTargetting = true;
-                    }
-                    Log.log("    DoCastSpell: did inner updates");
-                }
-                else
-                {
-                    Log.log("    DoCastSpell DoNetworkReponse failed, unsetting position");
-                    gs.SetSelectedOptionPosition(Network.NoPosition);
-                    return false;
-                }
-
-                if (doTargetting)
-                {
-                    Log.log("    DoCastSpell doing targetting");
-                    if (EnemyActionHandler.Get() != null)
-                    {
-                        EnemyActionHandler.Get().NotifyOpponentOfTargetModeBegin(c);
-
-                        Entity targetEntity = null;
-
-                        var eHero = ePlayer.GetHeroCard().GetEntity();
-                        if (gs.IsValidOptionTarget(eHero))
-                        {
-                            Log.log("Can attack hero");
-                            targetEntity = eHero;
-                        }
-
-                        // get a list of my cards on the battlefield
-                        var myPlayedCards = myPlayer.GetBattlefieldZone().GetCards().ToList();
-                        if (myPlayedCards.Count > 0)
-                        {
-                            // look through the cards, would normally select one based on this
-                            foreach (Card card in myPlayedCards)
-                            {
-                                var e = card.GetEntity();
-                                if (gs.IsValidOptionTarget(e))
-                                {
-                                    Log.log("is valid target: " + e.GetName());
-                                    Log.log("considering for battlecry: " + e.GetName());
-                                    targetEntity = e;
-                                }
-                                else
-                                {
-                                    Log.log("is NOT valid target: " + e.GetName());
-                                }
-                            }
-                        }
-
-                        // get a list of enemy cards on the battlefield
-                        var ePlayedCards = ePlayer.GetBattlefieldZone().GetCards().ToList();
-                        if (ePlayedCards.Count > 0)
-                        {
-                            // look through the cards, would normally select one based on this
-                            foreach (Card card in ePlayedCards)
-                            {
-                                var e = card.GetEntity();
-                                if (gs.IsValidOptionTarget(e))
-                                {
-                                    Log.log("is valid target: " + e.GetName());
-                                    Log.log("considering for battlecry: " + e.GetName());
-                                    targetEntity = e;
-                                }
-                                else
-                                {
-                                    Log.log("is NOT valid target: " + e.GetName());
-                                }
-                            }
-                        }
-                        if (targetEntity == null)
-                        {
-                            Log.log("    No target entity selected");
-                            return false;
-                        }
-
-                        Log.log("selected targetEntity: " + targetEntity.GetName());
-                        gs.GetGameEntity().NotifyOfBattlefieldCardClicked(targetEntity, true);
-
-                        myPlayer.GetBattlefieldZone().UnHighlightBattlefield();
-                        Log.log("    Response mode pre: " + gs.GetResponseMode().ToString());
-                        if (InputManager.Get().DoNetworkResponse(targetEntity))
-                        {
-                            Log.log("    Response mode post: " + gs.GetResponseMode().ToString());
-                            EnemyActionHandler.Get().NotifyOpponentOfTargetEnd();
-
-                            myPlayer.GetHandZone().UpdateLayout(-1, true);
-                            myPlayer.GetBattlefieldZone().UpdateLayout();
-                            Log.log("    did battlecry on: " + targetEntity.GetName());
-                        }
-                        else
-                        {
-                            Log.log("    DoCastSpell DoTarget outer DoNetworkReponse failed");
-                        }
-                    }
-                }
-                else
-                {
-                    EnemyActionHandler.Get().NotifyOpponentOfCardDropped();
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Log.log("    Dropping minion failed (exception): " + ex.StackTrace.ToString());
-                return false;
-            }
-        }
-        public bool BruteMinion()
-        {
-            var drop = NextBestMinionDrop();
-            if (drop == null)
-            {
-                return false;   // no more minions to drop => continue to attacking phase
-            }
-            if (DoDropMinion(drop))
-            {
-                return true;    // successfully dropped minion. stop here and continue next update
-            }
-            return true;       // had a minion to drop but failed to play it. try again next update
-        }
-        public Card NextBestMinionDrop()
-        {
-            var myCards = myPlayer.GetHandZone().GetCards().ToList();
-
-            // can't get any more minions if too many on the board
-            if (myPlayer.GetBattlefieldZone().GetCardCount() >= 7)
-            {
-                return null;
-            }
-
-            // get first valid minion we can afford
-            foreach (Card c in myCards)
-            {
-                var e = c.GetEntity();
-
-                // skip if not the right type, mana cost, etc
-                if (e.GetCardType() != TAG_CARDTYPE.MINION || e.GetCost() > myPlayer.GetNumAvailableResources())
-                {
-                    continue;
-                }
-                return c;
-            }
-            return null;
-        }
-        public bool BruteAttack()
-        {
-            var attacker = NextBestAttacker();
-            var attackee = NextBestAttackee(); // in theory could be null if enemy hero was somehow invulnerable
-            if (attacker == null || attackee == null)
-            {
-                return false;
-            }
-            if (DoAttack(attacker, attackee))
-            {
-                return true;        // successful attack. stop here and continue next update
-            }
-            return true;            // failed to execute attack. try again next update
-        }
-        public Card NextBestAttacker()
-        {
-            //TODO: consider weapons, hero, hero power
-            var myCards = myPlayer.GetBattlefieldZone().GetCards().ToList(); //.OrderBy(item => rng.Next());
-
-            foreach (Card c in myCards)
-            {
-                var e = c.GetEntity();
-
-                // skip if can't attack at all
-                if (e.IsAsleep() || e.IsExhausted() || e.IsFrozen() || e.IsRecentlyArrived() || !e.CanAttack() || e.GetATK() < 1)
-                {
-                    continue;
-                }
-                return c;
-            }
-            return null;
-        }
-        public Card NextBestAttackee()
-        {
-            var eCards = ePlayer.GetBattlefieldZone().GetCards().ToList();
-
-            // attack enemy hero iff no enemy minions
-            //eCards.Add(ePlayer.GetHeroCard());
-            if (eCards.Count == 0)
-            {
-                var c = ePlayer.GetHeroCard();
-                if (c.GetEntity().CanBeAttacked())
-                {
-                    return c;
-                }
-                return null;
-            }
-
-            Card best = eCards[0];
-
-            // look for a better option
-            foreach (Card c in eCards)
-            {
-                var e = c.GetEntity();
-
-                // skip if somehow immune to being attacked
-                if (!e.CanBeAttacked() || e.IsStealthed())
-                {
-                    continue;
-                }
-
-                // always take taunter over non-taunter
-                if (e.HasTaunt() || !best.GetEntity().HasTaunt())
-                {
-                    best = c;
-                }
-            }
-            return best;
-        }
-
-        public bool DoAttack(Card attacker, Card attackee)
-        {
-            Log.log("DoAttack " + attacker.GetEntity().GetName() + " -> " + attackee.GetEntity().GetName());
-
-            try
-            {
-                // stop stuff
-                attacker.SetDoNotSort(true);
-                iTween.Stop(attacker.gameObject);
-                KeywordHelpPanelManager.Get().HideKeywordHelp();
-                CardTypeBanner.Hide();
-                attacker.NotifyPickedUp();
-
-                // pick up minion
-                gs.GetGameEntity().NotifyOfCardGrabbed(attacker.GetEntity());
-                myPlayer.GetBattlefieldZone().UnHighlightBattlefield();
-
-                Log.log("    DoAttack: noted card grab. doing net response");
-                Log.log("    Response mode pre: " + gs.GetResponseMode().ToString());
-                if (InputManager.Get().DoNetworkResponse(attacker.GetEntity()))
-                {
-                    Log.log("    Response mode post: " + gs.GetResponseMode().ToString());
-                    EnemyActionHandler.Get().NotifyOpponentOfCardPickedUp(attacker);
-
-                    // attack with picked up minion
-                    EnemyActionHandler.Get().NotifyOpponentOfTargetModeBegin(attacker);
-                    gs.GetGameEntity().NotifyOfBattlefieldCardClicked(attackee.GetEntity(), true);
-                    myPlayer.GetBattlefieldZone().UnHighlightBattlefield();
-                    Log.log("    Response mode pre: " + gs.GetResponseMode().ToString());
-                    if (InputManager.Get().DoNetworkResponse(attackee.GetEntity()))
-                    {
-                        Log.log("    Response mode post: " + gs.GetResponseMode().ToString());
-                        EnemyActionHandler.Get().NotifyOpponentOfTargetEnd();
-
-                        myPlayer.GetHandZone().UpdateLayout(-1, true);
-                        myPlayer.GetBattlefieldZone().UpdateLayout();
-                        Log.log("    DoAttack succeeded");
-                        return true;
-                    }
-                    else
-                    {
-                        Log.log("    DoAttack inner DoNetworkResponse failed");
-                    }
-                }
-                else
-                {
-                    Log.log("    DoAttack outer DoNetworkReponse failed");
-                }
-                return false;
-            }
-            catch (Exception ex)
-            {
-                Log.log("    DoAttack failed" + ex.StackTrace.ToString());
-                return false;
-            }
-        }
-        public bool DoDropMinion(Card c) // if card needs to specify targets, you need to do that immediately after this
-        {
-            Log.log("DoDropMinion " + c.GetEntity().GetName());
-            try
-            {
-                // stop stuff
-                PegCursor.Get().SetMode(PegCursor.Mode.STOPDRAG);
-                c.SetDoNotSort(true);
-                iTween.Stop(c.gameObject);
-                KeywordHelpPanelManager.Get().HideKeywordHelp();
-                CardTypeBanner.Hide();
-
-                var sfx = c.GetActor().GetComponent<DragCardSoundEffects>();
-                if (sfx != null)
-                {
-                    sfx.Disable();
-                }
-                var pshadow = c.GetActor().GetComponentInChildren<ProjectedShadow>();
-                if (pshadow != null)
-                {
-                    pshadow.DisableShadow();
-                }
-
-                // pick up card
-                c.NotifyPickedUp();
-                gs.GetGameEntity().NotifyOfCardGrabbed(c.GetEntity());
-                Log.log("    picked card up");
-
-                // drop minion
-                c.SetDoNotSort(false);
-                c.NotifyLeftPlayfield();
-
-                bool doTargetting = false;
-                var destZone = myPlayer.GetBattlefieldZone();
-                int slot = destZone.GetCards().Count + 1;
-
-                Log.log("    DoDropMinion: did pre-action layout update and calculated slot/zone " + slot + " / " + destZone.ToString());
-                gs.GetGameEntity().NotifyOfCardDropped(c.GetEntity());
-                destZone.UnHighlightBattlefield();
-
-                gs.SetSelectedOptionPosition(slot);
-                Log.log("    Response mode pre: " + gs.GetResponseMode().ToString());
-                if (InputManager.Get().DoNetworkResponse(c.GetEntity()))
-                {
-                    Log.log("    Response mode post: " + gs.GetResponseMode().ToString());
-                    // Update local ui
-                    int zonePos = c.GetEntity().GetZonePosition();
-                    ZoneMgr.Get().AddLocalZoneChange(c, destZone, slot);
-
-                    // InputManager.ForceManaUpdate
-                    myPlayer.NotifyOfSpentMana(c.GetEntity().GetRealTimeCost());
-                    myPlayer.UpdateManaCounter();
-                    ManaCrystalMgr.Get().UpdateSpentMana(c.GetEntity().GetRealTimeCost());
-
-                    // handle battlecry targets
-                    if (gs.EntityHasTargets(c.GetEntity()))
-                    {
-                        doTargetting = true;
-                    }
-                    Log.log("    DoDropMinion: did inner updates");
-                }
-                else
-                {
-                    Log.log("    DropMinion DoNetworkReponse failed, unsetting position");
-                    gs.SetSelectedOptionPosition(Network.NoPosition);
-                    return false;
-                }
-
-                // update layout
-                myPlayer.GetHandZone().UpdateLayout(-1, true);
-                myPlayer.GetBattlefieldZone().SortWithSpotForHeldCard(-1);
-                Log.log("    DropMinion: updated layouts");
-
-                // do notifies
-                if (doTargetting)
-                {
-                    Log.log("    DoDropMinion doing targetting");
-                    if (EnemyActionHandler.Get() != null)
-                    {
-                        EnemyActionHandler.Get().NotifyOpponentOfTargetModeBegin(c);
-
-                        Entity targetEntity= null;
-
-                        var eHero = ePlayer.GetHeroCard().GetEntity();
-                        if (gs.IsValidOptionTarget(eHero))
-                        {
-                            Log.log("Can attack hero");
-                            targetEntity = eHero;
-                        }
-
-                        // get a list of my cards on the battlefield
-                        var myPlayedCards = myPlayer.GetBattlefieldZone().GetCards().ToList();
-                        if (myPlayedCards.Count > 0)
-                        {
-                            // look through the cards, would normally select one based on this
-                            foreach (Card card in myPlayedCards)
-                            {
-                                var e = card.GetEntity();
-                                if (gs.IsValidOptionTarget(e))
-                                {
-                                    Log.log("is valid target: " + e.GetName());
-                                    Log.log("considering for battlecry: " + e.GetName());
-                                    targetEntity = e;
-                                }
-                                else
-                                {
-                                    Log.log("is NOT valid target: " + e.GetName());
-                                }
-                            }
-                        }
-
-                        // get a list of enemy cards on the battlefield
-                        var ePlayedCards = ePlayer.GetBattlefieldZone().GetCards().ToList();
-                        if (ePlayedCards.Count > 0)
-                        {
-                            // look through the cards, would normally select one based on this
-                            foreach (Card card in ePlayedCards)
-                            {
-                                var e = card.GetEntity();
-                                if (gs.IsValidOptionTarget(e))
-                                {
-                                    Log.log("is valid target: " + e.GetName());
-                                    Log.log("considering for battlecry: " + e.GetName());
-                                    targetEntity = e;
-                                }
-                                else
-                                {
-                                    Log.log("is NOT valid target: " + e.GetName());
-                                }
-                            }
-                        }
-                        if (targetEntity == null)
-                        {
-                            Log.log("    No target entity selected");
-                            return false;
-                        }
-
-                        Log.log("selected targetEntity: " + targetEntity.GetName());
-                        gs.GetGameEntity().NotifyOfBattlefieldCardClicked(targetEntity, true);
-
-                        myPlayer.GetBattlefieldZone().UnHighlightBattlefield();
-                        Log.log("    Response mode pre: " + gs.GetResponseMode().ToString());
-                        if (InputManager.Get().DoNetworkResponse(targetEntity))
-                        {
-                            Log.log("    Response mode post: " + gs.GetResponseMode().ToString());
-                            EnemyActionHandler.Get().NotifyOpponentOfTargetEnd();
-
-                            myPlayer.GetHandZone().UpdateLayout(-1, true);
-                            myPlayer.GetBattlefieldZone().UpdateLayout();
-                            Log.log("    did battlecry on: " + targetEntity.GetName());
-                        }
-                        else
-                        {
-                            Log.log("    DoTarget outer DoNetworkReponse failed");
-                        }
-                    }
-                }
-                else
-                {
-                    EnemyActionHandler.Get().NotifyOpponentOfCardDropped();
-                }
-                Log.log("    DoDropMinion exiting");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Log.log("    Dropping minion failed (exception): " + ex.StackTrace.ToString());
-                return false;
-            }
-        }
-    }
-
-    public class Log
-    {
-        public static void debug(string msg)
-        {
-            log(msg);
-        }
-        public static void log(string msg)
-        {
-            Console.WriteLine( DateTime.Now.ToLongTimeString() + ": " + msg);
-        }
-        public static void log(int msg)
-        {
-            log(msg.ToString());
-        }
-        public static void say(string msg)
-        {
-            log(msg);
-            UIStatus.Get().AddInfo(msg);
         }
     }
 }
