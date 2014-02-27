@@ -18,9 +18,10 @@ namespace Sigmund
             var w = new Watchdog();
             w.startWatch();
             Log.log("Sigmund online");
-            //w.RunPlugin("TestPlugin"); // temp for testing
+            w.RunPlugin("TestPlugin");
         }
     }
+
     public class Watchdog
     {
         static string pluginDirectory = @"D:\StonerBot\2nd Chance\plugins";
@@ -45,21 +46,25 @@ namespace Sigmund
             // Echo function, for testing
             CheatMgr.Get().RegisterCheatHandler("echo", new CheatMgr.ProcessCheatCallback(this.EchoCommand));
         }
+
         public bool RunPlugin(string pluginName)
         {
             string path = pluginDirectory + Path.DirectorySeparatorChar + pluginName + ".dll";
             loader.exec(path);
             return true;
         }
+
         public bool RunCommand(string func, string[] args, string rawArgs)
         {
             return RunPlugin(rawArgs);
         }
+
         public bool EchoCommand(string func, string[] args, string rawArgs)
         {
             Log.say(rawArgs);
             return true;
         }
+
         public void onChange_raw(object sender, FileSystemEventArgs e)
         {
             TimeSpan eps = new TimeSpan(0, 0, 2);
@@ -70,6 +75,7 @@ namespace Sigmund
                 onChange(e.FullPath);
             }
         }
+
         public void onChange(string path)
         {
             Log.debug("Watchdog: change detected for: " + path);
@@ -77,6 +83,7 @@ namespace Sigmund
             loader.exec(path);
         }
     }
+
     public class Loader
     {
         public void exec(string path) // creates shadow copy
@@ -93,7 +100,7 @@ namespace Sigmund
 
             // load assembly and run the init
             var a = Assembly.LoadFile(tempPath);
-            runAssembly( a, name );
+            runAssembly(a, name);
         }
 
         public void runAssembly(Assembly a, string trueName)
@@ -104,6 +111,7 @@ namespace Sigmund
             Log.debug("Loader.runAssembly ran Plugin.Plugin.init for " + trueName);
         }
     }
+
     public class Log
     {
         public static void debug(string msg)
@@ -112,11 +120,11 @@ namespace Sigmund
         }
         public static void log(string msg)
         {
-            Console.WriteLine(msg);
+            System.Diagnostics.Debug.WriteLine(msg);
         }
         public static void say(string msg)
         {
-            UIStatus.Get().AddInfo( msg );
+            UIStatus.Get().AddInfo(msg);
             log(msg);
         }
     }
