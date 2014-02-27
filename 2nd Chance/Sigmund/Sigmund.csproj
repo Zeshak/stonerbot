@@ -64,8 +64,8 @@
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetPath)" "$(SolutionDir)\ext\$(TargetFileName)"
 
-copy /Y "$(SolutionDir)\ext\$(TargetFileName)" "D:\Games\Hearthstone\Hearthstone_Data\Managed\$(TargetFileName)"
-copy /Y "$(SolutionDir)\ext\Assembly-CSharp.dll" "D:\Games\Hearthstone\Hearthstone_Data\Managed\Assembly-CSharp.dll"</PostBuildEvent>
+copy /Y "$(SolutionDir)\ext\$(TargetFileName)" "D:\Juegos\Hearthstone\Hearthstone_Data\Managed\$(TargetFileName)"
+copy /Y "$(SolutionDir)\ext\Assembly-CSharp.dll" "D:\Juegos\Hearthstone\Hearthstone_Data\Managed\Assembly-CSharp.dll"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
