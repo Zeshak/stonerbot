@@ -295,9 +295,7 @@ namespace Plugin
                             Thread.Sleep(500);
                         GameFunctions.populateZones();
                         if (BruteAI.BruteHand())
-                        {
                             ++BruteAI.loops;
-                        }
                         else
                         {
                             if (BruteAI.BruteAttack())
