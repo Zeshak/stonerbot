@@ -212,6 +212,7 @@ namespace Plugin
                 GameFunctions.gs = GameState.Get();
                 GameFunctions.myPlayer = GameFunctions.gs.GetLocalPlayer();
                 GameFunctions.ePlayer = GameFunctions.gs.GetFirstOpponentPlayer(GameFunctions.myPlayer);
+                //init GameFunctions.cardDetails
                 InactivePlayerKicker.Get().SetShouldCheckForInactivity(false);
             }
             catch (Exception ex)
