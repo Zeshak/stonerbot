@@ -266,16 +266,12 @@ namespace Plugin
                             if (GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 0)
                             {
                                 Log.say("Defeat...");
-                                /*if (!Plugin.statisticsAdded)
-                                    Plugin.addStatistics(Plugin.currentDeckId, false);*/
                             }
                             else
                             {
                                 Log.say("Victory!");
-                                /*if (!Plugin.statisticsAdded)
-                                    Plugin.addStatistics(Plugin.currentDeckId, true);*/
                             }
-                            //Plugin.statisticsAdded = true;
+                            Plugin.statisticsAdded = true;
                             if (!((UnityEngine.Object)EndGameScreen.Get() != (UnityEngine.Object)null))
                                 break;
                             EndGameScreen.Get().ContinueEvents();

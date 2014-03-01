@@ -5,14 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using System.IO;
 
 namespace Injector
 {
     class Injector
     {
-        static string appOrigPath = @"D:\StonerBot\2nd Chance\ext\Assembly-CSharp.orig.dll";
-        static string injPath = @"D:\StonerBot\2nd Chance\ext\Sigmund.dll";
-        static string appPatchedPath = @"D:\StonerBot\2nd Chance\ext\Assembly-CSharp.dll";
+        static string appOrigPath = @"D:\StonerBot\ext\Assembly-CSharp.orig.dll";
+        static string injPath = @"D:\StonerBot\ext\Sigmund.dll";
+        static string appPatchedPath = @"D:\StonerBot\ext\Assembly-CSharp.dll";
 
         static string appTypeName = "SceneMgr";
         static string appMethodName = "Start";
