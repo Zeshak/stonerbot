@@ -7,11 +7,14 @@ namespace Plugin
 {
     internal class CardDetails
     {
-        static CardDetails()
+        int id;
+        bool BCCanHeal;
+        bool BCCanDamage;
+        int threatLevel;
+
+        public CardDetails()
         {
 
         }
-
-
     }
 }

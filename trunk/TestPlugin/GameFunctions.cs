@@ -13,6 +13,7 @@ namespace Plugin
         private static ZonePlay m_myPlayZone;
         private static ZoneWeapon m_myWeaponZone;
         private static ZoneSecret m_mySecretZone;
+        public static List<CardDetails> cardDetails;
 
         public static void populateZones()
         {
