@@ -24,7 +24,7 @@ namespace Sigmund
 
     public class Watchdog
     {
-        static string pluginDirectory = @"D:\StonerBot\2nd Chance\plugins";
+        static string pluginDirectory = @"D:\StonerBot\plugins";
         Loader loader;
         Hashtable mtimeDb = new Hashtable();
         public void startWatch()
