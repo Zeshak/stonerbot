@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Configuration;
 using System.IO;
 
 namespace Plugin
 {
     public class Log
     {
-        public static string logPath = @"D:\StonerBot\log.txt";
+        public static string logPath = ConfigurationManager.AppSettings["logPath"];
         public static string module = "";
 
         static Log()
