@@ -30,16 +30,16 @@ namespace Plugin
                 if (BruteAI.tryToPlayCoin())
                     return true;
                 Card c1 = BruteAI.NextBestSecret();
-                if ((UnityEngine.Object)c1 == (UnityEngine.Object)null)
+                if (c1 == null)
                 {
                     Card c2 = BruteAI.NextBestWeapon();
-                    if ((UnityEngine.Object)c2 == (UnityEngine.Object)null)
+                    if (c2 == null)
                     {
                         Card c3 = BruteAI.NextBestMinionDrop();
-                        if ((UnityEngine.Object)c3 == (UnityEngine.Object)null)
+                        if (c3 == null)
                         {
                             Card c4 = BruteAI.NextBestSpell();
-                            if ((UnityEngine.Object)c4 == (UnityEngine.Object)null)
+                            if (c4 == null)
                                 return BruteAI.LaunchNextBestHeroPower();
                             GameFunctions.doDropSpell(c4);
                             return true;
@@ -236,23 +236,6 @@ namespace Plugin
             }
             return card;
         }
-
-        /*public static List<Card> GetBestCombinatedAttackers(Card attackee)
-        {
-            List<Card> allMatches = null;
-            List<Card> thoseWhoSurvive = null;
-            if ((UnityEngine.Object)attackee == (UnityEngine.Object)null)
-                return allMatches;
-            if ((UnityEngine.Object)attackee != (UnityEngine.Object)GameFunctions.ePlayer.GetHeroCard())
-            {
-                List<Card> list1 = Enumerable.ToList<Card>((IEnumerable<Card>)GameFunctions.ePlayer.GetBattlefieldZone().GetCards());
-                foreach (Card card in list1)
-                {
-
-                }
-            }
-            return allMatches;
-        }*/
 
         public static Card NextBestAttackee()
         {
