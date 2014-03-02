@@ -9,10 +9,10 @@ namespace Plugin
         public static GameState gs;
         public static Player myPlayer;
         public static Player ePlayer;
-        private static ZoneHand m_myHandZone;
-        private static ZonePlay m_myPlayZone;
-        private static ZoneWeapon m_myWeaponZone;
-        private static ZoneSecret m_mySecretZone;
+        private static ZoneHand myHandZone;
+        private static ZonePlay myPlayZone;
+        private static ZoneWeapon myWeaponZone;
+        private static ZoneSecret mySecretZone;
         public static List<CardDetails> cardDetails;
 
         public static void populateZones()
@@ -25,13 +25,14 @@ namespace Plugin
                     if (current.m_Side == Player.Side.FRIENDLY)
                     {
                         if (current is ZoneHand)
-                            GameFunctions.m_myHandZone = (ZoneHand)current;
+                            GameFunctions.myHandZone = (ZoneHand)current;
                         else if (current is ZonePlay)
-                            GameFunctions.m_myPlayZone = (ZonePlay)current;
+                            GameFunctions.myPlayZone = (ZonePlay)current;
                         else if (current is ZoneWeapon)
-                            GameFunctions.m_myWeaponZone = (ZoneWeapon)current;
+                            GameFunctions.myWeaponZone = (ZoneWeapon)current;
                         else if (current is ZoneSecret)
-                            GameFunctions.m_mySecretZone = (ZoneSecret)current;
+                            GameFunctions.mySecretZone = (ZoneSecret)current;
+
                     }
                 }
             }
@@ -78,6 +79,71 @@ namespace Plugin
             catch (Exception ex)
             {
                 return false;
+            }
+        }
+
+        public static List<CardDetails> GetBattlefieldCardDetails()
+        {
+            List<CardDetails> listCards = new List<CardDetails>();
+            foreach (Card card in GameFunctions.myPlayer.GetBattlefieldZone().GetCards())
+            {
+                CardDetails c = cardDetails.Find(cd => cd.Card.GetEntity().GetCardId() == card.GetEntity().GetCardId());
+                Entity entity = card.GetEntity();
+                CardDetails cDet = new CardDetails();
+                cDet.Card = card;
+                switch (entity.GetRarity())
+                {
+                    case TAG_RARITY.LEGENDARY:
+                        cDet.SetInitValues();
+                        cDet.SpellOnThis = true;
+                        break;
+                    case TAG_RARITY.EPIC:
+                        cDet.SetInitValues();
+                        break;
+                    case TAG_RARITY.RARE:
+                        cDet.SetInitValues();
+                        break;
+                    case TAG_RARITY.COMMON:
+                        cDet.SetInitValues();
+                        break;
+                    case TAG_RARITY.FREE:
+                        cDet.SetInitValues();
+                        break;
+                }
+                SetNewValuesByCardStatus(ref cDet);
+                listCards.Add(cDet);
+            }
+            return listCards;
+        }
+
+        public static void SetNewValuesByCardStatus(ref CardDetails cd)
+        {
+            Entity entity = cd.Card.GetEntity();
+            int currATK = entity.GetATK();
+            int currHP = entity.GetHealth();
+            int origATK = entity.GetOriginalATK();
+            int origHP = entity.GetOriginalHealth();
+            if (currATK - currHP > 1 && currHP < 4)
+            {
+                //Si el bicho tiene dif de atk/vida mayor a 1, y tiene menos de 4 de vida, trato de matarlo perdiendo poco (ej: 5-3)
+                cd.SetInitValues();
+                cd.KillThis = true;
+                if (currATK > 5)
+                    cd.SpellOnThis = true;
+            }
+            else if (entity.HasTaunt())
+            {
+                //Se usa silence si tiene: (*)Menos de 3 ataque y más de 2 de vida (no silencia las 2-2, las va a matar luego) (*)Si está bufeada y le sumaron 2 a algún atributo
+                if ((currATK < 3 && currHP > 2) || (currATK > origATK + 1) || ((currHP > origHP + 1)))
+                    cd.SilenceThis = true;
+                //Bicho con taunt a partir de 3-6 o 5-3 le tiro spell si tengo
+                if ((currATK > 2 && currHP > 5) || (currHP > 2 && currATK > 4))
+                    cd.SpellOnThis = true;
+            }
+            else if (currATK > 4 && currHP > 4)
+            {
+                //Si es bicho fuerte, 5-5 en adelante, trato de tirarle spell
+                cd.SpellOnThis = true;
             }
         }
 
@@ -128,30 +194,31 @@ namespace Plugin
                 c.NotifyLeftPlayfield();
                 bool doTargetting = false;
                 bool isWeapon = c.GetEntity().IsWeapon();
-                int num;
+                bool isHeroPower = c.GetEntity().IsHeroPower();
+                int dropPlace = 0;
                 Zone destinationZone;
                 if (isWeapon)
                 {
-                    num = 1;
-                    destinationZone = (Zone)GameFunctions.m_myWeaponZone;
+                    dropPlace = 1;
+                    destinationZone = GameFunctions.myWeaponZone;
                 }
                 else
                 {
-                    destinationZone = (Zone)GameFunctions.m_myPlayZone;
-                    num = destinationZone.GetCards().Count + 1;
+                    destinationZone = GameFunctions.myPlayZone;
+                    dropPlace = destinationZone.GetCards().Count + 1;
                 }
-                if (num >= 8 && !isWeapon)
+                if (dropPlace >= 8 && !isWeapon)
                     return true;
                 GameFunctions.gs.GetGameEntity().NotifyOfCardDropped(c.GetEntity());
-                GameFunctions.gs.SetSelectedOptionPosition(num);
+                GameFunctions.gs.SetSelectedOptionPosition(dropPlace);
                 if (InputManager.Get().DoNetworkResponse(c.GetEntity()))
                 {
                     Log.log("DoNetworkResponse Loaded");
                     c.GetEntity().GetZonePosition();
                     if (c.GetEntity().IsSecret())
-                        ZoneMgr.Get().AddLocalZoneChange(c, (Zone)GameFunctions.m_mySecretZone, GameFunctions.m_mySecretZone.GetLastPos());
+                        ZoneMgr.Get().AddLocalZoneChange(c, (Zone)GameFunctions.mySecretZone, GameFunctions.mySecretZone.GetLastPos());
                     else
-                        ZoneMgr.Get().AddLocalZoneChange(c, destinationZone, num);
+                        ZoneMgr.Get().AddLocalZoneChange(c, destinationZone, dropPlace);
                     GameFunctions.myPlayer.NotifyOfSpentMana(c.GetEntity().GetRealTimeCost());
                     GameFunctions.myPlayer.UpdateManaCounter();
                     ManaCrystalMgr.Get().UpdateSpentMana(c.GetEntity().GetRealTimeCost());
