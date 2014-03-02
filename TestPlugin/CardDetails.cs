@@ -9,7 +9,10 @@ namespace Plugin
     {
         int id;
         bool BCCanHeal;
-        bool BCCanDamage;
+        bool BCDamage;
+        bool BCSilence;
+        bool BCDamageOwn;
+        bool BCDamageSeveral;
         int threatLevel;
 
         public CardDetails()
