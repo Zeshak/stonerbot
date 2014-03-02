@@ -6,14 +6,15 @@ using System.Threading.Tasks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.IO;
+using System.Configuration;
 
 namespace Injector
 {
     class Injector
     {
-        static string appOrigPath = @"D:\StonerBot\ext\Assembly-CSharp.orig.dll";
-        static string injPath = @"D:\StonerBot\ext\Sigmund.dll";
-        static string appPatchedPath = @"D:\StonerBot\ext\Assembly-CSharp.dll";
+        static string appOrigPath = ConfigurationManager.AppSettings["appOrigPath"];
+        static string injPath = ConfigurationManager.AppSettings["injPath"];
+        static string appPatchedPath = ConfigurationManager.AppSettings["appPatchedPath"];
 
         static string appTypeName = "SceneMgr";
         static string appMethodName = "Start";
