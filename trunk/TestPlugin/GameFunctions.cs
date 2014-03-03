@@ -13,7 +13,7 @@ namespace Plugin
         private static ZonePlay myPlayZone;
         private static ZoneWeapon myWeaponZone;
         private static ZoneSecret mySecretZone;
-        public static List<CardDetails> cardDetails;
+        public static List<CardDetails> CardDetails;
 
         public static void populateZones()
         {
@@ -87,7 +87,7 @@ namespace Plugin
             List<CardDetails> listCards = new List<CardDetails>();
             foreach (Card card in GameFunctions.myPlayer.GetBattlefieldZone().GetCards())
             {
-                CardDetails c = cardDetails.Find(cd => cd.Card.GetEntity().GetCardId() == card.GetEntity().GetCardId());
+                CardDetails c = CardDetails.Find(cd => cd.Card.GetEntity().GetCardId() == card.GetEntity().GetCardId());
                 Entity entity = card.GetEntity();
                 CardDetails cDet = new CardDetails();
                 cDet.Card = card;

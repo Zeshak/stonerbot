@@ -110,7 +110,12 @@ namespace Plugin
 
         private void SetCardDetails()
         {
-
+            CardDetails cd = new CardDetails();
+            cd.CardId = "EX1_044";
+            cd.CardName = "Questing Adventurer";
+            cd.KillThis = true;
+            cd.SilenceThis = true;
+            GameFunctions.CardDetails.Add(cd);
         }
 
         private void Mainloop()
