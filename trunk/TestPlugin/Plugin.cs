@@ -11,6 +11,8 @@ namespace Plugin
 {
     public class Plugin : MonoBehaviour
     {
+        #region -[ Attributes ]-
+
         private static double minTimeBetweenRuns = 1.0;
         private static string laststatus = "";
         public static float maxQueueTime = 120f;
@@ -26,6 +28,10 @@ namespace Plugin
         public static bool mulliganDone;
         public static long currentDeckId;
         public static int modulo;
+
+        #endregion
+
+        #region -[ Events ]-
 
         public static void init()
         {
@@ -54,6 +60,286 @@ namespace Plugin
             CheatMgr.Get().RegisterCheatHandler("finishthisgame", new CheatMgr.ProcessCheatCallback(Plugin.finishThisGame));
             CheatMgr.Get().RegisterCheatHandler("help", new CheatMgr.ProcessCheatCallback(Plugin.help));
         }
+
+        public void Update()    // This is called every frame from Unity's main thread
+        {
+            if ((double)UnityEngine.Time.realtimeSinceStartup - (double)this.timeLastRun < Plugin.minTimeBetweenRuns)
+                return;
+            this.timeLastRun = UnityEngine.Time.realtimeSinceStartup;
+            Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 2.0;
+            try
+            {
+                if (Plugin.run)
+                    this.Mainloop();/*
+                else
+                    Plugin.socketSendStatus("S");*/
+            }
+            catch (Exception ex)
+            {
+                Log.error("ERROR IN MAIN LOOP : " + ((object)ex.StackTrace).ToString());
+            }
+        }
+
+        public void Start()     // This is called after control is given back to Unity
+        {
+            rng = new System.Random();
+            timeLastRun = Time.realtimeSinceStartup;
+            timeLastQueued = Time.realtimeSinceStartup;
+            Log.log("Plugin started");
+        }
+
+        public void Init_Game()
+        {
+            try
+            {
+                GameFunctions.gs = GameState.Get();
+                GameFunctions.myPlayer = GameFunctions.gs.GetLocalPlayer();
+                GameFunctions.ePlayer = GameFunctions.gs.GetFirstOpponentPlayer(GameFunctions.myPlayer);
+                SetCardDetails();
+                InactivePlayerKicker.Get().SetShouldCheckForInactivity(false);
+            }
+            catch (Exception ex)
+            {
+                Log.error("Error in initgame function... " + ex.StackTrace);
+            }
+        }
+
+        #endregion
+
+        #region -[ Private Members ]-
+
+        private void SetCardDetails()
+        {
+
+        }
+
+        private void Mainloop()
+        {
+            SceneMgr.Mode curMode = SceneMgr.Get().GetMode();
+            switch (curMode)
+            {
+                case SceneMgr.Mode.LOGIN:
+                    DoLogin();
+                    break;
+                case SceneMgr.Mode.HUB:
+                    DoHub();
+                    break;
+                case SceneMgr.Mode.GAMEPLAY:
+                    DoGameplay();
+                    break;
+                case SceneMgr.Mode.PRACTICE:
+                    DoPractice();
+                    break;
+                case SceneMgr.Mode.TOURNAMENT:
+                    DoTournament();
+                    break;
+                default:
+                    Log.error("Mainloop failed over to default. Mode: " + curMode.ToString());
+                    break;
+            }
+        }
+
+        private void DoPractice()
+        {
+            if (SceneMgr.Get().IsInGame())
+                return;
+            Plugin.statisticsAdded = false;
+            Plugin.mulliganDone = false;
+            long selectedDeckId = DeckPickerTrayDisplay.Get().GetSelectedDeckID();
+            double num2 = new System.Random().NextDouble();
+            MissionID mission1;
+            MissionID mission2;
+            if (num2 < 0.1)
+            {
+                mission1 = MissionID.AI_NORMAL_MAGE;
+                mission2 = MissionID.AI_EXPERT_MAGE;
+            }
+            else if (num2 >= 0.1 && num2 < 0.2)
+            {
+                mission1 = MissionID.AI_NORMAL_DRUID;
+                mission2 = MissionID.AI_EXPERT_DRUID;
+            }
+            else if (num2 >= 0.2 && num2 < 0.3)
+            {
+                mission1 = MissionID.AI_NORMAL_HUNTER;
+                mission2 = MissionID.AI_EXPERT_HUNTER;
+            }
+            else if (num2 >= 0.3 && num2 < 0.4)
+            {
+                mission1 = MissionID.AI_NORMAL_PALADIN;
+                mission2 = MissionID.AI_EXPERT_PALADIN;
+            }
+            else if (num2 >= 0.4 && num2 < 0.5)
+            {
+                mission1 = MissionID.AI_NORMAL_PRIEST;
+                mission2 = MissionID.AI_EXPERT_PRIEST;
+            }
+            else if (num2 >= 0.5 && num2 < 0.6)
+            {
+                mission1 = MissionID.AI_NORMAL_ROGUE;
+                mission2 = MissionID.AI_EXPERT_ROGUE;
+            }
+            else if (num2 >= 0.6 && num2 < 0.7)
+            {
+                mission1 = MissionID.AI_NORMAL_SHAMAN;
+                mission2 = MissionID.AI_EXPERT_SHAMAN;
+            }
+            else if (num2 >= 0.7 && num2 < 0.8)
+            {
+                mission1 = MissionID.AI_NORMAL_WARLOCK;
+                mission2 = MissionID.AI_EXPERT_WARLOCK;
+            }
+            else
+            {
+                mission1 = MissionID.AI_NORMAL_WARRIOR;
+                mission2 = MissionID.AI_EXPERT_WARRIOR;
+            }
+            if (!Plugin.playExpert)
+            {
+                GameMgr.Get().StartGame(GameMode.PRACTICE, mission1, selectedDeckId);
+            }
+            else
+            {
+                GameMgr.Get().StartGame(GameMode.PRACTICE, mission2, selectedDeckId);
+            }
+        }
+
+        private void DoLogin()
+        {
+            if (!((UnityEngine.Object)WelcomeQuests.Get() != (UnityEngine.Object)null))
+                return;
+            Log.say("Clicking through welcome quest");
+            WelcomeQuests.Get().m_clickCatcher.TriggerRelease();
+        }
+
+        private void DoHub()
+        {
+            if (playVsHumans)
+            {
+                SceneMgr.Get().SetNextMode(SceneMgr.Mode.TOURNAMENT);
+            }
+            else
+            {
+                SceneMgr.Get().SetNextMode(SceneMgr.Mode.PRACTICE);
+            }
+        }
+
+        private void DoGameplay()
+        {
+            Init_Game();
+            if (GameFunctions.gs.IsMulliganPhase())
+            {
+                if (!Plugin.mulliganDone)
+                {
+                    try
+                    {
+                        Plugin.mulliganDone = GameFunctions.doMulligan();
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.error("Error in mulligan function... " + ex.StackTrace);
+                        return;
+                    }
+                }
+            }
+            if (GameFunctions.gs.IsGameOver())
+            {
+                try
+                {
+                    if (GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 0)
+                    {
+                        Log.say("Defeat...");
+                    }
+                    else
+                    {
+                        Log.say("Victory!");
+                    }
+                    Plugin.statisticsAdded = true;
+                    if (!((UnityEngine.Object)EndGameScreen.Get() != (UnityEngine.Object)null))
+                        return;
+                    EndGameScreen.Get().ContinueEvents();
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    Log.error("Error in endgame function... " + ex.StackTrace);
+                    return;
+                }
+            }
+            if (!GameFunctions.gs.IsLocalPlayerTurn())
+                return;
+            try
+            {
+                if (GameState.Get().IsBlockingServer())
+                    Thread.Sleep(500);
+                GameFunctions.populateZones();
+                if (BruteAI.BruteHand())
+                    ++BruteAI.loops;
+                else
+                {
+                    if (BruteAI.BruteAttack())
+                        return;
+                    GameFunctions.doEndTurn();
+                    BruteAI.loops = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.error("Error in playerturn function... " + ex.StackTrace);
+            }
+        }
+
+        private void DoTournament()
+        {
+            float num1 = UnityEngine.Time.realtimeSinceStartup - Plugin.timeLastQueued;
+            if (!Plugin.finishAfterThisGame)
+            {
+                try
+                {
+                    if (!SceneMgr.Get().IsInGame() && !Network.IsMatching() || (double)num1 > (double)Plugin.maxQueueTime)
+                    {
+                        Plugin.statisticsAdded = false;
+                        Plugin.mulliganDone = false;
+                        Plugin.currentDeckId = DeckPickerTrayDisplay.Get().GetSelectedDeckID();
+                        Log.say("Queuing for game against human with deck " + (object)Plugin.currentDeckId);
+                        GameMgr.Get().SetNextGame(GameMode.PLAY, MissionID.MULTIPLAYER_1v1);
+                        if (Plugin.playRanked)
+                        {
+                            Network.TrackClient(Network.TrackLevel.LEVEL_INFO, Network.TrackWhat.TRACK_PLAY_TOURNAMENT_WITH_CUSTOM_DECK);
+                            Network.RankedMatch(Plugin.currentDeckId);
+                        }
+                        else
+                        {
+                            Network.TrackClient(Network.TrackLevel.LEVEL_INFO, Network.TrackWhat.TRACK_PLAY_CASUAL_WITH_CUSTOM_DECK);
+                            Network.UnrankedMatch(Plugin.currentDeckId);
+                        }
+                        Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
+                        FriendChallengeMgr.Get().OnEnteredMatchmakerQueue();
+                        PresenceMgr.Get().SetStatus(new Enum[1]
+                                    {
+                                      (Enum) PresenceStatus.PLAY_QUEUE
+                                    });
+                    }
+                    else
+                    {
+                        //Plugin.socketSendStatus("Q");
+                        Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.error("Error in tournament loop... " + ex.StackTrace);
+                }
+            }
+            else
+            {
+                Plugin.run = false;
+                Plugin.finishAfterThisGame = false;
+            }
+        }
+
+        #endregion
 
         #region -[ Cheat Handlers ]-
 
@@ -177,251 +463,5 @@ namespace Plugin
         }
 
         #endregion
-
-        public void Update()    // This is called every frame from Unity's main thread
-        {
-            if ((double)UnityEngine.Time.realtimeSinceStartup - (double)this.timeLastRun < Plugin.minTimeBetweenRuns)
-                return;
-            this.timeLastRun = UnityEngine.Time.realtimeSinceStartup;
-            Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 2.0;
-            try
-            {
-                if (Plugin.run)
-                    this.Mainloop();/*
-                else
-                    Plugin.socketSendStatus("S");*/
-            }
-            catch (Exception ex)
-            {
-                Log.error("ERROR IN MAIN LOOP : " + ((object)ex.StackTrace).ToString());
-            }
-        }
-
-        public void Start()     // This is called after control is given back to Unity
-        {
-            rng = new System.Random();
-            timeLastRun = Time.realtimeSinceStartup;
-            timeLastQueued = Time.realtimeSinceStartup;
-            Log.log("Plugin started");
-        }
-
-        public void Init_Game()
-        {
-            try
-            {
-                GameFunctions.gs = GameState.Get();
-                GameFunctions.myPlayer = GameFunctions.gs.GetLocalPlayer();
-                GameFunctions.ePlayer = GameFunctions.gs.GetFirstOpponentPlayer(GameFunctions.myPlayer);
-                //init GameFunctions.cardDetails
-                InactivePlayerKicker.Get().SetShouldCheckForInactivity(false);
-            }
-            catch (Exception ex)
-            {
-                Log.error("Error in initgame function... " + ex.StackTrace);
-            }
-        }
-
-        public void Mainloop()
-        {
-            SceneMgr.Mode curMode = SceneMgr.Get().GetMode();
-            switch (curMode)
-            {
-                case SceneMgr.Mode.LOGIN:
-                    if (!((UnityEngine.Object)WelcomeQuests.Get() != (UnityEngine.Object)null))
-                        break;
-                    Log.say("Clicking through welcome quest");
-                    WelcomeQuests.Get().m_clickCatcher.TriggerRelease();
-                    break;
-                case SceneMgr.Mode.HUB:
-                    if (playVsHumans)
-                    {
-                        SceneMgr.Get().SetNextMode(SceneMgr.Mode.TOURNAMENT);
-                    }
-                    else
-                    {
-                        SceneMgr.Get().SetNextMode(SceneMgr.Mode.PRACTICE);
-                    }
-                    break;
-                case SceneMgr.Mode.GAMEPLAY:
-                    Init_Game();
-                    if (GameFunctions.gs.IsMulliganPhase())
-                    {
-                        if (!Plugin.mulliganDone)
-                        {
-                            try
-                            {
-                                Plugin.mulliganDone = GameFunctions.doMulligan();
-                                break;
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.error("Error in mulligan function... " + ex.StackTrace);
-                                break;
-                            }
-                        }
-                    }
-                    if (GameFunctions.gs.IsGameOver())
-                    {
-                        try
-                        {
-                            if (GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 0)
-                            {
-                                Log.say("Defeat...");
-                            }
-                            else
-                            {
-                                Log.say("Victory!");
-                            }
-                            Plugin.statisticsAdded = true;
-                            if (!((UnityEngine.Object)EndGameScreen.Get() != (UnityEngine.Object)null))
-                                break;
-                            EndGameScreen.Get().ContinueEvents();
-                            break;
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.error("Error in endgame function... " + ex.StackTrace);
-                            break;
-                        }
-                    }
-                    if (!GameFunctions.gs.IsLocalPlayerTurn())
-                        break;
-                    try
-                    {
-                        if (GameState.Get().IsBlockingServer())
-                            Thread.Sleep(500);
-                        GameFunctions.populateZones();
-                        if (BruteAI.BruteHand())
-                            ++BruteAI.loops;
-                        else
-                        {
-                            if (BruteAI.BruteAttack())
-                                break;
-                            GameFunctions.doEndTurn();
-                            BruteAI.loops = 0;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.error("Error in playerturn function... " + ex.StackTrace);
-                    }
-                    break;
-                case SceneMgr.Mode.PRACTICE:
-                    if (SceneMgr.Get().IsInGame())
-                        break;
-                    Plugin.statisticsAdded = false;
-                    Plugin.mulliganDone = false;
-                    long selectedDeckId = DeckPickerTrayDisplay.Get().GetSelectedDeckID();
-                    double num2 = new System.Random().NextDouble();
-                    MissionID mission1;
-                    MissionID mission2;
-                    if (num2 < 0.1)
-                    {
-                        mission1 = MissionID.AI_NORMAL_MAGE;
-                        mission2 = MissionID.AI_EXPERT_MAGE;
-                    }
-                    else if (num2 >= 0.1 && num2 < 0.2)
-                    {
-                        mission1 = MissionID.AI_NORMAL_DRUID;
-                        mission2 = MissionID.AI_EXPERT_DRUID;
-                    }
-                    else if (num2 >= 0.2 && num2 < 0.3)
-                    {
-                        mission1 = MissionID.AI_NORMAL_HUNTER;
-                        mission2 = MissionID.AI_EXPERT_HUNTER;
-                    }
-                    else if (num2 >= 0.3 && num2 < 0.4)
-                    {
-                        mission1 = MissionID.AI_NORMAL_PALADIN;
-                        mission2 = MissionID.AI_EXPERT_PALADIN;
-                    }
-                    else if (num2 >= 0.4 && num2 < 0.5)
-                    {
-                        mission1 = MissionID.AI_NORMAL_PRIEST;
-                        mission2 = MissionID.AI_EXPERT_PRIEST;
-                    }
-                    else if (num2 >= 0.5 && num2 < 0.6)
-                    {
-                        mission1 = MissionID.AI_NORMAL_ROGUE;
-                        mission2 = MissionID.AI_EXPERT_ROGUE;
-                    }
-                    else if (num2 >= 0.6 && num2 < 0.7)
-                    {
-                        mission1 = MissionID.AI_NORMAL_SHAMAN;
-                        mission2 = MissionID.AI_EXPERT_SHAMAN;
-                    }
-                    else if (num2 >= 0.7 && num2 < 0.8)
-                    {
-                        mission1 = MissionID.AI_NORMAL_WARLOCK;
-                        mission2 = MissionID.AI_EXPERT_WARLOCK;
-                    }
-                    else
-                    {
-                        mission1 = MissionID.AI_NORMAL_WARRIOR;
-                        mission2 = MissionID.AI_EXPERT_WARRIOR;
-                    }
-                    if (!Plugin.playExpert)
-                    {
-                        GameMgr.Get().StartGame(GameMode.PRACTICE, mission1, selectedDeckId);
-                        break;
-                    }
-                    else
-                    {
-                        GameMgr.Get().StartGame(GameMode.PRACTICE, mission2, selectedDeckId);
-                        break;
-                    }
-                    break;
-                case SceneMgr.Mode.TOURNAMENT:
-                    float num1 = UnityEngine.Time.realtimeSinceStartup - Plugin.timeLastQueued;
-                    if (!Plugin.finishAfterThisGame)
-                    {
-                        try
-                        {
-                            if (!SceneMgr.Get().IsInGame() && !Network.IsMatching() || (double)num1 > (double)Plugin.maxQueueTime)
-                            {
-                                Plugin.statisticsAdded = false;
-                                Plugin.mulliganDone = false;
-                                Plugin.currentDeckId = DeckPickerTrayDisplay.Get().GetSelectedDeckID();
-                                Log.say("Queuing for game against human with deck " + (object)Plugin.currentDeckId);
-                                GameMgr.Get().SetNextGame(GameMode.PLAY, MissionID.MULTIPLAYER_1v1);
-                                if (Plugin.playRanked)
-                                {
-                                    Network.TrackClient(Network.TrackLevel.LEVEL_INFO, Network.TrackWhat.TRACK_PLAY_TOURNAMENT_WITH_CUSTOM_DECK);
-                                    Network.RankedMatch(Plugin.currentDeckId);
-                                }
-                                else
-                                {
-                                    Network.TrackClient(Network.TrackLevel.LEVEL_INFO, Network.TrackWhat.TRACK_PLAY_CASUAL_WITH_CUSTOM_DECK);
-                                    Network.UnrankedMatch(Plugin.currentDeckId);
-                                }
-                                Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
-                                FriendChallengeMgr.Get().OnEnteredMatchmakerQueue();
-                                PresenceMgr.Get().SetStatus(new Enum[1]
-                                    {
-                                      (Enum) PresenceStatus.PLAY_QUEUE
-                                    });
-                            }
-                            else
-                            {
-                                //Plugin.socketSendStatus("Q");
-                                Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.error("Error in tournament loop... " + ex.StackTrace);
-                        }
-                    }
-                    else
-                    {
-                        Plugin.run = false;
-                        Plugin.finishAfterThisGame = false;
-                    }
-                    break;
-                default:
-                    Log.say("Mainloop failed over to default. Mode: " + curMode.ToString());
-                    break;
-            }
-        }
     }
 }
