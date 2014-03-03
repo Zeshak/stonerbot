@@ -10,12 +10,7 @@ namespace Plugin
 
         static BruteAI()
         {
-        }
 
-        public static bool BruteBattlecry()
-        {
-
-            return false;
         }
 
         public static bool BruteHand()
