@@ -6,7 +6,7 @@ namespace Plugin
 {
     public class Log
     {
-        public static string logPath = ConfigurationManager.AppSettings["logPath"];
+        public static string logPath = @"D:\StonerBot\log.txt";
         public static string module = "";
 
         static Log()
@@ -20,14 +20,14 @@ namespace Plugin
 
         public static void debug(string msg)
         {
-            Log.log(msg);
+            Log.log("DEBUG: " + msg);
         }
 
         public static void error(string msg)
         {
             try
             {
-                Log.log("ERROR : " + msg);
+                Log.log("ERROR: " + msg);
             }
             catch
             {
@@ -50,7 +50,7 @@ namespace Plugin
         {
             try
             {
-                Log.log(msg);
+                Log.log("SAY: " + msg);
                 UIStatus.Get().AddInfo(msg);
             }
             catch

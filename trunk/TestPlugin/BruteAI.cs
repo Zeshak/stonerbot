@@ -22,7 +22,7 @@ namespace Plugin
         {
             if (BruteAI.loops >= BruteAI.maxLoops)
             {
-                Log.debug((string)(object)BruteAI.maxLoops + (object)" loops done... Skip this turn");
+                Log.debug(BruteAI.maxLoops.ToString() + " loops done... Skip this turn");
                 return false;
             }
             else
@@ -48,7 +48,7 @@ namespace Plugin
                         {
                             if (!GameFunctions.doDropMinion(c3))
                                 return true;
-                            int num = (UnityEngine.Object)c3.GetBattlecrySpell() != (UnityEngine.Object)null ? 1 : 0;
+                            int num = c3.GetBattlecrySpell() != null ? 1 : 0;
                             return true;
                         }
                     }
@@ -68,7 +68,7 @@ namespace Plugin
 
         public static Card NextBestSecret()
         {
-            foreach (Card c in Enumerable.ToList<Card>((IEnumerable<Card>)GameFunctions.myPlayer.GetHandZone().GetCards()))
+            foreach (Card c in Enumerable.ToList<Card>(GameFunctions.myPlayer.GetHandZone().GetCards()))
             {
                 Entity entity = c.GetEntity();
                 if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSecret() && GameFunctions.canBeUsed(c))
@@ -79,7 +79,7 @@ namespace Plugin
 
         public static Card NextBestSpell()
         {
-            foreach (Card c in Enumerable.ToList<Card>((IEnumerable<Card>)GameFunctions.myPlayer.GetHandZone().GetCards()))
+            foreach (Card c in Enumerable.ToList<Card>(GameFunctions.myPlayer.GetHandZone().GetCards()))
             {
                 Entity entity = c.GetEntity();
                 if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSpell() && (entity.GetCardId() != "GAME_005" && GameFunctions.canBeUsed(c)))
@@ -92,7 +92,7 @@ namespace Plugin
         {
             if ((UnityEngine.Object)GameFunctions.myPlayer.GetHero().GetWeaponCard() != (UnityEngine.Object)null)
                 return (Card)null;
-            foreach (Card c in Enumerable.ToList<Card>((IEnumerable<Card>)GameFunctions.myPlayer.GetHandZone().GetCards()))
+            foreach (Card c in Enumerable.ToList<Card>(GameFunctions.myPlayer.GetHandZone().GetCards()))
             {
                 Entity entity = c.GetEntity();
                 if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsWeapon() && GameFunctions.canBeUsed(c))
