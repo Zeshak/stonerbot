@@ -58,7 +58,30 @@ namespace Plugin
         /// <returns>Devuelve la carta que le puedo usar</returns>
         private static Card NextBestSpellCard(CardDetails targetEntity)
         {
-            throw new NotImplementedException();
+            Card bestCard = null;
+            bool isDisable = false;
+            foreach (Card card in GameFunctions.myPlayer.GetHandZone().GetCards())
+            {
+                CardDetails cd = CardDetails.FindInCardDetails(card);
+                if (cd == null)
+                    break;
+                if (targetEntity.DisableThis && cd.CanDisable && GameFunctions.CanBeUsed(card))
+                {
+                    bestCard = card;
+                    isDisable = true;
+                }
+                if (targetEntity.SilenceThis && cd.CanSilence && GameFunctions.CanBeUsed(card))
+                {
+                    if (cd.DisableFirst && isDisable)
+                        break;
+                    else
+                    {
+                        bestCard = card;
+                        isDisable = false;
+                    }
+                }
+            }
+            return bestCard;
         }
 
         /// <summary>
@@ -74,7 +97,7 @@ namespace Plugin
             {
                 if (GameFunctions.CanBeTargetted(cd.Card.GetEntity()))
                 {
-                    if (cd.SpellThis)
+                    if (cd.DisableThis)
                     {
                         target = cd;
                         spellPriority = true;

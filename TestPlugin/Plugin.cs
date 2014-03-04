@@ -88,7 +88,7 @@ namespace Plugin
                 GameFunctions.gs = GameState.Get();
                 GameFunctions.myPlayer = GameFunctions.gs.GetLocalPlayer();
                 GameFunctions.ePlayer = GameFunctions.gs.GetFirstOpponentPlayer(GameFunctions.myPlayer);
-                SetCardDetails();
+                CardDetails.SetCardDetails();
                 InactivePlayerKicker.Get().SetShouldCheckForInactivity(false);
             }
             catch (Exception ex)
@@ -100,16 +100,6 @@ namespace Plugin
         #endregion
 
         #region -[ Private Members ]-
-
-        private void SetCardDetails()
-        {
-            CardDetails cd = new CardDetails();
-            cd.CardId = "EX1_044";
-            cd.CardName = "Questing Adventurer";
-            cd.KillThis = true;
-            cd.SilenceThis = true;
-            GameFunctions.CardDetails.Add(cd);
-        }
 
         private void Mainloop()
         {
@@ -382,6 +372,7 @@ namespace Plugin
                 Entity entity = card.GetEntity();
                 Log.debug("Card : " + card.ToString());
                 Log.debug("Type : " + entity.GetType().ToString());
+                Log.debug("Name : " + card.name);
                 if (entity.HasBattlecry())
                     Log.debug("Battlecry : " + card.GetBattlecrySpell().ToString());
                 Log.debug("ActorState : " + ((object)card.GetActor().GetActorStateType()).ToString());
