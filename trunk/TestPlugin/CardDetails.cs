@@ -27,7 +27,7 @@ namespace Plugin
         //KillThisEXTREME: No me importan las pérdidas, tengo que matar a este.
         public bool KillThisEXTREME = false;
         //SpellOnThis: Trato de usar spell que mate o disablee (Polymorph, Hex, Assasinate)
-        public bool SpellOnThis = false;
+        public bool SpellThis = false;
         //SilenceThis: Voy a silenciarlo.
         public bool SilenceThis = false;
         public Card Card;
@@ -41,7 +41,7 @@ namespace Plugin
         {
             KillThis = false;
             KillThisEXTREME = false;
-            SpellOnThis = false;
+            SpellThis = false;
             SilenceThis = false;
         }
     }

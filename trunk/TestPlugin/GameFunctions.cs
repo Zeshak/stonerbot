@@ -38,7 +38,7 @@ namespace Plugin
             }
         }
 
-        public static void cancel()
+        public static void Cancel()
         {
             GameState gameState = GameState.Get();
             if (gameState.IsInMainOptionMode())
@@ -85,17 +85,20 @@ namespace Plugin
         public static List<CardDetails> GetBattlefieldCardDetails()
         {
             List<CardDetails> listCards = new List<CardDetails>();
-            foreach (Card card in GameFunctions.myPlayer.GetBattlefieldZone().GetCards())
+            Log.debug("Cantidad de cartas " + GameFunctions.ePlayer.GetBattlefieldZone().GetCards().Count.ToString());
+            foreach (Card card in GameFunctions.ePlayer.GetBattlefieldZone().GetCards())
             {
-                CardDetails c = CardDetails.Find(cd => cd.Card.GetEntity().GetCardId() == card.GetEntity().GetCardId());
+                /*foreach (CardDetails cd in CardDetails)
+                CardDetails c = CardDetails.Find(cd => cd.Card.GetEntity().GetCardId() == card.GetEntity().GetCardId());*/
                 Entity entity = card.GetEntity();
                 CardDetails cDet = new CardDetails();
                 cDet.Card = card;
+                Log.debug("3");
                 switch (entity.GetRarity())
                 {
                     case TAG_RARITY.LEGENDARY:
                         cDet.SetInitValues();
-                        cDet.SpellOnThis = true;
+                        cDet.SpellThis = true;
                         break;
                     case TAG_RARITY.EPIC:
                         cDet.SetInitValues();
@@ -118,6 +121,7 @@ namespace Plugin
 
         public static void SetNewValuesByCardStatus(ref CardDetails cd)
         {
+            Log.debug("Entra en SetNewValuesByCardStatus");
             Entity entity = cd.Card.GetEntity();
             int currATK = entity.GetATK();
             int currHP = entity.GetHealth();
@@ -129,7 +133,7 @@ namespace Plugin
                 cd.SetInitValues();
                 cd.KillThis = true;
                 if (currATK > 5)
-                    cd.SpellOnThis = true;
+                    cd.SpellThis = true;
             }
             else if (entity.HasTaunt())
             {
@@ -138,41 +142,47 @@ namespace Plugin
                     cd.SilenceThis = true;
                 //Bicho con taunt a partir de 3-6 o 5-3 le tiro spell si tengo
                 if ((currATK > 2 && currHP > 5) || (currHP > 2 && currATK > 4))
-                    cd.SpellOnThis = true;
+                    cd.SpellThis = true;
             }
             else if (currATK > 4 && currHP > 4)
             {
                 //Si es bicho fuerte, 5-5 en adelante, trato de tirarle spell
-                cd.SpellOnThis = true;
+                cd.SpellThis = true;
             }
+            Log.debug("Termina en SetNewValuesByCardStatus");
         }
 
-        public static bool doDropWeapon(Card c)
+        public static bool DoDropWeapon(Card c)
         {
-            return GameFunctions.doDrop(c);
+            return GameFunctions.DoDrop(c);
         }
 
-        public static bool doDropBattlecry(Card c)
+        public static bool DoDropBattlecry(Card c)
         {
-            return GameFunctions.doDrop(c);
+            return GameFunctions.DoDrop(c);
         }
 
-        public static bool doDropSpell(Card c)
+        public static bool DoDropSpell(Card c)
         {
-            return GameFunctions.doDrop(c);
+            return GameFunctions.DoDrop(c);
+        }
+
+        public static bool DoDropHeroPowerSpell()
+        {
+            return GameFunctions.DoDrop(GameFunctions.myPlayer.GetHeroPower().GetCard());
         }
 
         public static bool doDropSecret(Card c)
         {
-            return GameFunctions.doDrop(c);
+            return GameFunctions.DoDrop(c);
         }
 
         public static bool doDropMinion(Card c)
         {
-            return GameFunctions.doDrop(c);
+            return GameFunctions.DoDrop(c);
         }
 
-        private static bool doDrop(Card c)
+        private static bool DoDrop(Card c, Entity certainTarget = null)
         {
             Log.log("DoDrop " + c.GetEntity().GetName());
             try
@@ -192,12 +202,10 @@ namespace Plugin
                 GameFunctions.gs.GetGameEntity().NotifyOfCardGrabbed(c.GetEntity());
                 c.SetDoNotSort(false);
                 c.NotifyLeftPlayfield();
-                bool doTargetting = false;
-                bool isWeapon = c.GetEntity().IsWeapon();
-                bool isHeroPower = c.GetEntity().IsHeroPower();
+                bool needsTargeting = false;
                 int dropPlace = 0;
                 Zone destinationZone;
-                if (isWeapon)
+                if (c.GetEntity().IsWeapon())
                 {
                     dropPlace = 1;
                     destinationZone = GameFunctions.myWeaponZone;
@@ -206,112 +214,125 @@ namespace Plugin
                 {
                     destinationZone = GameFunctions.myPlayZone;
                     dropPlace = destinationZone.GetCards().Count + 1;
+                    if (dropPlace >= 8)
+                        return true;
                 }
-                if (dropPlace >= 8 && !isWeapon)
-                    return true;
                 GameFunctions.gs.GetGameEntity().NotifyOfCardDropped(c.GetEntity());
                 GameFunctions.gs.SetSelectedOptionPosition(dropPlace);
                 if (InputManager.Get().DoNetworkResponse(c.GetEntity()))
                 {
                     Log.log("DoNetworkResponse Loaded");
                     c.GetEntity().GetZonePosition();
-                    if (c.GetEntity().IsSecret())
-                        ZoneMgr.Get().AddLocalZoneChange(c, (Zone)GameFunctions.mySecretZone, GameFunctions.mySecretZone.GetLastPos());
-                    else
-                        ZoneMgr.Get().AddLocalZoneChange(c, destinationZone, dropPlace);
+                    if (!c.GetEntity().IsHeroPower())
+                    {
+                        if (c.GetEntity().IsSecret())
+                            ZoneMgr.Get().AddLocalZoneChange(c, (Zone)GameFunctions.mySecretZone, GameFunctions.mySecretZone.GetLastPos());
+                        else
+                            ZoneMgr.Get().AddLocalZoneChange(c, destinationZone, dropPlace);
+                    }
                     GameFunctions.myPlayer.NotifyOfSpentMana(c.GetEntity().GetRealTimeCost());
                     GameFunctions.myPlayer.UpdateManaCounter();
                     ManaCrystalMgr.Get().UpdateSpentMana(c.GetEntity().GetRealTimeCost());
                     if (GameFunctions.gs.EntityHasTargets(c.GetEntity()))
-                        doTargetting = true;
+                        needsTargeting = true;
                 }
                 else
                     GameFunctions.gs.SetSelectedOptionPosition(Network.NoPosition);
                 GameFunctions.myPlayer.GetHandZone().UpdateLayout(-1, true);
                 GameFunctions.myPlayer.GetBattlefieldZone().SortWithSpotForHeldCard(-1);
-                if (doTargetting)
+                if (needsTargeting)
                 {
-                    Log.log(" DoDropMinion doing targetting");
+                    Log.log("DoDrop hace target");
                     if (EnemyActionHandler.Get() != null)
                     {
                         EnemyActionHandler.Get().NotifyOpponentOfTargetModeBegin(c);
-
                         Entity targetEntity = null;
 
-                        var eHero = ePlayer.GetHeroCard().GetEntity();
-                        if (gs.IsValidOptionTarget(eHero))
+                        if (certainTarget != null)
                         {
-                            Log.log("Can attack hero");
-                            targetEntity = eHero;
-                        }
-
-                        // get a list of my cards on the battlefield
-                        List<Card> myPlayedCards = myPlayer.GetBattlefieldZone().GetCards();
-                        if (myPlayedCards.Count > 0 && targetEntity == null)
-                        {
-                            foreach (Card card in myPlayedCards)
+                            if (c.GetEntity().IsHeroPower())
                             {
-                                var e = card.GetEntity();
-                                if (gs.IsValidOptionTarget(e))
+                                switch (GameFunctions.myPlayer.GetHero().GetClass())
                                 {
-                                    Log.log("is valid target: " + e.GetName());
-                                    Log.log("considering for battlecry: " + e.GetName());
-                                    targetEntity = e;
+                                    case TAG_CLASS.MAGE:
+                                        targetEntity = GetBestMageHeroPowerTarget();
+                                        if (targetEntity == null)
+                                        {
+                                            GameFunctions.Cancel();
+                                            return false;
+                                        }
+                                        Log.debug("Heropower mage en " + targetEntity.GetName());
+                                        break;
+                                    case TAG_CLASS.PRIEST:
+                                        targetEntity = GameFunctions.myPlayer.GetHero();
+                                        break;
+                                    default:
+                                        break;
                                 }
-                                else
+                            }
+                            else
+                            {
+                                var eHero = ePlayer.GetHeroCard().GetEntity();
+                                if (gs.IsValidOptionTarget(eHero))
                                 {
-                                    Log.log("is NOT valid target: " + e.GetName());
+                                    Log.log("Can attack hero");
+                                    targetEntity = eHero;
+                                }
+
+                                List<Card> myPlayedCards = myPlayer.GetBattlefieldZone().GetCards();
+                                if (myPlayedCards.Count > 0 && targetEntity == null)
+                                {
+                                    foreach (Card card in myPlayedCards)
+                                    {
+                                        var e = card.GetEntity();
+                                        if (gs.IsValidOptionTarget(e))
+                                        {
+                                            Log.log("is valid target: " + e.GetName());
+                                            Log.log("considering for battlecry: " + e.GetName());
+                                            targetEntity = e;
+                                        }
+                                        else
+                                        {
+                                            Log.log("is NOT valid target: " + e.GetName());
+                                        }
+                                    }
+                                }
+
+                                List<Card> ePlayedCards = ePlayer.GetBattlefieldZone().GetCards();
+                                if (ePlayedCards.Count > 0 && targetEntity == null)
+                                {
+                                    foreach (Card card in ePlayedCards)
+                                    {
+                                        var e = card.GetEntity();
+                                        if (gs.IsValidOptionTarget(e))
+                                        {
+                                            Log.log("is valid target: " + e.GetName());
+                                            Log.log("considering for battlecry: " + e.GetName());
+                                            targetEntity = e;
+                                        }
+                                        else
+                                        {
+                                            Log.log("is NOT valid target: " + e.GetName());
+                                        }
+                                    }
+                                }
+                                if (targetEntity == null)
+                                {
+                                    Log.log(" No target entity selected");
+                                    return false;
                                 }
                             }
                         }
+                        else 
+                            targetEntity = certainTarget;
 
-                        // get a list of enemy cards on the battlefield
-                        List<Card> ePlayedCards = ePlayer.GetBattlefieldZone().GetCards();
-                        if (ePlayedCards.Count > 0 && targetEntity == null)
-                        {
-                            foreach (Card card in ePlayedCards)
-                            {
-                                var e = card.GetEntity();
-                                if (gs.IsValidOptionTarget(e))
-                                {
-                                    Log.log("is valid target: " + e.GetName());
-                                    Log.log("considering for battlecry: " + e.GetName());
-                                    targetEntity = e;
-                                }
-                                else
-                                {
-                                    Log.log("is NOT valid target: " + e.GetName());
-                                }
-                            }
-                        }
-                        if (targetEntity == null)
-                        {
-                            Log.log(" No target entity selected");
-                            return false;
-                        }
+                        DoTargetting(targetEntity);
 
-                        Log.log("selected targetEntity: " + targetEntity.GetName());
-                        gs.GetGameEntity().NotifyOfBattlefieldCardClicked(targetEntity, true);
 
-                        myPlayer.GetBattlefieldZone().UnHighlightBattlefield();
-                        Log.log(" Response mode pre: " + gs.GetResponseMode().ToString());
-                        if (InputManager.Get().DoNetworkResponse(targetEntity))
-                        {
-                            Log.log(" Response mode post: " + gs.GetResponseMode().ToString());
-                            EnemyActionHandler.Get().NotifyOpponentOfTargetEnd();
-
-                            myPlayer.GetHandZone().UpdateLayout(-1, true);
-                            myPlayer.GetBattlefieldZone().UpdateLayout();
-                            Log.log(" did battlecry on: " + targetEntity.GetName());
-                        }
-                        else
-                        {
-                            Log.log(" DoTarget outer DoNetworkReponse failed");
-                        }
                     }
+                    else
+                        EnemyActionHandler.Get().NotifyOpponentOfCardDropped();
                 }
-                else
-                    EnemyActionHandler.Get().NotifyOpponentOfCardDropped();
                 return true;
             }
             catch (Exception ex)
@@ -320,42 +341,98 @@ namespace Plugin
             }
         }
 
+        private static Entity GetBestMageHeroPowerTarget()
+        {
+            Log.debug("Corro para buscar el mejor Hero power target");
+            List<CardDetails> listCards = GameFunctions.GetBattlefieldCardDetails();
+            Entity target = new Entity();
+            int maxAtk = 0;
+            int index = -1;
+            foreach (CardDetails cd in listCards)
+            {
+                Entity possibleTarget = cd.Card.GetEntity();
+                if (possibleTarget.GetHealth() == 1 || possibleTarget.HasDivineShield())
+                {
+                    int estimatedAtk = possibleTarget.GetATK();
+                    if (possibleTarget.HasWindfury())
+                        estimatedAtk *= 2;
+                    if (possibleTarget.HasTaunt())
+                        estimatedAtk += 1;
+                    if (maxAtk == 0 || estimatedAtk > maxAtk)
+                    {
+                        if (GameFunctions.CanBeTargetted(possibleTarget))
+                        {
+                            index = listCards.IndexOf(cd);
+                            maxAtk = estimatedAtk;
+                        }
+                    }
+                }
+            }
+            if (index != -1)
+                return listCards[index].Card.GetEntity();
+            else if (GameFunctions.CanBeTargetted(ePlayer.GetHeroCard().GetEntity()))
+                return ePlayer.GetHeroCard().GetEntity();
+            else return null;
+        }
+
+        private static bool SetEntityTarget(Entity entity)
+        {
+            Network.Options optionsPacket = GameFunctions.gs.GetOptionsPacket();
+            if (optionsPacket != null)
+            {
+                Network.Options.Option option = optionsPacket.List.Find(q => q.Main.ID == entity.GetEntityId());
+                option.Main.Targets.Add(0);
+            }
+            return true;
+        }
+
         public static Entity findBestSpellTarget(Spell s)
         {
             return (Entity)null;
         }
 
-        public static bool doTargetting(Entity target)
+        public static bool DoTargetting(Entity target)
         {
-            int num = 10;
-            for (int index = 0; index < num; ++index)
+            if (!GameState.Get().IsInTargetMode())
+                return false;
+            gs.GetGameEntity().NotifyOfBattlefieldCardClicked(target, true);
+            myPlayer.GetBattlefieldZone().UnHighlightBattlefield();
+            if (!GameFunctions.CanBeTargetted(target))
             {
-                InputManager inputManager = InputManager.Get();
-                if (!GameState.Get().IsInTargetMode())
-                    return false;
-                if (GameFunctions.canBeTargetted(target))
-                {
-                    GameFunctions.cancel();
-                    return false;
-                }
-                else if (inputManager.DoNetworkResponse(target))
-                    return true;
+                GameFunctions.Cancel();
+                return false;
             }
-            GameFunctions.cancel();
-            return false;
+            else
+            {
+                if (InputManager.Get().DoNetworkResponse(target))
+                {
+                    EnemyActionHandler.Get().NotifyOpponentOfTargetEnd();
+
+                    myPlayer.GetHandZone().UpdateLayout(-1, true);
+                    myPlayer.GetBattlefieldZone().UpdateLayout();
+                    return true;
+                }
+                else
+                    Log.log(" DoTarget outer DoNetworkReponse failed");
+                GameFunctions.Cancel();
+                return false;
+            }
         }
 
-        public static bool canBeTargetted(Entity e)
+        public static bool CanBeTargetted(Entity e)
         {
-            return e.GetCard().GetActor().GetActorStateType() != ActorStateType.CARD_VALID_TARGET;
-        }
-
-        public static bool canBeUsed(Card c)
-        {
-            if ((UnityEngine.Object)c.GetActor() == (UnityEngine.Object)null)
+            if (e.GetCard().GetActor() == null)
                 return false;
             else
-                return c.GetActor().GetActorStateType().Equals((object)ActorStateType.CARD_PLAYABLE);
+                return e.GetCard().GetActor().GetActorStateType().Equals(ActorStateType.CARD_VALID_TARGET);
+        }
+
+        public static bool CanBeUsed(Card c)
+        {
+            if (c.GetActor() == null)
+                return false;
+            else
+                return c.GetActor().GetActorStateType().Equals(ActorStateType.CARD_PLAYABLE);
         }
 
         public static bool doMulligan()
