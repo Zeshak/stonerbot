@@ -14,7 +14,6 @@ namespace Plugin
         #region -[ Attributes ]-
 
         private static double minTimeBetweenRuns = 1.0;
-        private static string laststatus = "";
         public static float maxQueueTime = 120f;
         public static bool playVsHumans = true;
         public static bool playRanked = false;
@@ -40,43 +39,38 @@ namespace Plugin
             GameObject.Destroy(go.GetComponent("Plugin"));
             foreach (var x in go.GetComponents<Plugin>())
             {
-                Log.debug("destroying old component: " + x.ToString());
                 GameObject.Destroy(x);
             }
-            Log.debug("Destroyed old plugin");
-
             go.AddComponent<Plugin>();
         }
 
         public void Awake()     // This is called after loading the DLL, before the loader gives back control to Unity
         {
-            CheatMgr.Get().RegisterCheatHandler("startbot", new CheatMgr.ProcessCheatCallback(Plugin.startBot));
-            CheatMgr.Get().RegisterCheatHandler("startvsai", new CheatMgr.ProcessCheatCallback(Plugin.startBotVsAi));
-            CheatMgr.Get().RegisterCheatHandler("startvsaiexpert", new CheatMgr.ProcessCheatCallback(Plugin.startBotVsAiExpert));
+            CheatMgr.Get().RegisterCheatHandler("startbot", new CheatMgr.ProcessCheatCallback(Plugin.StartBot));
+            CheatMgr.Get().RegisterCheatHandler("startvsai", new CheatMgr.ProcessCheatCallback(Plugin.StartBotVsAI));
+            CheatMgr.Get().RegisterCheatHandler("startvsaiexpert", new CheatMgr.ProcessCheatCallback(Plugin.StartBotVsAIExpert));
             CheatMgr.Get().RegisterCheatHandler("startbotranked", new CheatMgr.ProcessCheatCallback(Plugin.startBotRanked));
             CheatMgr.Get().RegisterCheatHandler("stopbot", new CheatMgr.ProcessCheatCallback(Plugin.stopBot));
-            CheatMgr.Get().RegisterCheatHandler("analyze", new CheatMgr.ProcessCheatCallback(Plugin.analyzeCards));
-            CheatMgr.Get().RegisterCheatHandler("deckid", new CheatMgr.ProcessCheatCallback(Plugin.getDeckId));
+            CheatMgr.Get().RegisterCheatHandler("analyze", new CheatMgr.ProcessCheatCallback(Plugin.AnalyzeCards));
+            CheatMgr.Get().RegisterCheatHandler("deckid", new CheatMgr.ProcessCheatCallback(Plugin.GetDeckId));
             CheatMgr.Get().RegisterCheatHandler("finishthisgame", new CheatMgr.ProcessCheatCallback(Plugin.finishThisGame));
             CheatMgr.Get().RegisterCheatHandler("help", new CheatMgr.ProcessCheatCallback(Plugin.help));
         }
 
         public void Update()    // This is called every frame from Unity's main thread
         {
-            if ((double)UnityEngine.Time.realtimeSinceStartup - (double)this.timeLastRun < Plugin.minTimeBetweenRuns)
+            if (UnityEngine.Time.realtimeSinceStartup - this.timeLastRun < Plugin.minTimeBetweenRuns)
                 return;
             this.timeLastRun = UnityEngine.Time.realtimeSinceStartup;
             Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 2.0;
             try
             {
                 if (Plugin.run)
-                    this.Mainloop();/*
-                else
-                    Plugin.socketSendStatus("S");*/
+                    this.Mainloop();
             }
             catch (Exception ex)
             {
-                Log.error("ERROR IN MAIN LOOP : " + ((object)ex.StackTrace).ToString());
+                Log.error(ex);
             }
         }
 
@@ -85,7 +79,6 @@ namespace Plugin
             rng = new System.Random();
             timeLastRun = Time.realtimeSinceStartup;
             timeLastQueued = Time.realtimeSinceStartup;
-            Log.log("Plugin started");
         }
 
         public void Init_Game()
@@ -100,7 +93,7 @@ namespace Plugin
             }
             catch (Exception ex)
             {
-                Log.error("Error in initgame function... " + ex.StackTrace);
+                Log.error(ex);
             }
         }
 
@@ -139,7 +132,7 @@ namespace Plugin
                     DoTournament();
                     break;
                 default:
-                    Log.error("Mainloop failed over to default. Mode: " + curMode.ToString());
+                    Log.error("Mainloop derrapó a default. Mode: " + curMode.ToString());
                     break;
             }
         }
@@ -200,13 +193,9 @@ namespace Plugin
                 mission2 = MissionID.AI_EXPERT_WARRIOR;
             }
             if (!Plugin.playExpert)
-            {
                 GameMgr.Get().StartGame(GameMode.PRACTICE, mission1, selectedDeckId);
-            }
             else
-            {
                 GameMgr.Get().StartGame(GameMode.PRACTICE, mission2, selectedDeckId);
-            }
         }
 
         private void DoLogin()
@@ -220,13 +209,9 @@ namespace Plugin
         private void DoHub()
         {
             if (playVsHumans)
-            {
                 SceneMgr.Get().SetNextMode(SceneMgr.Mode.TOURNAMENT);
-            }
             else
-            {
                 SceneMgr.Get().SetNextMode(SceneMgr.Mode.PRACTICE);
-            }
         }
 
         private void DoGameplay()
@@ -243,7 +228,7 @@ namespace Plugin
                     }
                     catch (Exception ex)
                     {
-                        Log.error("Error in mulligan function... " + ex.StackTrace);
+                        Log.error(ex);
                         return;
                     }
                 }
@@ -268,7 +253,7 @@ namespace Plugin
                 }
                 catch (Exception ex)
                 {
-                    Log.error("Error in endgame function... " + ex.StackTrace);
+                    Log.error(ex);
                     return;
                 }
             }
@@ -354,7 +339,7 @@ namespace Plugin
             return true;
         }
 
-        public static bool startBot(string func, string[] args, string rawArgs)
+        public static bool StartBot(string func, string[] args, string rawArgs)
         {
             Log.say("Bot started");
             Plugin.playVsHumans = true;
@@ -364,7 +349,7 @@ namespace Plugin
             return true;
         }
 
-        public static bool startBotVsAi(string func, string[] args, string rawArgs)
+        public static bool StartBotVsAI(string func, string[] args, string rawArgs)
         {
             Log.say("Bot started VS AI");
             Plugin.playVsHumans = false;
@@ -373,22 +358,22 @@ namespace Plugin
             return true;
         }
 
-        public static bool startBotVsAiExpert(string func, string[] args, string rawArgs)
+        public static bool StartBotVsAIExpert(string func, string[] args, string rawArgs)
         {
-            Log.say("Bot started VS AI");
+            Log.say("Bot started VS AI Expert");
             Plugin.playVsHumans = false;
             Plugin.playExpert = true;
             Plugin.run = true;
             return true;
         }
 
-        public static bool getDeckId(string func, string[] args, string rawArgs)
+        public static bool GetDeckId(string func, string[] args, string rawArgs)
         {
             Log.say("Deck id : " + DeckPickerTrayDisplay.Get().GetSelectedDeckID().ToString());
             return true;
         }
 
-        public static bool analyzeCards(string func, string[] args, string rawArgs)
+        public static bool AnalyzeCards(string func, string[] args, string rawArgs)
         {
             Log.say("-------------------------- ANALYSIS -----------------------");
             Log.say("-------------- My hand --------------");
@@ -398,7 +383,7 @@ namespace Plugin
                 Log.debug("Card : " + card.ToString());
                 Log.debug("Type : " + entity.GetType().ToString());
                 if (entity.HasBattlecry())
-                    Log.debug("Battlecry : " + card.GetBattlecrySpell().GetType().ToString());
+                    Log.debug("Battlecry : " + card.GetBattlecrySpell().ToString());
                 Log.debug("ActorState : " + ((object)card.GetActor().GetActorStateType()).ToString());
                 Log.debug("Rarity : " + (object)entity.GetTag(GAME_TAG.RARITY));
                 Log.debug("EntityID : " + (object)entity.GetTag(GAME_TAG.ENTITY_ID));

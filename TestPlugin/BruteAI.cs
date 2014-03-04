@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Plugin
@@ -22,43 +23,68 @@ namespace Plugin
             }
             else
             {
+                CardDetails targetEntity = NeedsToPlaySpellCard();
+                Card cardToPlay = new Card();
+                if (targetEntity != null)
+                {
+                    cardToPlay = NextBestSpellCard(targetEntity);
+                    if (cardToPlay != null)
+                        return GameFunctions.DoDropSpell(cardToPlay);
+                }
+
                 if (BruteAI.tryToPlayCoin())
                     return true;
-                Card c1 = BruteAI.NextBestSecret();
-                if (c1 == null)
+                cardToPlay = NextBestSecret();
+                if (cardToPlay != null)
+                    return GameFunctions.doDropSecret(cardToPlay);
+                cardToPlay = NextBestWeapon();
+                if (cardToPlay != null)
+                    return GameFunctions.DoDropWeapon(cardToPlay);
+                cardToPlay = NextBestMinionDrop();
+                if (cardToPlay != null)
+                    return GameFunctions.doDropMinion(cardToPlay);
+                cardToPlay = NextBestSpell();
+                if (cardToPlay != null)
+                    return GameFunctions.DoDropSpell(cardToPlay);
+                else
+                    return LaunchHeroPower();
+            }
+        }
+
+        /// <summary>
+        /// Verifica si tengo un spell o silence para tirarle a la carta que tengo apuntada
+        /// </summary>
+        /// <param name="targetEntity">El CardDetails a la cual le apuntamos el spell</param>
+        /// <returns>Devuelve la carta que le puedo usar</returns>
+        private static Card NextBestSpellCard(CardDetails targetEntity)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Verifica si es necesario jugar un spell antes que otra carta, siempre con prioridad en spell y luego en silence
+        /// </summary>
+        /// <returns>El CardDetails a la cual le apuntamos el spell</returns>
+        private static CardDetails NeedsToPlaySpellCard()
+        {
+            List<CardDetails> listCards = GameFunctions.GetBattlefieldCardDetails();
+            bool spellPriority = false;
+            CardDetails target = null;
+            foreach (CardDetails cd in listCards)
+            {
+                if (GameFunctions.CanBeTargetted(cd.Card.GetEntity()))
                 {
-                    Card c2 = BruteAI.NextBestWeapon();
-                    if (c2 == null)
+                    if (cd.SpellThis)
                     {
-                        Card c3 = BruteAI.NextBestMinionDrop();
-                        if (c3 == null)
-                        {
-                            Card c4 = BruteAI.NextBestSpell();
-                            if (c4 == null)
-                                return BruteAI.LaunchNextBestHeroPower();
-                            GameFunctions.doDropSpell(c4);
-                            return true;
-                        }
-                        else
-                        {
-                            if (!GameFunctions.doDropMinion(c3))
-                                return true;
-                            int num = c3.GetBattlecrySpell() != null ? 1 : 0;
-                            return true;
-                        }
+                        target = cd;
+                        spellPriority = true;
                     }
                     else
-                    {
-                        GameFunctions.doDropWeapon(c2);
-                        return true;
-                    }
-                }
-                else
-                {
-                    GameFunctions.doDropSecret(c1);
-                    return true;
+                        if (cd.SilenceThis && !spellPriority)
+                            target = cd;
                 }
             }
+            return target;
         }
 
         public static Card NextBestSecret()
@@ -66,7 +92,7 @@ namespace Plugin
             foreach (Card c in Enumerable.ToList<Card>(GameFunctions.myPlayer.GetHandZone().GetCards()))
             {
                 Entity entity = c.GetEntity();
-                if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSecret() && GameFunctions.canBeUsed(c))
+                if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSecret() && GameFunctions.CanBeUsed(c))
                     return c;
             }
             return (Card)null;
@@ -77,7 +103,7 @@ namespace Plugin
             foreach (Card c in Enumerable.ToList<Card>(GameFunctions.myPlayer.GetHandZone().GetCards()))
             {
                 Entity entity = c.GetEntity();
-                if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSpell() && (entity.GetCardId() != "GAME_005" && GameFunctions.canBeUsed(c)))
+                if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSpell() && (entity.GetCardId() != "GAME_005" && GameFunctions.CanBeUsed(c)))
                     return c;
             }
             return (Card)null;
@@ -90,43 +116,39 @@ namespace Plugin
             foreach (Card c in Enumerable.ToList<Card>(GameFunctions.myPlayer.GetHandZone().GetCards()))
             {
                 Entity entity = c.GetEntity();
-                if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsWeapon() && GameFunctions.canBeUsed(c))
+                if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsWeapon() && GameFunctions.CanBeUsed(c))
                     return c;
             }
             return (Card)null;
         }
 
-        public static bool LaunchNextBestHeroPower()
+        public static bool LaunchHeroPower()
         {
-            if (GameFunctions.myPlayer.GetNumAvailableResources() < GameFunctions.myPlayer.GetHeroPower().GetCost() || GameFunctions.myPlayer.GetHeroPower().IsExhausted() || (GameFunctions.myPlayer.GetHeroPower().IsBusy() || !GameFunctions.myPlayer.GetHeroPower().CanAttack()))
+            if (GameFunctions.myPlayer.GetNumAvailableResources() < GameFunctions.myPlayer.GetHeroPower().GetCost()
+                || GameFunctions.myPlayer.GetHeroPower().IsExhausted()
+                || (GameFunctions.myPlayer.GetHeroPower().IsBusy()
+                || !GameFunctions.myPlayer.GetHeroPower().CanAttack())
+                || !GameFunctions.CanBeUsed(GameFunctions.myPlayer.GetHeroPower().GetCard()))
                 return false;
-            Log.debug("Use Heropower");
+
+            //Lógica de si conviene o no jugar el heropower
             switch (GameFunctions.myPlayer.GetHero().GetClass())
             {
-                case TAG_CLASS.DRUID:
+                case TAG_CLASS.WARLOCK:
+                    return false;
                 case TAG_CLASS.HUNTER:
                 case TAG_CLASS.PALADIN:
                 case TAG_CLASS.ROGUE:
                 case TAG_CLASS.SHAMAN:
                 case TAG_CLASS.WARRIOR:
-                    if (GameFunctions.canBeUsed(GameFunctions.myPlayer.GetHeroPower().GetCard()))
-                        GameFunctions.doDropSpell(GameFunctions.myPlayer.GetHeroPower().GetCard());
-                    return true;
                 case TAG_CLASS.MAGE:
-                    if (!GameFunctions.canBeUsed(GameFunctions.myPlayer.GetHeroPower().GetCard()))
-                        return true;
-                    GameFunctions.doDropSpell(GameFunctions.myPlayer.GetHeroPower().GetCard());
-                    return GameFunctions.doTargetting(GameFunctions.ePlayer.GetHero());
                 case TAG_CLASS.PRIEST:
-                    if (!GameFunctions.canBeUsed(GameFunctions.myPlayer.GetHeroPower().GetCard()))
-                        return true;
-                    GameFunctions.doDropSpell(GameFunctions.myPlayer.GetHeroPower().GetCard());
-                    return GameFunctions.doTargetting(GameFunctions.myPlayer.GetHero());
-                case TAG_CLASS.WARLOCK:
-                    return false;
+                case TAG_CLASS.DRUID:
+                    break;
                 default:
                     return false;
             }
+            return GameFunctions.DoDropHeroPowerSpell();
         }
 
         public static bool tryToPlayCoin()
@@ -143,7 +165,7 @@ namespace Plugin
             }
             if (!flag || !((UnityEngine.Object)c != (UnityEngine.Object)null))
                 return false;
-            GameFunctions.doDropSpell(c);
+            GameFunctions.DoDropSpell(c);
             return true;
         }
 
@@ -166,7 +188,7 @@ namespace Plugin
                 foreach (Card c in list)
                 {
                     Entity entity = c.GetEntity();
-                    if (c.GetEntity().HasTaunt() && entity.GetCardType() == TAG_CARDTYPE.MINION && (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && GameFunctions.canBeUsed(c)))
+                    if (c.GetEntity().HasTaunt() && entity.GetCardType() == TAG_CARDTYPE.MINION && (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && GameFunctions.CanBeUsed(c)))
                         return c;
                 }
             }
@@ -176,7 +198,7 @@ namespace Plugin
                 Entity entity = c.GetEntity();
                 if (entity.GetCardType() == TAG_CARDTYPE.MINION && entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources())
                 {
-                    if (GameFunctions.myPlayer.GetNumAvailableResources() == entity.GetCost() && GameFunctions.canBeUsed(c))
+                    if (GameFunctions.myPlayer.GetNumAvailableResources() == entity.GetCost() && GameFunctions.CanBeUsed(c))
                         return c;
                     card = c;
                 }
@@ -204,25 +226,25 @@ namespace Plugin
                 foreach (Card c2 in list)
                 {
                     Entity entity = c2.GetEntity();
-                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && entity.GetHealth() < attackee.GetEntity().GetATK() && (!attackee.GetEntity().HasTaunt() && GameFunctions.canBeUsed(c2)))
+                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && entity.GetHealth() < attackee.GetEntity().GetATK() && (!attackee.GetEntity().HasTaunt() && GameFunctions.CanBeUsed(c2)))
                         return c2;
-                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && !attackee.GetEntity().HasTaunt() && GameFunctions.canBeUsed(c2))
+                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && !attackee.GetEntity().HasTaunt() && GameFunctions.CanBeUsed(c2))
                         c1 = c2;
                 }
-                if ((UnityEngine.Object)c1 != (UnityEngine.Object)null && GameFunctions.canBeUsed(c1))
+                if ((UnityEngine.Object)c1 != (UnityEngine.Object)null && GameFunctions.CanBeUsed(c1))
                     return c1;
             }
             else
             {
                 Entity hero = GameFunctions.myPlayer.GetHero();
-                if (hero != null && GameFunctions.canBeUsed(hero.GetCard()))
+                if (hero != null && GameFunctions.CanBeUsed(hero.GetCard()))
                     return hero.GetCard();
             }
             Card card = (Card)null;
             foreach (Card c in list)
             {
                 c.GetEntity();
-                if (GameFunctions.canBeUsed(c))
+                if (GameFunctions.CanBeUsed(c))
                 {
                     if (new System.Random().NextDouble() > 0.5)
                         return c;
@@ -239,14 +261,14 @@ namespace Plugin
             foreach (Card card in list1)
             {
                 Entity entity = card.GetEntity();
-                if (entity.HasTaunt() && entity.CanBeAttacked() && GameFunctions.canBeTargetted(entity))
+                if (entity.HasTaunt() && entity.CanBeAttacked() && GameFunctions.CanBeTargetted(entity))
                     return card;
             }
-            if (GameFunctions.ePlayer.GetHeroCard().GetEntity().CanBeAttacked() && GameFunctions.canBeTargetted(GameFunctions.ePlayer.GetHeroCard().GetEntity()))
+            if (GameFunctions.ePlayer.GetHeroCard().GetEntity().CanBeAttacked() && GameFunctions.CanBeTargetted(GameFunctions.ePlayer.GetHeroCard().GetEntity()))
                 return GameFunctions.ePlayer.GetHeroCard();
             foreach (Card card in list1)
             {
-                if (card.GetEntity().CanBeAttacked() && GameFunctions.canBeTargetted(card.GetEntity()))
+                if (card.GetEntity().CanBeAttacked() && GameFunctions.CanBeTargetted(card.GetEntity()))
                     return card;
             }
             return (Card)null;

@@ -23,6 +23,20 @@ namespace Plugin
             Log.log("DEBUG: " + msg);
         }
 
+        public static void error(Exception ex)
+        {
+            try
+            {
+                Log.log("ERROR MESSAGE: " + ex.Message);
+                Log.log("ERROR STACKTRACE: " + ex.StackTrace);
+                Log.log("ERROR SOURCE: " + ex.Source);
+            }
+            catch
+            {
+                Console.WriteLine(DateTime.Now.ToLongTimeString() + ": " + Log.module + " - ERROR : " + ex.Message);
+            }
+        }
+
         public static void error(string msg)
         {
             try
