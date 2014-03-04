@@ -9,27 +9,30 @@ namespace Plugin
     {
         public string CardId = "";
         public string CardName = "";
-        //BCCanHeal: Si el Battlecry puede curar y cuanto.
-        public bool BCHeal = false;
-        public int BCHealAmount = 0;
-        //BCDamage: Si el Battlecry puede dañar y cuanto.
-        public bool BCDamage = false;
-        public int BCDamageAmount = 0;
-        public int BCDamageAmountOnCombo = 0;
-        //BCDamageSeveral: Si el Battlecry puede silenciar.
-        public bool BCSilence = false;
-        //BCDamageSeveral: Si el Battlecry daña a mis propios bichos.
-        public bool BCDamageOwn = false;
-        //BCDamageSeveral: Si el Battlecry daña a varios bichos.
-        public bool BCDamageSeveral = false;
+
+        //Propiedades más usadas para minions propios y efectos
+        public bool CanHeal = false;
+        public int CanHealAmount = 0;
+        public bool CanDamage = false;
+        public int CanDamageAmount = 0;
+        public int CanDamageAmountOnCombo = 0;
+        public bool CanDamageOwn = false;
+        public bool CanDamageSeveral = false;
+        public bool CanSilence = false;
+        public bool CanDisable = false;
+        public static List<CardDetails> ListCardDetails = new List<CardDetails>();
+
+        //Propiedades más usadas para minions y cartas enemigas
         //KillThis: Voy a tratar de matarlo perdiendo menos que el daño que le tengo que hacer. EJ: a una 4-3 la ataco con una 1-1 y una 2-1
         public bool KillThis = false;
         //KillThisEXTREME: No me importan las pérdidas, tengo que matar a este.
         public bool KillThisEXTREME = false;
         //SpellOnThis: Trato de usar spell que mate o disablee (Polymorph, Hex, Assasinate)
-        public bool SpellThis = false;
+        public bool DisableThis = false;
         //SilenceThis: Voy a silenciarlo.
         public bool SilenceThis = false;
+        public bool DisableFirst = false;
+
         public Card Card;
 
         public CardDetails()
@@ -41,8 +44,61 @@ namespace Plugin
         {
             KillThis = false;
             KillThisEXTREME = false;
-            SpellThis = false;
+            DisableThis = false;
             SilenceThis = false;
         }
+
+        public static CardDetails FindInCardDetails(Card card)
+        {
+            foreach (CardDetails cd in ListCardDetails)
+            {
+                if (cd.CardId == card.GetEntity().GetCardId())
+                    return cd;
+            }
+            return null;
+        }
+
+        public static void SetCardDetails()
+        {
+            CardDetails cd;
+
+            #region -[ Questing Adventurer ]-
+            cd = new CardDetails();
+            cd.CardId = "EX1_044";
+            cd.CardName = "Questing Adventurer";
+            cd.KillThis = true;
+            cd.SilenceThis = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region -[ Polymorph ]-
+            cd = new CardDetails();
+            cd.CardId = "CS2_022";
+            cd.CardName = "Polymorph";
+            cd.CanDisable = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region -[ Assassinate ]-
+            cd = new CardDetails();
+            cd.CardId = "CS2_076";
+            cd.CardName = "Assassinate";
+            cd.CanDisable = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region -[ Hex ]-
+            cd = new CardDetails();
+            cd.CardId = "EX1_246";
+            cd.CardName = "Hex";
+            cd.CanDisable = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region -[ Mind Control ]-
+            cd = new CardDetails();
+            cd.CardId = "CS1_113";
+            cd.CardName = "Mind Control";
+            cd.CanDisable = true;
+            ListCardDetails.Add(cd);
+            #endregion
+        }
+
     }
 }

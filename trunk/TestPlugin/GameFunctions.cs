@@ -13,7 +13,6 @@ namespace Plugin
         private static ZonePlay myPlayZone;
         private static ZoneWeapon myWeaponZone;
         private static ZoneSecret mySecretZone;
-        public static List<CardDetails> CardDetails = new List<CardDetails>();
 
         public static void populateZones()
         {
@@ -88,29 +87,23 @@ namespace Plugin
             Log.debug("Cantidad de cartas " + GameFunctions.ePlayer.GetBattlefieldZone().GetCards().Count.ToString());
             foreach (Card card in GameFunctions.ePlayer.GetBattlefieldZone().GetCards())
             {
-                /*foreach (CardDetails cd in CardDetails)
-                CardDetails c = CardDetails.Find(cd => cd.Card.GetEntity().GetCardId() == card.GetEntity().GetCardId());*/
+                CardDetails cDet = (CardDetails.FindInCardDetails(card) ?? new CardDetails());
                 Entity entity = card.GetEntity();
-                CardDetails cDet = new CardDetails();
+                cDet.CardId = card.GetEntity().GetCardId();
+                cDet.CardName = card.name;
                 cDet.Card = card;
-                Log.debug("3");
                 switch (entity.GetRarity())
                 {
                     case TAG_RARITY.LEGENDARY:
-                        cDet.SetInitValues();
-                        cDet.SpellThis = true;
+                        cDet.DisableThis = true;
                         break;
                     case TAG_RARITY.EPIC:
-                        cDet.SetInitValues();
                         break;
                     case TAG_RARITY.RARE:
-                        cDet.SetInitValues();
                         break;
                     case TAG_RARITY.COMMON:
-                        cDet.SetInitValues();
                         break;
                     case TAG_RARITY.FREE:
-                        cDet.SetInitValues();
                         break;
                 }
                 SetNewValuesByCardStatus(ref cDet);
@@ -133,7 +126,7 @@ namespace Plugin
                 cd.SetInitValues();
                 cd.KillThis = true;
                 if (currATK > 5)
-                    cd.SpellThis = true;
+                    cd.DisableThis = true;
             }
             else if (entity.HasTaunt())
             {
@@ -142,12 +135,12 @@ namespace Plugin
                     cd.SilenceThis = true;
                 //Bicho con taunt a partir de 3-6 o 5-3 le tiro spell si tengo
                 if ((currATK > 2 && currHP > 5) || (currHP > 2 && currATK > 4))
-                    cd.SpellThis = true;
+                    cd.DisableThis = true;
             }
             else if (currATK > 4 && currHP > 4)
             {
                 //Si es bicho fuerte, 5-5 en adelante, trato de tirarle spell
-                cd.SpellThis = true;
+                cd.DisableThis = true;
             }
             Log.debug("Termina en SetNewValuesByCardStatus");
         }
@@ -323,7 +316,7 @@ namespace Plugin
                                 }
                             }
                         }
-                        else 
+                        else
                             targetEntity = certainTarget;
 
                         DoTargetting(targetEntity);
