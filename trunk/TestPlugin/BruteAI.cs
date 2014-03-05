@@ -79,6 +79,11 @@ namespace Plugin
                         isDisable = false;
                     }
                 }
+                if (targetEntity.KillThisEXTREME && cd.CanDestroy && GameFunctions.CanBeUsed(card))
+                {
+                    bestCard = card;
+                    isDisable = true;
+                }
             }
             return bestCard;
         }
