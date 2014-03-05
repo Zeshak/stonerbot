@@ -20,6 +20,7 @@ namespace Plugin
         public bool CanDamageSeveral = false;
         public bool CanSilence = false;
         public bool CanDisable = false;
+        public bool CanDestroy = false;
         public static List<CardDetails> ListCardDetails = new List<CardDetails>();
 
         //Propiedades más usadas para minions y cartas enemigas
@@ -81,7 +82,7 @@ namespace Plugin
             cd = new CardDetails();
             cd.CardId = "CS2_076";
             cd.CardName = "Assassinate";
-            cd.CanDisable = true;
+            cd.CanDestroy = true; //Me pareció más copado separar aquellas cartas que Destruyen y las que disablean como el Poly.
             ListCardDetails.Add(cd);
             #endregion
             #region -[ Hex ]-
@@ -114,6 +115,32 @@ namespace Plugin
             cd.DisableThis = true;
             ListCardDetails.Add(cd);            
             #endregion
+            #region-[Ironbeak Owl]-
+            cd = new CardDetails;
+            cd.CardId = "CS2_203";
+            cd.CardName = "Ironbeak Owl";
+            cd.DisableThis = false;
+            cd.DisableFirst = false;
+            cd.SilenceThis = false;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region-[Ragnaros]-
+            cd = new CardDetails;
+            cd.CardId = "EX1_298";
+            cd.CardName = "Ragnaros";
+            cd.DisableThis = true;
+            cd.DisableFirst = true;
+            cd.KillThisEXTREME=true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region-[Deadly Shot]-
+            cd = new CardDetails;
+            cd.CardId = "EX1_617";
+            cd.CardName = "Deadly Shot";
+            cd.CanDestroy = true;
+            ListCardDetails.Add(cd);
+            #endregion
+
         }
 
     }
