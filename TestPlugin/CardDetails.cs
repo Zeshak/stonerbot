@@ -98,6 +98,22 @@ namespace Plugin
             cd.CanDisable = true;
             ListCardDetails.Add(cd);
             #endregion
+            #region -[ Abomination ]-
+            cd = new CardDetails();
+            cd.CardId = "EX1_097";
+            cd.CardName = "Abomination";
+            cd.DisableThis = true;
+            cd.DisableFirst = true;
+            cd.SilenceThis = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region -[ TEST ]-
+            cd = new CardDetails();
+            cd.CardId = "EX1_048";
+            cd.CardName = "Spellbreaker";
+            cd.DisableThis = true;
+            ListCardDetails.Add(cd);            
+            #endregion
         }
 
     }

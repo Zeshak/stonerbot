@@ -29,9 +29,8 @@ namespace Plugin
                 {
                     cardToPlay = NextBestSpellCard(targetEntity);
                     if (cardToPlay != null)
-                        return GameFunctions.DoDropSpell(cardToPlay);
+                        return GameFunctions.DoDropSpell(cardToPlay, targetEntity.Card.GetEntity());
                 }
-
                 if (BruteAI.tryToPlayCoin())
                     return true;
                 cardToPlay = NextBestSecret();
@@ -64,7 +63,7 @@ namespace Plugin
             {
                 CardDetails cd = CardDetails.FindInCardDetails(card);
                 if (cd == null)
-                    break;
+                    continue;
                 if (targetEntity.DisableThis && cd.CanDisable && GameFunctions.CanBeUsed(card))
                 {
                     bestCard = card;
@@ -73,7 +72,7 @@ namespace Plugin
                 if (targetEntity.SilenceThis && cd.CanSilence && GameFunctions.CanBeUsed(card))
                 {
                     if (cd.DisableFirst && isDisable)
-                        break;
+                        continue;
                     else
                     {
                         bestCard = card;
@@ -95,7 +94,7 @@ namespace Plugin
             CardDetails target = null;
             foreach (CardDetails cd in listCards)
             {
-                if (GameFunctions.CanBeTargetted(cd.Card.GetEntity()))
+                if (cd.Card.GetEntity().CanBeTargetedByAbilities())
                 {
                     if (cd.DisableThis)
                     {
@@ -284,14 +283,14 @@ namespace Plugin
             foreach (Card card in list1)
             {
                 Entity entity = card.GetEntity();
-                if (entity.HasTaunt() && entity.CanBeAttacked() && GameFunctions.CanBeTargetted(entity))
+                if (entity.HasTaunt() && entity.CanBeAttacked())
                     return card;
             }
-            if (GameFunctions.ePlayer.GetHeroCard().GetEntity().CanBeAttacked() && GameFunctions.CanBeTargetted(GameFunctions.ePlayer.GetHeroCard().GetEntity()))
+            if (GameFunctions.ePlayer.GetHeroCard().GetEntity().CanBeAttacked())
                 return GameFunctions.ePlayer.GetHeroCard();
             foreach (Card card in list1)
             {
-                if (card.GetEntity().CanBeAttacked() && GameFunctions.CanBeTargetted(card.GetEntity()))
+                if (card.GetEntity().CanBeAttacked())
                     return card;
             }
             return (Card)null;

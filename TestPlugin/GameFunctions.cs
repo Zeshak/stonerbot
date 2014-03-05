@@ -84,7 +84,6 @@ namespace Plugin
         public static List<CardDetails> GetBattlefieldCardDetails()
         {
             List<CardDetails> listCards = new List<CardDetails>();
-            Log.debug("Cantidad de cartas " + GameFunctions.ePlayer.GetBattlefieldZone().GetCards().Count.ToString());
             foreach (Card card in GameFunctions.ePlayer.GetBattlefieldZone().GetCards())
             {
                 CardDetails cDet = (CardDetails.FindInCardDetails(card) ?? new CardDetails());
@@ -114,7 +113,6 @@ namespace Plugin
 
         public static void SetNewValuesByCardStatus(ref CardDetails cd)
         {
-            Log.debug("Entra en SetNewValuesByCardStatus");
             Entity entity = cd.Card.GetEntity();
             int currATK = entity.GetATK();
             int currHP = entity.GetHealth();
@@ -142,7 +140,6 @@ namespace Plugin
                 //Si es bicho fuerte, 5-5 en adelante, trato de tirarle spell
                 cd.DisableThis = true;
             }
-            Log.debug("Termina en SetNewValuesByCardStatus");
         }
 
         public static bool DoDropWeapon(Card c)
@@ -155,9 +152,9 @@ namespace Plugin
             return GameFunctions.DoDrop(c);
         }
 
-        public static bool DoDropSpell(Card c)
+        public static bool DoDropSpell(Card c, Entity certainTarget = null)
         {
-            return GameFunctions.DoDrop(c);
+            return GameFunctions.DoDrop(c, certainTarget);
         }
 
         public static bool DoDropHeroPowerSpell()
@@ -177,7 +174,9 @@ namespace Plugin
 
         private static bool DoDrop(Card c, Entity certainTarget = null)
         {
-            Log.log("DoDrop " + c.GetEntity().GetName());
+            Log.debug("DoDrop " + c.GetEntity().GetName());
+            if (certainTarget != null)
+                Log.debug("DoDrop on " + certainTarget.GetName());
             try
             {
                 PegCursor.Get().SetMode(PegCursor.Mode.STOPDRAG);
@@ -214,7 +213,6 @@ namespace Plugin
                 GameFunctions.gs.SetSelectedOptionPosition(dropPlace);
                 if (InputManager.Get().DoNetworkResponse(c.GetEntity()))
                 {
-                    Log.log("DoNetworkResponse Loaded");
                     c.GetEntity().GetZonePosition();
                     if (!c.GetEntity().IsHeroPower())
                     {
@@ -235,13 +233,12 @@ namespace Plugin
                 GameFunctions.myPlayer.GetBattlefieldZone().SortWithSpotForHeldCard(-1);
                 if (needsTargeting)
                 {
-                    Log.log("DoDrop hace target");
                     if (EnemyActionHandler.Get() != null)
                     {
                         EnemyActionHandler.Get().NotifyOpponentOfTargetModeBegin(c);
                         Entity targetEntity = null;
 
-                        if (certainTarget != null)
+                        if (certainTarget == null)
                         {
                             if (c.GetEntity().IsHeroPower())
                             {
@@ -319,6 +316,7 @@ namespace Plugin
                         else
                             targetEntity = certainTarget;
 
+                        Log.log("Por castear algo directo en: " + targetEntity.GetName());
                         DoTargetting(targetEntity);
 
 
@@ -330,6 +328,7 @@ namespace Plugin
             }
             catch (Exception ex)
             {
+                Log.error(ex);
                 return false;
             }
         }
