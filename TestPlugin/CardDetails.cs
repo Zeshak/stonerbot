@@ -7,6 +7,9 @@ namespace Plugin
 {
     public class CardDetails
     {
+        public static List<CardDetails> ListCardDetails = new List<CardDetails>();
+        public Card Card;
+
         public string CardId = "";
         public string CardName = "";
 
@@ -20,8 +23,6 @@ namespace Plugin
         public bool CanDamageSeveral = false;
         public bool CanSilence = false;
         public bool CanDisable = false;
-        public bool CanDestroy = false;
-        public static List<CardDetails> ListCardDetails = new List<CardDetails>();
 
         //Propiedades más usadas para minions y cartas enemigas
         //KillThis: Voy a tratar de matarlo perdiendo menos que el daño que le tengo que hacer. EJ: a una 4-3 la ataco con una 1-1 y una 2-1
@@ -33,8 +34,6 @@ namespace Plugin
         //SilenceThis: Voy a silenciarlo.
         public bool SilenceThis = false;
         public bool DisableFirst = false;
-
-        public Card Card;
 
         public CardDetails()
         {
@@ -82,7 +81,7 @@ namespace Plugin
             cd = new CardDetails();
             cd.CardId = "CS2_076";
             cd.CardName = "Assassinate";
-            cd.CanDestroy = true; //Me pareció más copado separar aquellas cartas que Destruyen y las que disablean como el Poly.
+            cd.CanDisable = true;
             ListCardDetails.Add(cd);
             #endregion
             #region -[ Hex ]-
@@ -108,40 +107,21 @@ namespace Plugin
             cd.SilenceThis = true;
             ListCardDetails.Add(cd);
             #endregion
-            #region -[ TEST ]-
+            #region -[ Ironbeak Owl ]-
             cd = new CardDetails();
-            cd.CardId = "EX1_048";
-            cd.CardName = "Spellbreaker";
-            cd.DisableThis = true;
-            ListCardDetails.Add(cd);            
-            #endregion
-            #region-[Ironbeak Owl]-
-            cd = new CardDetails;
             cd.CardId = "CS2_203";
             cd.CardName = "Ironbeak Owl";
-            cd.DisableThis = false;
-            cd.DisableFirst = false;
-            cd.SilenceThis = false;
+            cd.CanSilence = true;
             ListCardDetails.Add(cd);
             #endregion
-            #region-[Ragnaros]-
-            cd = new CardDetails;
+            #region -[ Ragnaros ]-
+            cd = new CardDetails();
             cd.CardId = "EX1_298";
             cd.CardName = "Ragnaros";
             cd.DisableThis = true;
-            cd.DisableFirst = true;
-            cd.KillThisEXTREME=true;
+            cd.KillThisEXTREME = true;
             ListCardDetails.Add(cd);
             #endregion
-            #region-[Deadly Shot]-
-            cd = new CardDetails;
-            cd.CardId = "EX1_617";
-            cd.CardName = "Deadly Shot";
-            cd.CanDestroy = true;
-            ListCardDetails.Add(cd);
-            #endregion
-
         }
-
     }
 }
