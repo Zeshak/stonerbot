@@ -140,6 +140,17 @@ namespace Plugin
                 //Si es bicho fuerte, 5-5 en adelante, trato de tirarle spell
                 cd.DisableThis = true;
             }
+            else if (entity.HasDivineShield())
+            {
+                //Bicho relativamente fuerte, en adelante que pueda estar buffeado o tenga taunt con divine shield. Ej: Sunwalker
+                if ((currATK > 3 && currHP > 1) || (currATK > origATK + 1) ||(currHP > origHP + 1) || (entity.HasTaunt()))
+                    cd.DisableThis = true;
+
+                //Bicho originalmente débil, Escudera argenta o alguno con shield que haya sido buffeado, me conviene silenciarlo.
+                if ((origATK <= 2 && origHP <= 2))
+                    cd.SilenceThis = true;
+            }
+            
         }
 
         public static bool DoDropWeapon(Card c)

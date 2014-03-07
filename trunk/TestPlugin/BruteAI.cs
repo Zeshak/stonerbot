@@ -52,7 +52,7 @@ namespace Plugin
 
         /// <summary>
         /// Verifica si tengo un spell o silence para tirarle a la carta que tengo apuntada
-        /// </summary>
+        /// </summary> 
         /// <param name="targetEntity">El CardDetails a la cual le apuntamos el spell</param>
         /// <returns>Devuelve la carta que le puedo usar</returns>
         private static Card NextBestSpellCard(CardDetails targetEntity)
