@@ -142,14 +142,20 @@ namespace Plugin
             }
             else if (entity.HasDivineShield())
             {
-                //Bicho relativamente fuerte, en adelante que pueda estar buffeado o tenga taunt con divine shield. Ej: Sunwalker
+                //Bicho relativamente fuerte, en adelante que pueda o no estar buffeado o tenga taunt con divine shield. Ej: Sunwalker
                 if ((currATK > 3 && currHP > 1) || (currATK > origATK + 1) ||(currHP > origHP + 1) || (entity.HasTaunt()))
                     cd.DisableThis = true;
 
                 //Bicho originalmente débil, Escudera argenta o alguno con shield que haya sido buffeado, me conviene silenciarlo.
-                if ((origATK <= 2 && origHP <= 2))
+                if ((origATK <= 2 && origHP <= 2) && ((currATK > origATK + 1) || (currHP > origHP + 1)))
                     cd.SilenceThis = true;
             }
+                
+            else if (entity.HasSpellPower())
+            {
+                cd.SilenceThis = true; //Por ahora lo deje así hasta que unifiquemos criterios :P
+            }
+
             
         }
 
