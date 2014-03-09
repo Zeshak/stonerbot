@@ -23,8 +23,13 @@ namespace Plugin
             }
             else
             {
-                CardDetails targetEntity = NeedsToPlaySpellCard();
                 Card cardToPlay = new Card();
+                //Para empezar hasta tener todo programado, hago una primera recorrida de la mano, si alguna carta es viable, la juego, sino sigo de largo.                
+                cardToPlay = NextViableCard();
+                if (cardToPlay != null)
+                    GameFunctions.DoDrop(cardToPlay);
+
+                CardDetails targetEntity = NeedsToPlaySpellCard();
                 if (targetEntity != null)
                 {
                     cardToPlay = NextBestSpellCard(targetEntity);
@@ -35,19 +40,29 @@ namespace Plugin
                     return true;
                 cardToPlay = NextBestSecret();
                 if (cardToPlay != null)
-                    return GameFunctions.doDropSecret(cardToPlay);
+                    return GameFunctions.DoDropSecret(cardToPlay);
                 cardToPlay = NextBestWeapon();
                 if (cardToPlay != null)
                     return GameFunctions.DoDropWeapon(cardToPlay);
                 cardToPlay = NextBestMinionDrop();
                 if (cardToPlay != null)
-                    return GameFunctions.doDropMinion(cardToPlay);
+                    return GameFunctions.DoDropMinion(cardToPlay);
                 cardToPlay = NextBestSpell();
                 if (cardToPlay != null)
                     return GameFunctions.DoDropSpell(cardToPlay);
                 else
                     return LaunchHeroPower();
             }
+        }
+
+        private static Card NextViableCard()
+        {
+            foreach (Card card in GameFunctions.myPlayer.GetHandZone().GetCards())
+            {
+                if (CardDetails.IsViableToPlay(card.GetEntity(), null, true) && GameFunctions.CanBeUsed(card))
+                    return card;
+            }
+            return null;
         }
 
         /// <summary>
@@ -66,8 +81,11 @@ namespace Plugin
                     continue;
                 if (targetEntity.DisableThis && cd.CanDisable && GameFunctions.CanBeUsed(card))
                 {
-                    bestCard = card;
-                    isDisable = true;
+                    if (CardDetails.IsViableToPlay(cd.Card.GetEntity(), targetEntity))
+                    {
+                        bestCard = card;
+                        isDisable = true;
+                    }
                 }
                 if (targetEntity.SilenceThis && cd.CanSilence && GameFunctions.CanBeUsed(card))
                 {
@@ -111,13 +129,13 @@ namespace Plugin
 
         public static Card NextBestSecret()
         {
-            foreach (Card c in Enumerable.ToList<Card>(GameFunctions.myPlayer.GetHandZone().GetCards()))
+            foreach (Card c in GameFunctions.myPlayer.GetHandZone().GetCards())
             {
                 Entity entity = c.GetEntity();
                 if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSecret() && GameFunctions.CanBeUsed(c))
                     return c;
             }
-            return (Card)null;
+            return null;
         }
 
         public static Card NextBestSpell()
@@ -128,20 +146,20 @@ namespace Plugin
                 if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSpell() && (entity.GetCardId() != "GAME_005" && GameFunctions.CanBeUsed(c)))
                     return c;
             }
-            return (Card)null;
+            return null;
         }
 
         public static Card NextBestWeapon()
         {
-            if ((UnityEngine.Object)GameFunctions.myPlayer.GetHero().GetWeaponCard() != (UnityEngine.Object)null)
-                return (Card)null;
+            if (GameFunctions.myPlayer.GetHero().GetWeaponCard() != null)
+                return null;
             foreach (Card c in Enumerable.ToList<Card>(GameFunctions.myPlayer.GetHandZone().GetCards()))
             {
                 Entity entity = c.GetEntity();
                 if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsWeapon() && GameFunctions.CanBeUsed(c))
                     return c;
             }
-            return (Card)null;
+            return null;
         }
 
         public static bool LaunchHeroPower()
@@ -176,7 +194,7 @@ namespace Plugin
         public static bool tryToPlayCoin()
         {
             bool flag = false;
-            Card c = (Card)null;
+            Card c = null;
             foreach (Card card in Enumerable.ToList<Card>((IEnumerable<Card>)GameFunctions.myPlayer.GetHandZone().GetCards()))
             {
                 Entity entity = card.GetEntity();
@@ -185,7 +203,7 @@ namespace Plugin
                 if (entity.GetCardId() == "GAME_005")
                     c = card;
             }
-            if (!flag || !((UnityEngine.Object)c != (UnityEngine.Object)null))
+            if (!flag || !(c != null))
                 return false;
             GameFunctions.DoDropSpell(c);
             return true;
@@ -195,7 +213,7 @@ namespace Plugin
         {
             List<Card> list = Enumerable.ToList<Card>((IEnumerable<Card>)GameFunctions.myPlayer.GetHandZone().GetCards());
             if (GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount() >= 7)
-                return (Card)null;
+                return null;
             bool flag = false;
             using (List<Card>.Enumerator enumerator = GameFunctions.myPlayer.GetBattlefieldZone().GetCards().GetEnumerator())
             {
@@ -214,7 +232,7 @@ namespace Plugin
                         return c;
                 }
             }
-            Card card = (Card)null;
+            Card card = null;
             foreach (Card c in list)
             {
                 Entity entity = c.GetEntity();
@@ -232,19 +250,19 @@ namespace Plugin
         {
             Card attackee = BruteAI.NextBestAttackee();
             Card attacker = BruteAI.NextBestAttacker(attackee);
-            if ((UnityEngine.Object)attacker == (UnityEngine.Object)null || (UnityEngine.Object)attackee == (UnityEngine.Object)null)
+            if (attacker == null || attackee == null)
                 return false;
-            return GameFunctions.doAttack(attacker, attackee) ? true : true;
+            return GameFunctions.DoAttack(attacker, attackee) ? true : true;
         }
 
         public static Card NextBestAttacker(Card attackee)
         {
-            if ((UnityEngine.Object)attackee == (UnityEngine.Object)null)
-                return (Card)null;
+            if (attackee == null)
+                return null;
             List<Card> list = Enumerable.ToList<Card>((IEnumerable<Card>)GameFunctions.myPlayer.GetBattlefieldZone().GetCards());
-            if ((UnityEngine.Object)attackee != (UnityEngine.Object)GameFunctions.ePlayer.GetHeroCard())
+            if (attackee != GameFunctions.ePlayer.GetHeroCard())
             {
-                Card c1 = (Card)null;
+                Card c1 = null;
                 foreach (Card c2 in list)
                 {
                     Entity entity = c2.GetEntity();
@@ -253,7 +271,7 @@ namespace Plugin
                     if (entity.GetATK() >= attackee.GetEntity().GetHealth() && !attackee.GetEntity().HasTaunt() && GameFunctions.CanBeUsed(c2))
                         c1 = c2;
                 }
-                if ((UnityEngine.Object)c1 != (UnityEngine.Object)null && GameFunctions.CanBeUsed(c1))
+                if (c1 != null && GameFunctions.CanBeUsed(c1))
                     return c1;
             }
             else
@@ -262,7 +280,7 @@ namespace Plugin
                 if (hero != null && GameFunctions.CanBeUsed(hero.GetCard()))
                     return hero.GetCard();
             }
-            Card card = (Card)null;
+            Card card = null;
             foreach (Card c in list)
             {
                 c.GetEntity();
@@ -293,7 +311,7 @@ namespace Plugin
                 if (card.GetEntity().CanBeAttacked())
                     return card;
             }
-            return (Card)null;
+            return null;
         }
     }
 }

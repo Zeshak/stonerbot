@@ -47,9 +47,9 @@ namespace Plugin
             gameState.GetGameEntity().NotifyOfTargetModeCancelled();
         }
 
-        public static bool doAttack(Card attacker, Card attackee)
+        public static bool DoAttack(Card attacker, Card attackee)
         {
-            Log.log("DoAttack " + attacker.GetEntity().GetName() + " -> " + attackee.GetEntity().GetName());
+            Log.debug("DoAttack " + attacker.GetEntity().GetName() + " -> " + attackee.GetEntity().GetName());
             try
             {
                 attacker.SetDoNotSort(true);
@@ -179,17 +179,17 @@ namespace Plugin
             return GameFunctions.DoDrop(GameFunctions.myPlayer.GetHeroPower().GetCard());
         }
 
-        public static bool doDropSecret(Card c)
+        public static bool DoDropSecret(Card c)
         {
             return GameFunctions.DoDrop(c);
         }
 
-        public static bool doDropMinion(Card c)
+        public static bool DoDropMinion(Card c)
         {
             return GameFunctions.DoDrop(c);
         }
 
-        private static bool DoDrop(Card c, Entity certainTarget = null)
+        public static bool DoDrop(Card c, Entity certainTarget = null)
         {
             Log.debug("DoDrop " + c.GetEntity().GetName());
             if (certainTarget != null)
@@ -282,7 +282,7 @@ namespace Plugin
                                 var eHero = ePlayer.GetHeroCard().GetEntity();
                                 if (gs.IsValidOptionTarget(eHero))
                                 {
-                                    Log.log("Can attack hero");
+                                    Log.debug("Can attack hero");
                                     targetEntity = eHero;
                                 }
 
@@ -294,13 +294,13 @@ namespace Plugin
                                         var e = card.GetEntity();
                                         if (gs.IsValidOptionTarget(e))
                                         {
-                                            Log.log("is valid target: " + e.GetName());
-                                            Log.log("considering for battlecry: " + e.GetName());
+                                            Log.debug("is valid target: " + e.GetName());
+                                            Log.debug("considering for battlecry: " + e.GetName());
                                             targetEntity = e;
                                         }
                                         else
                                         {
-                                            Log.log("is NOT valid target: " + e.GetName());
+                                            Log.debug("is NOT valid target: " + e.GetName());
                                         }
                                     }
                                 }
@@ -313,19 +313,19 @@ namespace Plugin
                                         var e = card.GetEntity();
                                         if (gs.IsValidOptionTarget(e))
                                         {
-                                            Log.log("is valid target: " + e.GetName());
-                                            Log.log("considering for battlecry: " + e.GetName());
+                                            Log.debug("is valid target: " + e.GetName());
+                                            Log.debug("considering for battlecry: " + e.GetName());
                                             targetEntity = e;
                                         }
                                         else
                                         {
-                                            Log.log("is NOT valid target: " + e.GetName());
+                                            Log.debug("is NOT valid target: " + e.GetName());
                                         }
                                     }
                                 }
                                 if (targetEntity == null)
                                 {
-                                    Log.log(" No target entity selected");
+                                    Log.debug(" No target entity selected");
                                     return false;
                                 }
                             }
@@ -333,7 +333,7 @@ namespace Plugin
                         else
                             targetEntity = certainTarget;
 
-                        Log.log("Por castear algo directo en: " + targetEntity.GetName());
+                        Log.debug("Por castear algo directo en: " + targetEntity.GetName());
                         DoTargetting(targetEntity);
 
 
@@ -360,7 +360,7 @@ namespace Plugin
             foreach (CardDetails cd in listCards)
             {
                 Entity possibleTarget = cd.Card.GetEntity();
-                if (possibleTarget.GetHealth() == 1 || possibleTarget.HasDivineShield())
+                if (possibleTarget.GetRemainingHP() == 1 || possibleTarget.HasDivineShield())
                 {
                     int estimatedAtk = possibleTarget.GetATK();
                     if (possibleTarget.HasWindfury())
@@ -422,7 +422,7 @@ namespace Plugin
                     return true;
                 }
                 else
-                    Log.log(" DoTarget outer DoNetworkReponse failed");
+                    Log.debug(" DoTarget outer DoNetworkReponse failed");
                 GameFunctions.Cancel();
                 return false;
             }
@@ -441,12 +441,12 @@ namespace Plugin
             if (c.GetActor() == null)
                 return false;
             else
-                return c.GetActor().GetActorStateType().Equals(ActorStateType.CARD_PLAYABLE);
+                return c.GetActor().GetActorStateType().Equals(ActorStateType.CARD_PLAYABLE) && CardDetails.IsViableToPlay(c.GetEntity());
         }
 
-        public static bool doMulligan()
+        public static bool DoMulligan()
         {
-            if ((UnityEngine.Object)MulliganManager.Get().GetMulliganButton() == (UnityEngine.Object)null || !MulliganManager.Get().GetMulliganButton().IsEnabled())
+            if (MulliganManager.Get().GetMulliganButton() == null || !MulliganManager.Get().GetMulliganButton().IsEnabled())
                 return false;
             int num = 0;
             using (List<Card>.Enumerator enumerator = GameFunctions.myPlayer.GetHandZone().GetCards().GetEnumerator())
@@ -456,19 +456,19 @@ namespace Plugin
                     Card current = enumerator.Current;
                     if (current.GetEntity().GetCost() >= 4)
                     {
-                        ++num;
+                        num++;
                         MulliganManager.Get().ToggleHoldState(current);
                     }
                 }
             }
-            GameFunctions.doEndTurn();
+            GameFunctions.DoEndTurn();
             TurnStartManager.Get().BeginListeningForTurnEvents();
             MulliganManager.Get().EndMulliganEarly();
-            Log.say("Mulligan ended : " + (object)num + " cards changed");
+            Log.say("Mulligan ended : " + num.ToString() + " cards changed");
             return true;
         }
 
-        public static void doEndTurn()
+        public static void DoEndTurn()
         {
             InputManager.Get().DoEndTurnButton();
         }
