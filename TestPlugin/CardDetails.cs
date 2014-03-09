@@ -7,6 +7,69 @@ namespace Plugin
 {
     public class CardDetails
     {
+        #region -[ Sección variables que pondremos en un XML ]-
+
+        private class ExplosiveTrap
+        {
+            public static int MyMaxCardsInPlay = 1;
+            public static int MyMinHeroHPToForcePlay = 13;
+            public static int EnemyMinCardsInPlay = 2;
+            public static int CardDamage = 2;
+            public static int CardsDestroyed = 2;
+        }
+
+        private class ArcaneExplosion
+        {
+            public static int EnemyMinCardsInPlay = 0;
+            public static int CardDamage = 2;
+            public static int CardsDestroyed = 2;
+        }
+
+        private class Flamestrike
+        {
+            public static int EnemyMinCardsInPlay = 0;
+            public static int CardDamage = 4;
+            public static int CardsDestroyed = 2;
+        }
+
+        private class Blizzard
+        {
+            public static int EnemyMinCardsInPlay = 4;
+            public static int CardDamage = 2;
+            public static int CardsDestroyed = 2;
+        }
+
+        private class HolyNova
+        {
+            public static int EnemyMinCardsInPlay = 0;
+            public static int CardDamage = 2;
+            public static int CardsDestroyed = 2;
+        }
+
+        private class Consecration
+        {
+            public static int EnemyMinCardsInPlay = 0;
+            public static int CardDamage = 2;
+            public static int CardsDestroyed = 2;
+        }
+
+        private class FanOfKnives
+        {
+            public static int EnemyMinCardsInPlay = 0;
+            public static int CardDamage = 1;
+            public static int CardsDestroyed = 2;
+        }
+
+        private class BladeFlurry
+        {
+            public static int EnemyMinCardsInPlay = 0;
+            public static int CardDamage = 0;
+            public static int CardsDestroyed = 2;
+            public static int MinWeaponDurability = 1;
+        }
+
+        #endregion
+
         public static List<CardDetails> ListCardDetails = new List<CardDetails>();
         public Card Card;
 
@@ -25,13 +88,10 @@ namespace Plugin
         public bool CanDisable = false;
 
         //Propiedades más usadas para minions y cartas enemigas
-        //KillThis: Voy a tratar de matarlo perdiendo menos que el daño que le tengo que hacer. EJ: a una 4-3 la ataco con una 1-1 y una 2-1
         public bool KillThis = false;
-        //KillThisEXTREME: No me importan las pérdidas, tengo que matar a este.
         public bool KillThisEXTREME = false;
         //SpellOnThis: Trato de usar spell que mate o disablee (Polymorph, Hex, Assasinate)
         public bool DisableThis = false;
-        //SilenceThis: Voy a silenciarlo.
         public bool SilenceThis = false;
         public bool DisableFirst = false;
 
@@ -58,18 +118,14 @@ namespace Plugin
             return null;
         }
 
+        /// <summary>
+        /// Se usa para cartas con efectos simples, como silenciar o matar un enemigo.
+        /// </summary>
         public static void SetCardDetails()
         {
             CardDetails cd;
 
-            #region -[ Questing Adventurer ]-
-            cd = new CardDetails();
-            cd.CardId = "EX1_044";
-            cd.CardName = "Questing Adventurer";
-            cd.KillThis = true;
-            cd.SilenceThis = true;
-            ListCardDetails.Add(cd);
-            #endregion
+            #region -[ Cartas Propias ]-
             #region -[ Polymorph ]-
             cd = new CardDetails();
             cd.CardId = "CS2_022";
@@ -98,6 +154,30 @@ namespace Plugin
             cd.CanDisable = true;
             ListCardDetails.Add(cd);
             #endregion
+            #region -[ Shadow Word: Pain ]-
+            cd = new CardDetails();
+            cd.CardId = "CS2_234";
+            cd.CardName = "Shadow Word: Pain";
+            cd.CanDisable = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region -[ Shadow Word: Death ]-
+            cd = new CardDetails();
+            cd.CardId = "EX1_622";
+            cd.CardName = "Shadow Word: Death";
+            cd.CanDisable = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region -[ Ironbeak Owl ]-
+            cd = new CardDetails();
+            cd.CardId = "CS2_203";
+            cd.CardName = "Ironbeak Owl";
+            cd.CanSilence = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #endregion
+
+            #region -[ Cartas Enemigas ]-
             #region -[ Abomination ]-
             cd = new CardDetails();
             cd.CardId = "EX1_097";
@@ -107,11 +187,11 @@ namespace Plugin
             cd.SilenceThis = true;
             ListCardDetails.Add(cd);
             #endregion
-            #region -[ Ironbeak Owl ]-
+            #region -[ Lightspawn ]-
             cd = new CardDetails();
-            cd.CardId = "CS2_203";
-            cd.CardName = "Ironbeak Owl";
-            cd.CanSilence = true;
+            cd.CardId = "EX1_335";
+            cd.CardName = "Lightspawn";
+            cd.SilenceThis = true;
             ListCardDetails.Add(cd);
             #endregion
             #region -[ Ragnaros ]-
@@ -122,6 +202,130 @@ namespace Plugin
             cd.KillThisEXTREME = true;
             ListCardDetails.Add(cd);
             #endregion
+            #region -[ Questing Adventurer ]-
+            cd = new CardDetails();
+            cd.CardId = "EX1_044";
+            cd.CardName = "Questing Adventurer";
+            cd.KillThis = true;
+            cd.SilenceThis = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #endregion
+        }
+
+        /// <summary>
+        /// Esta función a diferencia de la anterior se usa para cartas complejas y que requieren una toma de decisiones específica dependiendo del juego. 
+        /// SIEMPRE antes de decidirse si jugar una carta, hay que correr esta función, SIN IMPORTAR que la carta no esté acá.
+        /// </summary>
+        /// <param name="entity">Carta en sí que deseamos jugar</param>
+        /// <param name="specialParameter">Las cartas especiales a veces necesitan parámetros</param>
+        /// <param name="playPrority">Si se pasa este parámetro entonces se está forzando a jugar la carta UNICAMENTE si está acá y cumple la condición, si no está no se juega.</param>
+        /// <returns>Si es viable para jugar, o no.</returns>
+        public static bool IsViableToPlay(Entity entity, object specialParameter = null, bool playPrority = false)
+        {
+            switch (entity.GetName())
+            {
+                #region -[ Explosive Trap ]-
+                case "EX1_610":
+                    if ((GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount() <= ExplosiveTrap.MyMaxCardsInPlay
+                        || GameFunctions.myPlayer.GetRemainingHP() <= ExplosiveTrap.MyMinHeroHPToForcePlay)
+                        && GameFunctions.ePlayer.GetBattlefieldZone().GetCardCount() >= ExplosiveTrap.EnemyMinCardsInPlay)
+                    {
+                        int count = 0;
+                        foreach (Card card in GameFunctions.ePlayer.GetBattlefieldZone().GetCards())
+                        {
+                            if (card.GetEntity().GetRemainingHP() <= ExplosiveTrap.CardDamage)
+                                count++;
+                        }
+                        if (count >= ExplosiveTrap.CardsDestroyed)
+                            return true;
+                    }
+                    return false;
+                #endregion
+                #region -[ Arcane Explosion ]-
+                case "CS2_025":
+                    return CommonMultipleSpell(ArcaneExplosion.CardDamage, ArcaneExplosion.CardsDestroyed, ArcaneExplosion.EnemyMinCardsInPlay);
+                #endregion
+                #region -[ Flamestrike ]-
+                case "CS2_032":
+                    return CommonMultipleSpell(Flamestrike.CardDamage, Flamestrike.CardsDestroyed, Flamestrike.EnemyMinCardsInPlay);
+                #endregion
+                #region -[ Blizzard ]-
+                case "CS2_028":
+                    return CommonMultipleSpell(Blizzard.CardDamage, Blizzard.CardsDestroyed, Blizzard.EnemyMinCardsInPlay);
+                #endregion
+                #region -[ Holy Nova ]-
+                case "CS1_112":
+                    return CommonMultipleSpell(HolyNova.CardDamage, HolyNova.CardsDestroyed, HolyNova.EnemyMinCardsInPlay);
+                #endregion
+                #region -[ Shadow Word: Pain ]-
+                case "CS2_234":
+                    {
+                        CardDetails targetEntity = (CardDetails)specialParameter;
+                        if (targetEntity.Card.GetEntity().GetATK() <= 3)
+                            return true;
+                        return false;
+                    }
+                #endregion
+                #region -[ Shadow Word: Death ]-
+                case "EX1_622":
+                    {
+                        CardDetails targetEntity = (CardDetails)specialParameter;
+                        if (targetEntity.Card.GetEntity().GetATK() >= 5)
+                            return true;
+                        return false;
+                    }
+                #endregion
+                #region -[ Consecration ]-
+                case "CS2_093":
+                    return CommonMultipleSpell(Consecration.CardDamage, Consecration.CardsDestroyed, Consecration.EnemyMinCardsInPlay);
+                #endregion
+                #region -[ Fan of Knives ]-
+                case "EX1_129":
+                    return CommonMultipleSpell(FanOfKnives.CardDamage, FanOfKnives.CardsDestroyed, FanOfKnives.EnemyMinCardsInPlay);
+                #endregion
+                #region -[ Blade Flurry ]-
+                case "CS2_233":
+                    int cardDamage = GameFunctions.myPlayer.GetHero().GetWeaponCard().GetEntity().GetATK();
+                    if (GameFunctions.myPlayer.GetHero().GetWeaponCard().GetEntity().GetDurability() <= BladeFlurry.MinWeaponDurability)
+                        return CommonMultipleSpell(cardDamage, BladeFlurry.CardsDestroyed, BladeFlurry.EnemyMinCardsInPlay);
+                    return false;
+                #endregion
+                default:
+                    return !playPrority;
+            }
+        }
+
+        /// <summary>
+        /// Para más info ver la otra sobrecarga.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public static bool IsViableToPlay(Entity entity)
+        {
+            return IsViableToPlay(entity, null, false);
+        }
+
+        /// <summary>
+        /// Se usa para los hechizos de múltiples objetivos comunes
+        /// </summary>
+        /// <param name="CardDamage">Una condición de HP máxima de los minions oponentes</param>
+        /// <param name="CardsDestroyed">Cantidad de minions que deben ser afectados por la condición</param>
+        /// <param name="EnemyMinCardsInPlay">Opcional, mínimo de cartas que debe tener en juego el oponente</param>
+        /// <returns>Devuelve si cumple la condición.</returns>
+        private static bool CommonMultipleSpell(int CardDamage, int CardsDestroyed, int EnemyMinCardsInPlay)
+        {
+            if (GameFunctions.ePlayer.GetBattlefieldZone().GetCardCount() < EnemyMinCardsInPlay)
+                return false;
+            int count = 0;
+            foreach (Card card in GameFunctions.ePlayer.GetBattlefieldZone().GetCards())
+            {
+                if (card.GetEntity().GetRemainingHP() <= CardDamage && !card.GetEntity().HasDivineShield())
+                    count++;
+            }
+            if (count >= CardsDestroyed)
+                return true;
+            return false;
         }
     }
 }

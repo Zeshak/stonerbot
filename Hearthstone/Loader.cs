@@ -11,7 +11,7 @@ namespace Hearthstone
     {
         public void exec(string path) // creates shadow copy
         {
-            Log.log("Loader.exec called for " + path);
+            Log.debug("Loader.exec called for " + path);
             string tempPath = System.IO.Path.GetTempFileName();
 
             // rewrite name to let us load a different version of the same library

@@ -213,7 +213,7 @@ namespace Plugin
                 {
                     try
                     {
-                        Plugin.mulliganDone = GameFunctions.doMulligan();
+                        Plugin.mulliganDone = GameFunctions.DoMulligan();
                         return;
                     }
                     catch (Exception ex)
@@ -262,13 +262,13 @@ namespace Plugin
                 {
                     if (BruteAI.BruteAttack())
                         return;
-                    GameFunctions.doEndTurn();
+                    GameFunctions.DoEndTurn();
                     BruteAI.loops = 0;
                 }
             }
             catch (Exception ex)
             {
-                Log.error("Error in playerturn function... " + ex.StackTrace);
+                Log.error(ex);
             }
         }
 
