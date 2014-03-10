@@ -163,7 +163,11 @@ namespace Plugin
             foreach (CardDetails cd in ListCardDetails)
             {
                 if (cd.CardId == card.GetEntity().GetCardId())
+                {
+                    if (cd.Card == null)
+                        cd.Card = card;
                     return cd;
+                }
             }
             return null;
         }
@@ -267,7 +271,7 @@ namespace Plugin
         /// Esta función a diferencia de la anterior se usa para cartas complejas y que requieren una toma de decisiones específica dependiendo del juego. 
         /// SIEMPRE antes de decidirse si jugar una carta, hay que correr esta función, SIN IMPORTAR que la carta no esté acá.
         /// </summary>
-        /// <param name="entity">Carta en sí que deseamos jugar</param>
+        /// <param name="c">Carta en sí que deseamos jugar</param>
         /// <param name="specialParameter">Las cartas especiales a veces necesitan parámetros</param>
         /// <param name="playPrority">Si se pasa este parámetro entonces se está forzando a jugar la carta UNICAMENTE si está acá y cumple la condición, si no está no se juega.</param>
         /// <returns>Si es viable para jugar, o no.</returns>
