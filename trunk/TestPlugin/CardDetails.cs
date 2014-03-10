@@ -9,6 +9,7 @@ namespace Plugin
     {
         #region -[ Sección variables que pondremos en un XML ]-
 
+        #region -[ Hunter ]-
         private class ExplosiveTrap
         {
             public static int MyMaxCardsInPlay = 1;
@@ -17,7 +18,8 @@ namespace Plugin
             public static int CardDamage = 2;
             public static int CardsDestroyed = 2;
         }
-
+        #endregion
+        #region -[ Mage ]-
         private class ArcaneExplosion
         {
             public static int EnemyMinCardsInPlay = 0;
@@ -39,20 +41,39 @@ namespace Plugin
             public static int CardsDestroyed = 2;
         }
 
+        private class ArcaneIntellect
+        {
+            public static int EnemyMaxCardsInPlay = 2;
+            public static int MyMinCardsInPlay = 2;
+            public static int MyMaxCardsInHand = 2;
+            public static int MyMinTotalCrystals = 5;
+        }
+
+        private class Fireball
+        {
+            public static int UseToKillTaunt = 1;
+            public static int UseToKillNormal = 1;
+            public static int MinHPToKillTaunt = 5;
+            public static int MinHPToKillNormal = 6;
+        }
+        #endregion
+        #region -[ Priest ]-
         private class HolyNova
         {
             public static int EnemyMinCardsInPlay = 0;
             public static int CardDamage = 2;
             public static int CardsDestroyed = 2;
         }
-
+        #endregion
+        #region -[ Paladin ]-
         private class Consecration
         {
             public static int EnemyMinCardsInPlay = 0;
             public static int CardDamage = 2;
             public static int CardsDestroyed = 2;
         }
-
+        #endregion
+        #region -[ Rogue ]-
         private class FanOfKnives
         {
             public static int EnemyMinCardsInPlay = 0;
@@ -67,6 +88,35 @@ namespace Plugin
             public static int CardsDestroyed = 2;
             public static int MinWeaponDurability = 1;
         }
+        #endregion
+        #region -[ Shaman ]-
+        private class LightningStorm
+        {
+            public static int EnemyMinCardsInPlay = 0;
+            public static int CardDamage = 2;
+            public static int CardsDestroyed = 2;
+        }
+        #endregion
+        #region -[ Warlock ]-
+        private class Hellfire
+        {
+            public static int MyMaxCardsInPlay = 1;
+            public static int MyMaxCardsDestroyed = 0;
+            public static int EnemyMinCardsInPlay = 2;
+            public static int CardDamage = 2;
+            public static int CardsDestroyed = 2;
+        }
+        #endregion
+        #region -[ Warrior ]-
+        private class Whirlwind
+        {
+            public static int MyMaxCardsInPlay = 1;
+            public static int MyMaxCardsDestroyed = 0;
+            public static int EnemyMinCardsInPlay = 2;
+            public static int CardDamage = 2;
+            public static int CardsDestroyed = 2;
+        }
+        #endregion
 
         #endregion
 
@@ -225,6 +275,7 @@ namespace Plugin
         {
             switch (entity.GetName())
             {
+                #region -[ Hunter ]-
                 #region -[ Explosive Trap ]-
                 case "EX1_610":
                     if ((GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount() <= ExplosiveTrap.MyMaxCardsInPlay
@@ -242,6 +293,8 @@ namespace Plugin
                     }
                     return false;
                 #endregion
+                #endregion
+                #region -[ Mage ]-
                 #region -[ Arcane Explosion ]-
                 case "CS2_025":
                     return CommonMultipleSpell(ArcaneExplosion.CardDamage, ArcaneExplosion.CardsDestroyed, ArcaneExplosion.EnemyMinCardsInPlay);
@@ -254,6 +307,23 @@ namespace Plugin
                 case "CS2_028":
                     return CommonMultipleSpell(Blizzard.CardDamage, Blizzard.CardsDestroyed, Blizzard.EnemyMinCardsInPlay);
                 #endregion
+                #region -[ Arcane Intellect ]-
+                case "CS2_023":
+                    if (GameFunctions.ePlayer.GetBattlefieldZone().GetCardCount() <= ArcaneIntellect.EnemyMaxCardsInPlay
+                        && GameFunctions.myPlayer.GetHandZone().GetCardCount() <= ArcaneIntellect.MyMaxCardsInHand
+                        && GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount() >= ArcaneIntellect.MyMinCardsInPlay
+                        && GameFunctions.myPlayer.GetRealTimeTempMana() >= ArcaneIntellect.MyMinTotalCrystals)
+                        return true;
+                    return false;
+                #endregion
+                #region -[ Fireball ]-
+                case "CS2_029":
+                    if (GameFunctions.ePlayer.GetRealTimeRemainingHP() < 0)
+                        return true;
+                    return false;
+                #endregion
+                #endregion
+                #region -[ Priest ]-
                 #region -[ Holy Nova ]-
                 case "CS1_112":
                     return CommonMultipleSpell(HolyNova.CardDamage, HolyNova.CardsDestroyed, HolyNova.EnemyMinCardsInPlay);
@@ -276,10 +346,14 @@ namespace Plugin
                         return false;
                     }
                 #endregion
+                #endregion
+                #region -[ Paladin ]-
                 #region -[ Consecration ]-
                 case "CS2_093":
                     return CommonMultipleSpell(Consecration.CardDamage, Consecration.CardsDestroyed, Consecration.EnemyMinCardsInPlay);
                 #endregion
+                #endregion
+                #region -[ Rogue ]-
                 #region -[ Fan of Knives ]-
                 case "EX1_129":
                     return CommonMultipleSpell(FanOfKnives.CardDamage, FanOfKnives.CardsDestroyed, FanOfKnives.EnemyMinCardsInPlay);
@@ -290,6 +364,25 @@ namespace Plugin
                     if (GameFunctions.myPlayer.GetHero().GetWeaponCard().GetEntity().GetDurability() <= BladeFlurry.MinWeaponDurability)
                         return CommonMultipleSpell(cardDamage, BladeFlurry.CardsDestroyed, BladeFlurry.EnemyMinCardsInPlay);
                     return false;
+                #endregion
+                #endregion
+                #region -[ Shaman ]-
+                #region -[ Lightning Storm ]-
+                case "EX1_259":
+                    return CommonMultipleSpell(LightningStorm.CardDamage, LightningStorm.CardsDestroyed, LightningStorm.EnemyMinCardsInPlay);
+                #endregion
+                #endregion
+                #region -[ Warlock ]-
+                #region -[ Hellfire ]-
+                case "CS2_062":
+                    return CommonMultipleSpellDamageALL(Hellfire.CardDamage, Hellfire.CardsDestroyed, Hellfire.EnemyMinCardsInPlay, Hellfire.MyMaxCardsInPlay, Hellfire.MyMaxCardsDestroyed);
+                #endregion
+                #endregion
+                #region -[ Warrior ]-
+                #region -[ Whirlwind ]-
+                case "EX1_400":
+                    return CommonMultipleSpellDamageALL(Whirlwind.CardDamage, Whirlwind.CardsDestroyed, Whirlwind.EnemyMinCardsInPlay, Whirlwind.MyMaxCardsInPlay, Whirlwind.MyMaxCardsDestroyed);
+                #endregion
                 #endregion
                 default:
                     return !playPrority;
@@ -325,6 +418,29 @@ namespace Plugin
             }
             if (count >= CardsDestroyed)
                 return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Se usa para los hechizos de múltiples objetivos comunes
+        /// </summary>
+        /// <param name="CardDamage">Una condición de HP máxima de los minions oponentes</param>
+        /// <param name="CardsDestroyed">Cantidad de minions que deben ser afectados por la condición</param>
+        /// <param name="EnemyMinCardsInPlay">Opcional, mínimo de cartas que debe tener en juego el oponente</param>
+        /// <returns>Devuelve si cumple la condición.</returns>
+        private static bool CommonMultipleSpellDamageALL(int CardDamage, int CardsDestroyed, int EnemyMinCardsInPlay, int MyMaxCardsInPlay, int MyMaxCardsDestroyed)
+        {
+            if (GameFunctions.ePlayer.GetBattlefieldZone().GetCardCount() <= MyMaxCardsInPlay)
+            {
+                int count = 0;
+                foreach (Card card in GameFunctions.myPlayer.GetBattlefieldZone().GetCards())
+                {
+                    if (card.GetEntity().GetRemainingHP() <= CardDamage)
+                        count++;
+                }
+                if (count <= MyMaxCardsDestroyed)
+                    return CommonMultipleSpell(CardDamage, CardsDestroyed, EnemyMinCardsInPlay);
+            }
             return false;
         }
     }

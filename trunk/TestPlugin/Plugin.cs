@@ -375,6 +375,8 @@ namespace Plugin
                 Log.debug("Card : " + card.ToString());
                 Log.debug("Type : " + entity.GetType().ToString());
                 Log.debug("Name : " + card.name);
+                Log.debug("ATK : " + card.guiText.text);
+                Log.debug("ATK : " + card.GetEntity().GetCardTextInHand());
                 if (entity.HasBattlecry())
                     Log.debug("Battlecry : " + card.GetBattlecrySpell().ToString());
                 Log.debug("ActorState : " + ((object)card.GetActor().GetActorStateType()).ToString());
