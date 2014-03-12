@@ -23,18 +23,18 @@ namespace Injector
         
         static void Main(string[] args)
         {
-            var app = AssemblyDefinition.ReadAssembly(appOrigPath);
-            var inj = AssemblyDefinition.ReadAssembly(injPath);
+            AssemblyDefinition app = AssemblyDefinition.ReadAssembly(appOrigPath);
+            AssemblyDefinition inj = AssemblyDefinition.ReadAssembly(injPath);
 
-            var injType = inj.MainModule.Types.Single(t => t.Name == injTypeName);
-            var injMethod = injType.Methods.Single(t => t.Name == injMethodName);
+            TypeDefinition injType = inj.MainModule.Types.Single(t => t.Name == injTypeName);
+            MethodDefinition injMethod = injType.Methods.Single(t => t.Name == injMethodName);
 
-            var appType = app.MainModule.Types.Single(t => t.Name == appTypeName);
-            var appMethod = appType.Methods.Single(t => t.Name == appMethodName);
+            TypeDefinition appType = app.MainModule.Types.Single(t => t.Name == appTypeName);
+            MethodDefinition appMethod = appType.Methods.Single(t => t.Name == appMethodName);
 
-            var ipl = appMethod.Body.GetILProcessor();
-            var firstInstruction = ipl.Body.Instructions[0];
-            var instruction = ipl.Create(OpCodes.Call, app.MainModule.Import(injMethod.Resolve()));
+            ILProcessor ipl = appMethod.Body.GetILProcessor();
+            Instruction firstInstruction = ipl.Body.Instructions[0];
+            Instruction instruction = ipl.Create(OpCodes.Call, app.MainModule.Import(injMethod.Resolve()));
             ipl.InsertBefore(firstInstruction, instruction);
             app.Write(appPatchedPath);
         }

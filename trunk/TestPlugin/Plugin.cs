@@ -41,7 +41,9 @@ namespace Plugin
             {
                 GameObject.Destroy(x);
             }
-            go.AddComponent<Plugin>();
+            go.AddComponent<Plugin>(); 
+            Thread.Sleep(1000 * 5);
+            //StartBot(null, null, null);
         }
 
         public void Awake()     // This is called after loading the DLL, before the loader gives back control to Unity
@@ -54,7 +56,7 @@ namespace Plugin
             CheatMgr.Get().RegisterCheatHandler("analyze", new CheatMgr.ProcessCheatCallback(Plugin.AnalyzeCards));
             CheatMgr.Get().RegisterCheatHandler("deckid", new CheatMgr.ProcessCheatCallback(Plugin.GetDeckId));
             CheatMgr.Get().RegisterCheatHandler("finishthisgame", new CheatMgr.ProcessCheatCallback(Plugin.finishThisGame));
-            CheatMgr.Get().RegisterCheatHandler("help", new CheatMgr.ProcessCheatCallback(Plugin.help));
+            CheatMgr.Get().RegisterCheatHandler("help", new CheatMgr.ProcessCheatCallback(Plugin.help));            
         }
 
         public void Update()    // This is called every frame from Unity's main thread
@@ -285,7 +287,7 @@ namespace Plugin
                         Plugin.mulliganDone = false;
                         Plugin.currentDeckId = DeckPickerTrayDisplay.Get().GetSelectedDeckID();
                         Log.say("Queuing for game against human with deck " + (object)Plugin.currentDeckId);
-                        GameMgr.Get().SetNextGame(GameMode.PLAY, MissionID.MULTIPLAYER_1v1);
+                        GameMgr.Get().SetNextGame(GameMode.UNRANKED_PLAY, MissionID.MULTIPLAYER_1v1);
                         if (Plugin.playRanked)
                         {
                             Network.TrackClient(Network.TrackLevel.LEVEL_INFO, Network.TrackWhat.TRACK_PLAY_TOURNAMENT_WITH_CUSTOM_DECK);
