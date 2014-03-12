@@ -1,0 +1,14 @@
+G:\BotStone\UI\bin\Debug\UI.exe.config
+G:\BotStone\UI\bin\Debug\UI.exe
+G:\BotStone\UI\bin\Debug\UI.pdb
+G:\BotStone\UI\bin\Debug\Hearthstone.dll
+G:\BotStone\UI\bin\Debug\Injector.exe
+G:\BotStone\UI\bin\Debug\Mono.Cecil.dll
+G:\BotStone\UI\bin\Debug\Hearthstone.pdb
+G:\BotStone\UI\bin\Debug\Injector.pdb
+G:\BotStone\UI\obj\Debug\UI.csprojResolveAssemblyReference.cache
+G:\BotStone\UI\obj\Debug\UI.Form1.resources
+G:\BotStone\UI\obj\Debug\UI.Properties.Resources.resources
+G:\BotStone\UI\obj\Debug\UI.csproj.GenerateResource.Cache
+G:\BotStone\UI\obj\Debug\UI.exe
+G:\BotStone\UI\obj\Debug\UI.pdb
