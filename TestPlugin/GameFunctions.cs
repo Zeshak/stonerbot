@@ -463,7 +463,7 @@ namespace Plugin
             }
             GameFunctions.DoEndTurn();
             TurnStartManager.Get().BeginListeningForTurnEvents();
-            MulliganManager.Get().EndMulliganEarly();
+            MulliganManager.Get().EndMulligan();
             Log.say("Mulligan ended : " + num.ToString() + " cards changed");
             return true;
         }
