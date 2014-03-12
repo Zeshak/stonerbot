@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestPlugin", "TestPlugin\Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hearthstone", "Hearthstone\Hearthstone.csproj", "{007A96FA-BFF6-4622-BC76-D9D7BF4D066E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI", "UI\UI.csproj", "{BDDEE89E-5AB7-4CA7-9605-BA11DBBA7C02}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{007A96FA-BFF6-4622-BC76-D9D7BF4D066E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{007A96FA-BFF6-4622-BC76-D9D7BF4D066E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{007A96FA-BFF6-4622-BC76-D9D7BF4D066E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDDEE89E-5AB7-4CA7-9605-BA11DBBA7C02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDDEE89E-5AB7-4CA7-9605-BA11DBBA7C02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDDEE89E-5AB7-4CA7-9605-BA11DBBA7C02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDDEE89E-5AB7-4CA7-9605-BA11DBBA7C02}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
