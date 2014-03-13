@@ -145,6 +145,8 @@ namespace Plugin
         public bool SilenceThis = false;
         public bool DisableFirst = false;
 
+
+
         public CardDetails()
         {
             SetInitValues();

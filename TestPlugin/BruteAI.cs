@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
+
 
 namespace Plugin
 {
@@ -13,6 +15,25 @@ namespace Plugin
         {
 
         }
+        
+        public void EmoMsgs()
+        {
+            if (GameFunctions.gs.IsBeginPhase())
+            {
+                if (GameFunctions.gs.IsLocalPlayerTurn() && GameFunctions.myPlayer.GetHero().GetRemainingHP() == 30)
+                {
+                    Log.say("GREETINGS");
+                    GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(EmoteType.GREETINGS);
+                }
+            }
+            if (GameFunctions.gs.IsGameOver() || GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 0)
+            {
+                //this.randomEmoticon();
+                GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(EmoteType.GOOD_GAME);
+            }
+        }
+
+      
 
         public static bool BruteHand()
         {
@@ -210,7 +231,8 @@ namespace Plugin
         }
 
         public static Card NextBestMinionDrop()
-        {
+        {//Si el CardDetails tiene silence hay que usarla en el caso que sea necesario
+
             List<Card> list = Enumerable.ToList<Card>((IEnumerable<Card>)GameFunctions.myPlayer.GetHandZone().GetCards());
             if (GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount() >= 7)
                 return null;
@@ -229,7 +251,16 @@ namespace Plugin
                 {
                     Entity entity = c.GetEntity();
                     if (c.GetEntity().HasTaunt() && entity.GetCardType() == TAG_CARDTYPE.MINION && (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && GameFunctions.CanBeUsed(c)))
+                   
                         return c;
+                   
+                    if (HasSilence(c)&& entity.GetCardType() == TAG_CARDTYPE.MINION && (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && GameFunctions.CanBeUsed(c)))
+                        {
+                            if(NextBestAttackee().GetEntity().HasSpellPower() && ShouldBeSilenced(c))
+                            return c;
+                        }
+                      
+                    
                 }
             }
             Card card = null;
@@ -244,6 +275,24 @@ namespace Plugin
                 }
             }
             return card;
+        }
+
+        private static bool ShouldBeSilenced(Card c)
+        {
+            if (CardDetails.FindInCardDetails(c).SilenceThis)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private static bool HasSilence(Card c)
+        {
+            if (CardDetails.FindInCardDetails(c).CanSilence)
+            {
+                return true;
+            }
+            return false;
         }
 
         public static bool BruteAttack()

@@ -13,6 +13,7 @@ namespace Plugin
         private static ZonePlay myPlayZone;
         private static ZoneWeapon myWeaponZone;
         private static ZoneSecret mySecretZone;
+      
 
         public static void populateZones()
         {
@@ -512,5 +513,7 @@ namespace Plugin
             }
             localPlayer.UpdateManaCounter();
         }
+
+        
     }
 }
