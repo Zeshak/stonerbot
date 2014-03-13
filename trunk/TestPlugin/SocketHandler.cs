@@ -5,96 +5,75 @@ using System.Text;
 using System.Threading;
 using System.Net.Sockets;
 using System.IO;
+using System.Net;
 
 namespace Plugin
 {
     public static class SocketHandler
     {
-        private static Thread socket;
-        private static TcpClient client;
-        private static TcpListener serverSocket;
-        private static NetworkStream netStream;
-        private static string lastStatus;
-
-        public static void socketThread()
+        private class SocketHelper
         {
-            SocketHandler.serverSocket = new TcpListener(8888);
-            SocketHandler.serverSocket.Start();
-            while (true)
+            TcpClient mscClient;
+            string message;
+            string response;
+            byte[] bytesSent;
+
+            public void processMsg(TcpClient client, NetworkStream stream, byte[] bytesReceived)
             {
-                try
+                //Maneja el mensaje recibido y le envía una respuesta.
+                message = Encoding.ASCII.GetString(bytesReceived, 0, bytesReceived.Length);
+                mscClient = client;
+                message = message.Substring(0, 5);
+                switch (message)
                 {
-                    do
-                    {
-                        do
-                            ;
-                        while (!SocketHandler.ListenSocket(SocketHandler.serverSocket));
-                        SocketHandler.netStream = SocketHandler.client.GetStream();
-                    }
-                    while (!SocketHandler.netStream.CanRead);
-                    byte[] numArray = new byte[SocketHandler.client.ReceiveBufferSize];
-                    SocketHandler.netStream.Read(numArray, 0, SocketHandler.client.ReceiveBufferSize);
-                    SocketHandler.socketComputing(Encoding.UTF8.GetString(numArray));
-                    Thread.Sleep(50);
+                    case "stbot":
+                        Plugin.StartBot(null, null, null);
+                        break;
+                    case "stran":
+                        Plugin.StartBotRanked(null, null, null);
+                        break;
+                    case "stain":
+                        Plugin.StartBotVsAI(null, null, null);
+                        break;
+                    case "staie":
+                        Plugin.StartBotVsAIExpert(null, null, null);
+                        break;
+                    case "stopb":
+                        Plugin.StopBot(null, null, null);
+                        break;
+                    case "stopa":
+                        Plugin.FinishThisGame(null, null, null);
+                        break;
+                    default:
+                        response = "Error";
+                        break;
                 }
-                catch (Exception ex)
-                {
-                    Log.debug(ex.StackTrace);
-                }
+                if (response != "Error")
+                    response = message;
+                Log.debug("El mensaje era: " + message);
+                bytesSent = Encoding.ASCII.GetBytes(response);
+                stream.Write(bytesSent, 0, bytesSent.Length);
             }
         }
 
-        public static void socketComputing(string data)
+        public static void InitSocketListener()
         {
-            if (data.Contains("startbotranked"))
-                Plugin.startBotRanked(null, null, null);
-            else if (data.Contains("stopbot"))
-                Plugin.stopBot(null, null, null);
-            else if (data.Contains("finishthisgame"))
-                Plugin.finishThisGame(null, null, null);
-            else if (data.Contains("startbot"))
-                Plugin.StartBot(null, null, null);
-            else if (data.Contains("startvsai"))
-                Plugin.StartBotVsAI(null, null, null);
-            return;
-        }
+            IPAddress ip = Dns.GetHostEntry("localhost").AddressList[0];
+            TcpListener tcpListener = new TcpListener(ip, 8888);
+            tcpListener.Start();
+            Log.debug(" >> Server Started");
 
-        public static bool ListenSocket(TcpListener serverSocket)
-        {
-            if (SocketHandler.client != null)
+            while ((true))
             {
-                if (SocketHandler.client.Connected)
-                    return true;
-                SocketHandler.client.Close();
-                ((Stream)SocketHandler.netStream).Close();
-                SocketHandler.client = serverSocket.AcceptTcpClient();
-                Log.say("Remote connected");
-                return true;
+                Thread.Sleep(10);
+                TcpClient tcpClient = tcpListener.AcceptTcpClient();
+                Log.debug(" >> Accept connection from client");
+                byte[] bytes = new byte[256];
+                NetworkStream stream = tcpClient.GetStream();
+                stream.Read(bytes, 0, bytes.Length);
+                SocketHelper helper = new SocketHelper();
+                helper.processMsg(tcpClient, stream, bytes);
             }
-            else
-            {
-                SocketHandler.client = serverSocket.AcceptTcpClient();
-                Log.say("Remote connected");
-                return true;
-            }
-        }
-
-        public static void SocketSendStatus(string status)
-        {
-            if (status.Equals(SocketHandler.lastStatus))
-                return;
-            SocketHandler.SocketSendCmd(status);
-            SocketHandler.lastStatus = status;
-        }
-
-        public static void SocketSendCmd(string cmd)
-        {
-            if (SocketHandler.client == null || SocketHandler.netStream == null || (!SocketHandler.client.Connected || !SocketHandler.netStream.CanWrite))
-                return;
-            SocketHandler.netStream.WriteTimeout = 1;
-            byte[] bytes = Encoding.UTF8.GetBytes(cmd);
-            SocketHandler.netStream.Write(bytes, 0, bytes.Length);
-            SocketHandler.netStream.Flush();
         }
     }
 }
