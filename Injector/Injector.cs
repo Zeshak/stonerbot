@@ -12,9 +12,9 @@ namespace Injector
 {
     class Injector
     {
-        static string appOrigPath = ConfigurationManager.AppSettings["appOrigPath"];
-        static string injPath = ConfigurationManager.AppSettings["injPath"];
-        static string appPatchedPath = ConfigurationManager.AppSettings["appPatchedPath"];
+        static string appOrigPath = "Assembly-CSharp.orig.dll";
+        static string injPath = "Hearthstone.dll";
+        static string appPatchedPath = "Assembly-CSharp.dll";
 
         static string appTypeName = "SceneMgr";
         static string appMethodName = "Start";

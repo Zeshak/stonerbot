@@ -27,6 +27,7 @@ namespace Plugin
         public static bool mulliganDone;
         public static long currentDeckId;
         public static int modulo;
+        private static Thread socket;
 
         #endregion
 
@@ -42,8 +43,6 @@ namespace Plugin
                 GameObject.Destroy(x);
             }
             go.AddComponent<Plugin>(); 
-            Thread.Sleep(1000 * 5);
-            //StartBot(null, null, null);
         }
 
         public void Awake()     // This is called after loading the DLL, before the loader gives back control to Unity
@@ -51,11 +50,11 @@ namespace Plugin
             CheatMgr.Get().RegisterCheatHandler("startbot", new CheatMgr.ProcessCheatCallback(Plugin.StartBot));
             CheatMgr.Get().RegisterCheatHandler("startvsai", new CheatMgr.ProcessCheatCallback(Plugin.StartBotVsAI));
             CheatMgr.Get().RegisterCheatHandler("startvsaiexpert", new CheatMgr.ProcessCheatCallback(Plugin.StartBotVsAIExpert));
-            CheatMgr.Get().RegisterCheatHandler("startbotranked", new CheatMgr.ProcessCheatCallback(Plugin.startBotRanked));
-            CheatMgr.Get().RegisterCheatHandler("stopbot", new CheatMgr.ProcessCheatCallback(Plugin.stopBot));
+            CheatMgr.Get().RegisterCheatHandler("startbotranked", new CheatMgr.ProcessCheatCallback(Plugin.StartBotRanked));
+            CheatMgr.Get().RegisterCheatHandler("stopbot", new CheatMgr.ProcessCheatCallback(Plugin.StopBot));
             CheatMgr.Get().RegisterCheatHandler("analyze", new CheatMgr.ProcessCheatCallback(Plugin.AnalyzeCards));
             CheatMgr.Get().RegisterCheatHandler("deckid", new CheatMgr.ProcessCheatCallback(Plugin.GetDeckId));
-            CheatMgr.Get().RegisterCheatHandler("finishthisgame", new CheatMgr.ProcessCheatCallback(Plugin.finishThisGame));
+            CheatMgr.Get().RegisterCheatHandler("finishthisgame", new CheatMgr.ProcessCheatCallback(Plugin.FinishThisGame));
             CheatMgr.Get().RegisterCheatHandler("help", new CheatMgr.ProcessCheatCallback(Plugin.help));            
         }
 
@@ -78,6 +77,8 @@ namespace Plugin
 
         public void Start()     // This is called after control is given back to Unity
         {
+            Plugin.socket = new Thread(new ThreadStart(SocketHandler.InitSocketListener));
+            Plugin.socket.Start();
             rng = new System.Random();
             timeLastRun = Time.realtimeSinceStartup;
             timeLastQueued = Time.realtimeSinceStartup;
@@ -425,14 +426,14 @@ namespace Plugin
             return true;
         }
 
-        public static bool finishThisGame(string func, string[] args, string rawArgs)
+        public static bool FinishThisGame(string func, string[] args, string rawArgs)
         {
             Log.say("Bot will stop after this game");
             Plugin.finishAfterThisGame = true;
             return true;
         }
 
-        public static bool startBotRanked(string func, string[] args, string rawArgs)
+        public static bool StartBotRanked(string func, string[] args, string rawArgs)
         {
             Log.say("Bot started in ranked mode");
             Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
@@ -442,7 +443,7 @@ namespace Plugin
             return true;
         }
 
-        public static bool stopBot(string func, string[] args, string rawArgs)
+        public static bool StopBot(string func, string[] args, string rawArgs)
         {
             Log.say("Bot stopped");
             Plugin.run = false;
