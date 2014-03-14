@@ -13,6 +13,20 @@ namespace Plugin
     {
         #region -[ Attributes ]-
 
+        public enum BotStatusList
+        {
+            OnLogin,
+            OnHub,
+            OnGamePlay,
+            OnMulligan,
+            OnMulliganWaitEnemy,
+            OnPracticeDeckSel,
+            OnPracticeQueue,
+            OnMatchDeckSel,
+            OnMatchDeckQueue
+        }
+
+        public static BotStatusList BotStatus;
         private static double minTimeBetweenRuns = 1.0;
         public static float maxQueueTime = 120f;
         public static bool playVsHumans = true;
@@ -28,6 +42,9 @@ namespace Plugin
         public static long currentDeckId;
         public static int modulo;
         private static Thread socket;
+        private bool inQueue = false;
+        public static bool saidHi = false;
+        public static bool saidGG = false;
 
         #endregion
 
@@ -42,20 +59,12 @@ namespace Plugin
             {
                 GameObject.Destroy(x);
             }
-            go.AddComponent<Plugin>(); 
+            go.AddComponent<Plugin>();
         }
 
         public void Awake()     // This is called after loading the DLL, before the loader gives back control to Unity
         {
-            CheatMgr.Get().RegisterCheatHandler("startbot", new CheatMgr.ProcessCheatCallback(Plugin.StartBot));
-            CheatMgr.Get().RegisterCheatHandler("startvsai", new CheatMgr.ProcessCheatCallback(Plugin.StartBotVsAI));
-            CheatMgr.Get().RegisterCheatHandler("startvsaiexpert", new CheatMgr.ProcessCheatCallback(Plugin.StartBotVsAIExpert));
-            CheatMgr.Get().RegisterCheatHandler("startbotranked", new CheatMgr.ProcessCheatCallback(Plugin.StartBotRanked));
-            CheatMgr.Get().RegisterCheatHandler("stopbot", new CheatMgr.ProcessCheatCallback(Plugin.StopBot));
-            CheatMgr.Get().RegisterCheatHandler("analyze", new CheatMgr.ProcessCheatCallback(Plugin.AnalyzeCards));
-            CheatMgr.Get().RegisterCheatHandler("deckid", new CheatMgr.ProcessCheatCallback(Plugin.GetDeckId));
-            CheatMgr.Get().RegisterCheatHandler("finishthisgame", new CheatMgr.ProcessCheatCallback(Plugin.FinishThisGame));
-            CheatMgr.Get().RegisterCheatHandler("help", new CheatMgr.ProcessCheatCallback(Plugin.help));            
+
         }
 
         public void Update()    // This is called every frame from Unity's main thread
@@ -63,7 +72,7 @@ namespace Plugin
             if (UnityEngine.Time.realtimeSinceStartup - this.timeLastRun < Plugin.minTimeBetweenRuns)
                 return;
             this.timeLastRun = UnityEngine.Time.realtimeSinceStartup;
-            Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 3.0;
+            Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 4.0;
             try
             {
                 if (Plugin.run)
@@ -84,6 +93,16 @@ namespace Plugin
             timeLastQueued = Time.realtimeSinceStartup;
         }
 
+        public void OnDestroy()
+        {
+            Log.debug("Hearthstone closing.");
+            Plugin.socket.Abort();
+            SocketHandler.tcpListener.Stop();
+            SocketHandler.stream.Close();
+            if (SocketHandler.tcpClient != null)
+                SocketHandler.tcpClient.Close();
+        }
+
         public void Init_Game()
         {
             try
@@ -93,6 +112,7 @@ namespace Plugin
                 GameFunctions.ePlayer = GameFunctions.gs.GetFirstOpponentPlayer(GameFunctions.myPlayer);
                 CardDetails.SetCardDetails();
                 InactivePlayerKicker.Get().SetShouldCheckForInactivity(false);
+                inQueue = false;
             }
             catch (Exception ex)
             {
@@ -193,18 +213,26 @@ namespace Plugin
 
         private void DoLogin()
         {
-            if (!((UnityEngine.Object)WelcomeQuests.Get() != (UnityEngine.Object)null))
+            BotStatus = BotStatusList.OnLogin;
+            if (WelcomeQuests.Get() == null)
                 return;
             Log.say("Clicking through welcome quest");
             WelcomeQuests.Get().m_clickCatcher.TriggerRelease();
+            BotStatus = BotStatusList.OnHub;
         }
 
         private void DoHub()
         {
             if (playVsHumans)
+            {
                 SceneMgr.Get().SetNextMode(SceneMgr.Mode.TOURNAMENT);
+                BotStatus = BotStatusList.OnMatchDeckSel;
+            }
             else
+            {
                 SceneMgr.Get().SetNextMode(SceneMgr.Mode.PRACTICE);
+                BotStatus = BotStatusList.OnPracticeDeckSel;
+            }
         }
 
         private void DoGameplay()
@@ -242,6 +270,8 @@ namespace Plugin
                     if (!((UnityEngine.Object)EndGameScreen.Get() != (UnityEngine.Object)null))
                         return;
                     EndGameScreen.Get().ContinueEvents();
+                    saidHi = false;
+                    saidGG = false;
                     return;
                 }
                 catch (Exception ex)
@@ -257,10 +287,9 @@ namespace Plugin
                 if (GameState.Get().IsBlockingServer())
                     Thread.Sleep(500);
                 GameFunctions.populateZones();
+                BruteAI.SendEmoMessages();
                 if (BruteAI.BruteHand())
-                {
                     ++BruteAI.loops;
-                }
                 else
                 {
                     Thread.Sleep(1000);
@@ -283,7 +312,7 @@ namespace Plugin
             {
                 try
                 {
-                    if (!SceneMgr.Get().IsInGame() && !Network.IsMatching() || (double)num1 > (double)Plugin.maxQueueTime)
+                    if (!SceneMgr.Get().IsInGame() && !Network.IsMatching() && !Network.IsInDraftQueue() && !inQueue || (double)num1 > (double)Plugin.maxQueueTime)
                     {
                         Plugin.statisticsAdded = false;
                         Plugin.mulliganDone = false;
@@ -300,6 +329,7 @@ namespace Plugin
                             Network.TrackClient(Network.TrackLevel.LEVEL_INFO, Network.TrackWhat.TRACK_PLAY_CASUAL_WITH_CUSTOM_DECK);
                             Network.UnrankedMatch(Plugin.currentDeckId);
                         }
+                        inQueue = true;
                         Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
                         FriendChallengeMgr.Get().OnEnteredMatchmakerQueue();
                         PresenceMgr.Get().SetStatus(new Enum[1]

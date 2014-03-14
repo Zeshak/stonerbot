@@ -16,24 +16,20 @@ namespace Plugin
 
         }
 
-        public void EmoMsgs()
+        public static void SendEmoMessages()
         {
-            if (GameFunctions.gs.IsBeginPhase())
+            if (GameFunctions.myPlayer.GetHero().GetRemainingHP() == 30 && !Plugin.saidHi)
             {
-                if (GameFunctions.gs.IsLocalPlayerTurn() && GameFunctions.myPlayer.GetHero().GetRemainingHP() == 30)
-                {
-                    Log.say("GREETINGS");
-                    GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(EmoteType.GREETINGS);
-                }
+                GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(EmoteType.GREETINGS);
+                Plugin.saidHi = true;
             }
-            if (GameFunctions.gs.IsGameOver() || GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 0)
+            if (GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 10 && !Plugin.saidGG
+				|| GameFunctions.ePlayer.GetHero().GetRemainingHP() <= 10 && !Plugin.saidGG)
             {
-                //this.randomEmoticon();
                 GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(EmoteType.GOOD_GAME);
+                Plugin.saidGG = true;
             }
         }
-
-
 
         public static bool BruteHand()
         {
@@ -236,17 +232,18 @@ namespace Plugin
             Log.debug("Mi zona del campo tiene " + GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount().ToString() + " minions");
             if (GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount() >= 7)
                 return null;
-            bool flag = false;
+            bool haveInPlayWithTaunt = false;
             foreach (Card c in GameFunctions.myPlayer.GetBattlefieldZone().GetCards())
             {
                 if (c.GetEntity().HasTaunt())
-                    flag = true;
+                    haveInPlayWithTaunt = true;
             }
-            if (!flag)
+            if (!haveInPlayWithTaunt)
             {
                 foreach (Card c in listCardsInHand)
                 {
-                    if (CardDetails.FindInCardDetails(c).CanSilence)
+                    CardDetails cd = CardDetails.FindInCardDetails(c);
+                    if (cd != null && cd.CanSilence)
                         continue;
                     Entity entity = c.GetEntity();
                     if (c.GetEntity().HasTaunt() && entity.GetCardType() == TAG_CARDTYPE.MINION && (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && GameFunctions.CanBeUsed(c)))
@@ -257,7 +254,7 @@ namespace Plugin
             foreach (Card c in listCardsInHand)
             {
                 CardDetails cd = CardDetails.FindInCardDetails(c);
-                if (cd.CanSilence)
+                if (cd != null && cd.CanSilence)
                     continue;
                 Entity entity = c.GetEntity();
                 if (entity.GetCardType() == TAG_CARDTYPE.MINION && entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources())
@@ -417,13 +414,17 @@ namespace Plugin
             if (attackee != GameFunctions.ePlayer.GetHeroCard())
             {
                 Card c1 = null;
+                int bestSum = 0;
                 foreach (Card c2 in list)
                 {
                     Entity entity = c2.GetEntity();
-                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && entity.GetHealth() < attackee.GetEntity().GetATK() && (!attackee.GetEntity().HasTaunt() && GameFunctions.CanBeUsed(c2)))
+                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && entity.GetHealth() < attackee.GetEntity().GetATK() && GameFunctions.CanBeUsed(c2))
                         return c2;
-                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && !attackee.GetEntity().HasTaunt() && GameFunctions.CanBeUsed(c2))
+                    int thisSum = entity.GetATK() + entity.GetHealth();
+                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && GameFunctions.CanBeUsed(c2) && (thisSum < bestSum || bestSum == 0))
+                    {
                         c1 = c2;
+                    }
                 }
                 if (c1 != null && GameFunctions.CanBeUsed(c1))
                     return c1;
@@ -466,6 +467,137 @@ namespace Plugin
                     return card;
             }
             return null;
+        }
+
+        public static List<Card> NextBestAttackerCombinated(Card attackee)
+        {
+            List<Card> eligibleCards = new List<Card>();
+            List<Card> possibleCards = new List<Card>();
+            if (attackee == null)
+                return null;
+            List<Card> listCardInMyHand = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
+            if (attackee != GameFunctions.ePlayer.GetHeroCard())
+            {
+                //Acá entra en caso de que haya que atacar a un minion
+                foreach (Card card in listCardInMyHand)
+                {
+                    Entity entity = card.GetEntity();
+                    // EJ: Mia es 4-4 y la de él es 3-4
+                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && entity.GetHealth() < attackee.GetEntity().GetATK() && GameFunctions.CanBeUsed(card))
+                    {
+                        eligibleCards.Add(card);
+                        return eligibleCards;
+                    }
+
+                    // EJ: Mia es 4-3 la de él es 3-4
+                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && GameFunctions.CanBeUsed(card))
+                    {
+                        //Si no tengo cartas posibles, la agrego y sigo mirando
+                        if (possibleCards.Count == 0)
+                        {
+                            possibleCards.Clear();
+                            possibleCards.Add(card);
+                            continue;
+                        }
+                        else
+                        {
+                            //Si tengo cartas posibles elijo la de menor ataque.
+                            if (possibleCards[0].GetEntity().GetATK() > entity.GetATK())
+                            {
+                                possibleCards.Clear();
+                                possibleCards.Add(card);
+                            }
+                        }
+                    }
+                }
+
+                if (eligibleCards == null)
+                {
+                    GetCombinatedAttackersThatKill(listCardInMyHand, eligibleCards, attackee);
+                }
+
+                if (eligibleCards != null)
+                    return eligibleCards;
+            }
+            else
+            {
+                //Sino ataca al heroe primero con el héroe si puede
+                Entity hero = GameFunctions.myPlayer.GetHero();
+                if (hero != null && GameFunctions.CanBeUsed(hero.GetCard()))
+                {
+                    eligibleCards.Add(hero.GetCard());
+                    return eligibleCards;
+                }
+            }
+            foreach (Card c in listCardInMyHand)
+            {
+                //Sino empieza a atacar al héroe de manera random con todos los minions que se vaya pudiendo
+                c.GetEntity();
+                if (GameFunctions.CanBeUsed(c))
+                {
+                    if (new System.Random().NextDouble() > 0.5)
+                    {
+                        eligibleCards.Clear();
+                        eligibleCards.Add(c);
+                        return eligibleCards;
+                    }
+                    eligibleCards.Add(c);
+                }
+            }
+            return eligibleCards;
+        }
+
+        private static void GetCombinatedAttackersThatKill(List<Card> listCardInMyHand, List<Card> eligibleCards, Card attackee)
+        {
+            List<Card> orderedList = new List<Card>(listCardInMyHand);
+            orderedList.Sort((x, y) => x.GetEntity().GetATK().CompareTo(y.GetEntity().GetATK()));
+            int bestAtk = 0;
+            int[] avoidedIndexes = new int[orderedList.Count];
+            int[] bestAvoidedIndexes = new int[orderedList.Count];
+            int possibleCombinations = GetCombinationsWithoutRepetition(orderedList.Count);
+            for (int i = 0; i < possibleCombinations; i++)
+            {
+                int thisAttack = 0;
+                thisAttack = orderedList.Sum(
+                    delegate(Card card)
+                    {
+                        int index = orderedList.FindIndex(s => s == card);
+                        if (!avoidedIndexes.Contains(index))
+                            return card.GetEntity().GetATK();
+                        else
+                            return 0;
+                    }
+                );
+                if (thisAttack == attackee.GetEntity().GetHealth())
+                {
+                    bestAvoidedIndexes = avoidedIndexes;
+                    break;
+                }
+                else if (thisAttack > attackee.GetEntity().GetHealth() && (thisAttack < bestAtk || bestAtk == 0))
+                    bestAvoidedIndexes = avoidedIndexes;
+            }
+        }
+
+        private static int GetCombinationsWithoutRepetition(int items)
+        {
+            int result = 0;
+            for (int i = 1; i <= items; i++)
+            {
+                result += GetPermutationsWithoutRepetition(items, i);
+            }
+            return result;
+        }
+
+        private static int GetPermutationsWithoutRepetition(int items, int count)
+        {
+            return (Factorial(items) / (Factorial(count) * Factorial(items - count)));
+        }
+
+        private static int Factorial(int i)
+        {
+            if (i <= 1)
+                return 1;
+            return i * Factorial(i - 1);
         }
     }
 }

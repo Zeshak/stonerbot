@@ -9,8 +9,12 @@ using System.Net;
 
 namespace Plugin
 {
-    public static class SocketHandler
+    public class SocketHandler
     {
+        public static TcpListener tcpListener;
+        public static NetworkStream stream;
+        public static TcpClient tcpClient;
+
         private class SocketHelper
         {
             TcpClient mscClient;
@@ -23,8 +27,8 @@ namespace Plugin
                 //Maneja el mensaje recibido y le envía una respuesta.
                 message = Encoding.ASCII.GetString(bytesReceived, 0, bytesReceived.Length);
                 mscClient = client;
-                message = message.Substring(0, 5);
-                switch (message)
+                string messageb = message.Substring(0, 5);
+                switch (messageb)
                 {
                     case "stbot":
                         Plugin.StartBot(null, null, null);
@@ -44,13 +48,18 @@ namespace Plugin
                     case "stopa":
                         Plugin.FinishThisGame(null, null, null);
                         break;
+                    case "saywo":
+                        int length = Convert.ToInt32(message.Substring(5, 1));
+                        string messageSay = message.Substring(6, length);
+                        Log.say(messageSay);
+                        break;
                     default:
                         response = "Error";
                         break;
                 }
                 if (response != "Error")
-                    response = message;
-                Log.debug("El mensaje era: " + message);
+                    response = messageb;
+                Log.debug("El mensaje era: " + messageb);
                 bytesSent = Encoding.ASCII.GetBytes(response);
                 stream.Write(bytesSent, 0, bytesSent.Length);
             }
@@ -59,17 +68,17 @@ namespace Plugin
         public static void InitSocketListener()
         {
             IPAddress ip = Dns.GetHostEntry("localhost").AddressList[0];
-            TcpListener tcpListener = new TcpListener(ip, 8888);
+            tcpListener = new TcpListener(ip, 8888);
             tcpListener.Start();
             Log.debug(" >> Server Started");
 
             while ((true))
             {
                 Thread.Sleep(10);
-                TcpClient tcpClient = tcpListener.AcceptTcpClient();
+                tcpClient = tcpListener.AcceptTcpClient();
                 Log.debug(" >> Accept connection from client");
                 byte[] bytes = new byte[256];
-                NetworkStream stream = tcpClient.GetStream();
+                stream = tcpClient.GetStream();
                 stream.Read(bytes, 0, bytes.Length);
                 SocketHelper helper = new SocketHelper();
                 helper.processMsg(tcpClient, stream, bytes);
