@@ -63,7 +63,7 @@ namespace Plugin
             if (UnityEngine.Time.realtimeSinceStartup - this.timeLastRun < Plugin.minTimeBetweenRuns)
                 return;
             this.timeLastRun = UnityEngine.Time.realtimeSinceStartup;
-            Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 2.0;
+            Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 3.0;
             try
             {
                 if (Plugin.run)
@@ -263,6 +263,7 @@ namespace Plugin
                 }
                 else
                 {
+                    Thread.Sleep(1000);
                     if (BruteAI.BruteAttack())
                         return;
                     GameFunctions.DoEndTurn();
