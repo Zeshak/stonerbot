@@ -61,6 +61,11 @@ namespace UI
             SendConnectCmd("stopa");
         }
 
+        private void btnSay_Click(object sender, EventArgs e)
+        {
+            SendConnectCmd("saywo" + txtSay.Text.Length.ToString() + txtSay.Text);
+        }
+
         private void btnInject_Click(object sender, EventArgs e)
         {
             Inject();

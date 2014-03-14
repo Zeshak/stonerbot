@@ -39,6 +39,8 @@
             this.btnStopBotAfterThis = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.txtSay = new System.Windows.Forms.TextBox();
+            this.btnSay = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnStartBot
@@ -147,11 +149,30 @@
             this.label2.TabIndex = 10;
             this.label2.Text = "Bot Status: ";
             // 
+            // txtSay
+            // 
+            this.txtSay.Location = new System.Drawing.Point(12, 167);
+            this.txtSay.Name = "txtSay";
+            this.txtSay.Size = new System.Drawing.Size(144, 20);
+            this.txtSay.TabIndex = 11;
+            // 
+            // btnSay
+            // 
+            this.btnSay.Location = new System.Drawing.Point(162, 163);
+            this.btnSay.Name = "btnSay";
+            this.btnSay.Size = new System.Drawing.Size(144, 23);
+            this.btnSay.TabIndex = 12;
+            this.btnSay.Text = "Say";
+            this.btnSay.UseVisualStyleBackColor = true;
+            this.btnSay.Click += new System.EventHandler(this.btnSay_Click);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(472, 262);
+            this.Controls.Add(this.btnSay);
+            this.Controls.Add(this.txtSay);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnStopBotAfterThis);
@@ -184,6 +205,8 @@
         private System.Windows.Forms.Button btnStopBotAfterThis;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox txtSay;
+        private System.Windows.Forms.Button btnSay;
     }
 }
 
