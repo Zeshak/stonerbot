@@ -162,12 +162,12 @@ namespace Plugin
 
         public static bool DoDropWeapon(Card c)
         {
-            return GameFunctions.DoDrop(c);
+            return GameFunctions.DoDrop(c, null);
         }
 
         public static bool DoDropBattlecry(Card c)
         {
-            return GameFunctions.DoDrop(c);
+            return GameFunctions.DoDrop(c, null);
         }
 
         public static bool DoDropSpell(Card c, Entity certainTarget = null)
@@ -177,20 +177,20 @@ namespace Plugin
 
         public static bool DoDropHeroPowerSpell()
         {
-            return GameFunctions.DoDrop(GameFunctions.myPlayer.GetHeroPower().GetCard());
+            return GameFunctions.DoDrop(GameFunctions.myPlayer.GetHeroPower().GetCard(), null);
         }
 
         public static bool DoDropSecret(Card c)
         {
-            return GameFunctions.DoDrop(c);
+            return GameFunctions.DoDrop(c, null);
         }
 
         public static bool DoDropMinion(Card c)
         {
-            return GameFunctions.DoDrop(c);
+            return GameFunctions.DoDrop(c, null);
         }
 
-        public static bool DoDrop(Card c, Entity certainTarget = null)
+        public static bool DoDrop(Card c, Entity certainTarget)
         {
             Log.debug("DoDrop " + c.GetEntity().GetName());
             if (certainTarget != null)
@@ -450,16 +450,12 @@ namespace Plugin
             if (MulliganManager.Get().GetMulliganButton() == null || !MulliganManager.Get().GetMulliganButton().IsEnabled())
                 return false;
             int num = 0;
-            using (List<Card>.Enumerator enumerator = GameFunctions.myPlayer.GetHandZone().GetCards().GetEnumerator())
+            foreach (Card card in GameFunctions.myPlayer.GetHandZone().GetCards())
             {
-                while (enumerator.MoveNext())
+                if (card.GetEntity().GetCost() >= 4)
                 {
-                    Card current = enumerator.Current;
-                    if (current.GetEntity().GetCost() >= 4)
-                    {
-                        num++;
-                        MulliganManager.Get().ToggleHoldState(current);
-                    }
+                    MulliganManager.Get().ToggleHoldState(card);
+                    num++;
                 }
             }
             GameFunctions.DoEndTurn();
