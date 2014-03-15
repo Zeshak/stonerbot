@@ -185,9 +185,9 @@
             this.label3.ForeColor = System.Drawing.Color.Red;
             this.label3.Location = new System.Drawing.Point(210, 298);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(247, 13);
+            this.label3.Size = new System.Drawing.Size(235, 13);
             this.label3.TabIndex = 18;
-            this.label3.Text = "\"Before Inject, configures the path of Hearthstone\"";
+            this.label3.Text = "\"Before Inject, configure your Hearthstone path\"";
             // 
             // Main
             // 
