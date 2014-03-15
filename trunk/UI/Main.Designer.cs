@@ -41,6 +41,9 @@
             this.label2 = new System.Windows.Forms.Label();
             this.txtSay = new System.Windows.Forms.TextBox();
             this.btnSay = new System.Windows.Forms.Button();
+            this.folderPath = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.SuspendLayout();
             // 
             // btnStartBot
@@ -166,11 +169,33 @@
             this.btnSay.UseVisualStyleBackColor = true;
             this.btnSay.Click += new System.EventHandler(this.btnSay_Click);
             // 
+            // folderPath
+            // 
+            this.folderPath.Location = new System.Drawing.Point(15, 293);
+            this.folderPath.Name = "folderPath";
+            this.folderPath.Size = new System.Drawing.Size(145, 23);
+            this.folderPath.TabIndex = 17;
+            this.folderPath.Text = "Hearthstone Path";
+            this.folderPath.UseVisualStyleBackColor = true;
+            this.folderPath.Click += new System.EventHandler(this.folderPath_Click);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.ForeColor = System.Drawing.Color.Red;
+            this.label3.Location = new System.Drawing.Point(210, 298);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(247, 13);
+            this.label3.TabIndex = 18;
+            this.label3.Text = "\"Before Inject, configures the path of Hearthstone\"";
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(472, 262);
+            this.ClientSize = new System.Drawing.Size(640, 369);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.folderPath);
             this.Controls.Add(this.btnSay);
             this.Controls.Add(this.txtSay);
             this.Controls.Add(this.label2);
@@ -184,6 +209,7 @@
             this.Controls.Add(this.lblStatus);
             this.Controls.Add(this.btnInject);
             this.Controls.Add(this.btnStartBot);
+            this.ForeColor = System.Drawing.Color.Black;
             this.Name = "Main";
             this.Text = "StonerBot";
             this.Load += new System.EventHandler(this.Form1_Load);
@@ -207,6 +233,9 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox txtSay;
         private System.Windows.Forms.Button btnSay;
+        private System.Windows.Forms.Button folderPath;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
     }
 }
 

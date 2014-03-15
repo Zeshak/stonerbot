@@ -14,6 +14,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows;
+
 
 namespace UI
 {
@@ -27,8 +29,7 @@ namespace UI
         public Main()
         {
             InitializeComponent();
-            this.HSpath = "D:\\Juegos\\Hearthstone";
-            this.extPath = "D:\\StonerBot\\ext";
+            this.extPath = "G:\\StonerBot\\ext";        
         }
 
         private void btnStartBot_Click(object sender, EventArgs e)
@@ -222,5 +223,18 @@ namespace UI
             btnStopBot.Enabled = isPlaying;
             btnStopBotAfterThis.Enabled = isPlaying;
         }
+
+    
+        private void folderPath_Click(object sender, EventArgs e)
+        {
+            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
+            {
+                this.label3.Text = folderBrowserDialog1.SelectedPath;
+                this.HSpath = this.label3.Text;
+            }
+        }
+
+     
+       
     }
 }
