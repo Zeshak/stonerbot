@@ -231,8 +231,15 @@ namespace Plugin
             cd.CanSilence = true;
             ListCardDetails.Add(cd);
             #endregion
+            #region -[ Spellbreaker ]-
+            cd = new CardDetails();
+            cd.CardId = "EX1_048";
+            cd.CardName = "Spellbreaker";
+            cd.CanSilence = true;
+            ListCardDetails.Add(cd);
             #endregion
-
+            #endregion
+            
             #region -[ Cartas Enemigas ]-
             #region -[ Abomination ]-
             cd = new CardDetails();
@@ -262,6 +269,14 @@ namespace Plugin
             cd = new CardDetails();
             cd.CardId = "EX1_044";
             cd.CardName = "Questing Adventurer";
+            cd.KillThis = true;
+            cd.SilenceThis = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region -[ Flametongue Totem ]-
+            cd = new CardDetails();
+            cd.CardId = "EX1_565";
+            cd.CardName = "Flametongue Totem";
             cd.KillThis = true;
             cd.SilenceThis = true;
             ListCardDetails.Add(cd);
@@ -448,6 +463,66 @@ namespace Plugin
                     return CommonMultipleSpell(CardDamage, CardsDestroyed, EnemyMinCardsInPlay);
             }
             return false;
+        }
+
+        public static void SetNewValuesByCardStatus(ref CardDetails cd)
+        {
+            Entity entity = cd.Card.GetEntity();
+            int currATK = entity.GetATK();
+            int currHP = entity.GetHealth();
+            int origATK = entity.GetOriginalATK();
+            int origHP = entity.GetOriginalHealth();
+            if (currATK - currHP > 1 && currHP < 4)
+            {
+                //Si el bicho tiene dif de atk/vida mayor a 1, y tiene menos de 4 de vida, trato de matarlo perdiendo poco (ej: 5-3)
+                cd.SetInitValues();
+                cd.KillThis = true;
+                if (currATK > 5)
+                    cd.DisableThis = true;
+            }
+            else if (entity.HasTaunt())
+            {
+                if (entity.HasDivineShield())
+                {
+                    //Se usa silence si tiene: (*)Menos de 3 ataque y más de 2 de vida (no silencia las 2-2, las va a matar luego) (*)Si está bufeada y le sumaron 2 a algún atributo
+                    if (currATK > 3 && currHP > 3)
+                    {
+                        cd.SilenceThis = true;
+                        cd.DisableFirst = true;
+                        cd.DisableThis = true;
+                    }
+                    else
+                        cd.SilenceThis = true;
+                }
+                else
+                {
+                    //Se usa silence si tiene: (*)Menos de 3 ataque y más de 2 de vida (no silencia las 2-2, las va a matar luego) (*)Si está bufeada y le sumaron 2 a algún atributo
+                    if ((currATK < 3 && currHP > 2) || (currATK > origATK + 1) || ((currHP > origHP + 1)))
+                        cd.SilenceThis = true;
+                    //Bicho con taunt a partir de 3-6 o 5-3 le tiro spell si tengo
+                    if ((currATK > 2 && currHP > 5) || (currHP > 2 && currATK > 4))
+                        cd.DisableThis = true;
+                }
+            }
+            else if (currATK > 4 && currHP > 4)
+            {
+                //Si es bicho fuerte, 5-5 en adelante, trato de tirarle spell
+                cd.DisableThis = true;
+            }
+            else if (entity.HasDivineShield())
+            {
+                //Bicho relativamente fuerte, en adelante que pueda o no estar buffeado o tenga taunt con divine shield. Ej: Sunwalker
+                if ((currATK > 3 && currHP > 1) || (currATK > origATK + 1) || (currHP > origHP + 1) || (entity.HasTaunt()))
+                    cd.DisableThis = true;
+
+                //Bicho originalmente débil, Escudera argenta o alguno con shield que haya sido buffeado, me conviene silenciarlo.
+                if ((origATK <= 2 && origHP <= 2) && ((currATK > origATK + 1) || (currHP > origHP + 1)))
+                    cd.SilenceThis = true;
+            }
+            else if (entity.HasSpellPower())
+            {
+                cd.SilenceThis = true; //Por ahora lo deje así hasta que unifiquemos criterios :P
+            }
         }
     }
 }

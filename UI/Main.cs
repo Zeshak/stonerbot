@@ -1,5 +1,4 @@
-﻿using Hearthstone;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -23,13 +22,29 @@ namespace UI
     {
         public string HSpath;
         private string extPath;
+        public string rootPath;
 
         #region -[ Eventos ]-
 
         public Main()
         {
             InitializeComponent();
-            this.extPath = "G:\\StonerBot\\ext";        
+            this.extPath = "ext";
+            string exePath = Assembly.GetExecutingAssembly().CodeBase;
+            rootPath = exePath.Substring(0, exePath.LastIndexOf("/") + 1).Replace("file:///", "");
+            if (rootPath.Contains("bin/Debug"))
+                rootPath = rootPath.Replace("/UI/bin/Debug", "");
+            if (File.Exists(Path.Combine(rootPath, "Config.cfg")))
+            {
+                HSpath = File.ReadAllText(Path.Combine(rootPath, "Config.cfg"));
+                if (HSpath != "")
+                {
+                    btnInject.Enabled = true;
+                    lblPath.Text = HSpath;
+                    return;
+                }
+            }
+            btnInject.Enabled = false;
         }
 
         private void btnStartBot_Click(object sender, EventArgs e)
@@ -78,19 +93,20 @@ namespace UI
         {
             if (!this.HSpath.Equals(""))
             {
-                if (File.Exists(extPath + "\\Injector.exe"))
+                string injPath = Path.Combine(rootPath + extPath + "/Injector.exe");
+                if (File.Exists(injPath))
                 {
                     try
                     {
-                        string destAssemblyPath = this.HSpath + "\\Hearthstone_Data\\Managed\\Assembly-CSharp.dll";
-                        string destAssemblyUnity = this.HSpath + "\\Hearthstone_Data\\Managed\\UnityEngine.dll";
-                        string destMonoCecil = this.HSpath + "\\Hearthstone_Data\\Managed\\Mono.Cecil.dll";
-                        string destHearthstone = this.HSpath + "\\Hearthstone_Data\\Managed\\Hearthstone.dll";
-                        string assemblyMonoCecil = extPath + "\\Mono.Cecil.dll";
-                        string assemblyUnityExt = extPath + "\\UnityEngine.dll";
-                        string assemblyCSharpExtOrig = extPath + "\\Assembly-CSharp.orig.dll";
-                        string assemblyCSharpExtPatched = extPath + "\\Assembly-CSharp.dll";
-                        string assemblyHearthstoneExt = extPath + "\\Hearthstone.dll";
+                        string destAssemblyPath = Path.Combine(this.HSpath, "Hearthstone_Data\\Managed\\Assembly-CSharp.dll");
+                        string destAssemblyUnity = Path.Combine(this.HSpath, "Hearthstone_Data\\Managed\\UnityEngine.dll");
+                        string destMonoCecil = Path.Combine(this.HSpath, "Hearthstone_Data\\Managed\\Mono.Cecil.dll");
+                        string destHearthstone = Path.Combine(this.HSpath, "Hearthstone_Data\\Managed\\Hearthstone.dll");
+                        string assemblyMonoCecil = Path.Combine(rootPath, extPath, "Mono.Cecil.dll");
+                        string assemblyUnityExt = Path.Combine(rootPath, extPath, "UnityEngine.dll");
+                        string assemblyCSharpExtOrig = Path.Combine(rootPath, extPath, "Assembly-CSharp.orig.dll");
+                        string assemblyCSharpExtPatched = Path.Combine(rootPath, extPath, "Assembly-CSharp.dll");
+                        string assemblyHearthstoneExt = Path.Combine(rootPath, extPath, "Hearthstone.dll");
 
                         if (File.Exists(destAssemblyPath) && File.Exists(destAssemblyUnity))
                         {
@@ -101,10 +117,10 @@ namespace UI
                                 File.Copy(destAssemblyUnity, assemblyUnityExt, true);
                             }
                             Process process = new Process();
-                            process.StartInfo.FileName = extPath + "\\Injector.exe";
+                            process.StartInfo.FileName = injPath;
                             process.StartInfo.UseShellExecute = false;
                             process.StartInfo.CreateNoWindow = true;
-                            process.StartInfo.WorkingDirectory = extPath + "\\";
+                            process.StartInfo.WorkingDirectory = Path.Combine(rootPath + extPath + "/");
                             process.Start();
                             this.lblStatus.Text = "Injecting...";
                             process.WaitForExit();
@@ -113,7 +129,8 @@ namespace UI
                                 File.Copy(assemblyHearthstoneExt, destHearthstone, true);
                                 File.Copy(assemblyCSharpExtPatched, destAssemblyPath, true);
                                 File.Copy(assemblyMonoCecil, destMonoCecil, true);
-                                File.WriteAllText(this.HSpath + "\\plugins.txt", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\plugins");
+                                File.WriteAllText(Path.Combine(this.HSpath + "plugins.txt"), Path.Combine(rootPath, "plugins"));
+                                File.WriteAllText(Path.Combine(this.HSpath + "root.txt"), rootPath);
                                 this.lblStatus.Text = "Injection done";
                             }
                             else
@@ -121,7 +138,8 @@ namespace UI
                         }
                         else
                         {
-                            int num = (int)MessageBox.Show("Impossible to locate some game DLLS..." + Environment.NewLine + "Please select right Hearthstone path in Edit menu." + Environment.NewLine + "The selected folder MUST contains both 'Data' and 'Hearthstone_Data' folders...", "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                            int num = (int)MessageBox.Show("Impossible to locate some game DLLS..." + Environment.NewLine + "Please select right Hearthstone path in Edit menu." + Environment.NewLine
+                                + "The selected folder MUST contains both 'Data' and 'Hearthstone_Data' folders..." + Environment.NewLine + this.HSpath + "/Hearthstone_Data/Managed/Assembly-CSharp.dll", "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
                         }
                     }
                     catch (IOException ex)
@@ -135,7 +153,7 @@ namespace UI
                 }
                 else
                 {
-                    int num1 = (int)MessageBox.Show("Impossible to find injector/injector.exe...", "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                    int num1 = (int)MessageBox.Show("Impossible to find " + Path.Combine(rootPath + extPath + "/Injector.exe"), "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
                 }
             }
             else
@@ -174,7 +192,6 @@ namespace UI
             }
             catch (Exception e)
             {
-                Log.error(e);
                 UpdateBotStatus("Error");
             }
         }
@@ -224,17 +241,15 @@ namespace UI
             btnStopBotAfterThis.Enabled = isPlaying;
         }
 
-    
         private void folderPath_Click(object sender, EventArgs e)
         {
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
-                this.label3.Text = folderBrowserDialog1.SelectedPath;
-                this.HSpath = this.label3.Text;
+                this.lblPath.Text = folderBrowserDialog1.SelectedPath;
+                this.HSpath = this.lblPath.Text;
+                File.WriteAllText(Path.Combine(rootPath, "Config.cfg"), this.HSpath);
+                btnInject.Enabled = true;
             }
         }
-
-     
-       
     }
 }

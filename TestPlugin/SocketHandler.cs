@@ -59,7 +59,7 @@ namespace Plugin
                 }
                 if (response != "Error")
                     response = messageb;
-                Log.debug("El mensaje era: " + messageb);
+                Log.debug("El mensaje era:  " + messageb);
                 bytesSent = Encoding.ASCII.GetBytes(response);
                 stream.Write(bytesSent, 0, bytesSent.Length);
             }
@@ -68,9 +68,17 @@ namespace Plugin
         public static void InitSocketListener()
         {
             IPAddress ip = Dns.GetHostEntry("localhost").AddressList[0];
+            Thread.Sleep(1000);
             tcpListener = new TcpListener(ip, 8888);
-            tcpListener.Start();
-            Log.debug(" >> Server Started");
+            try
+            {
+                tcpListener.Start();
+                Log.debug(" >> Server Started");
+            }
+            catch (SocketException)
+            {
+                Log.debug(" >> Server was Started.");
+            }
 
             while ((true))
             {

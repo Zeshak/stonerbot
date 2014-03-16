@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Configuration;
 using System.IO;
+using System.Reflection;
 
 namespace Hearthstone
 {
     public class Log
     {
-        public static string logPath = @"D:\StonerBot\logsigmund.txt";
+        public static string logPath = @"D:\StonerBot\log2.txt";
         public static string module = "";
 
         static Log()
         {
+            string exePath = Assembly.GetExecutingAssembly().CodeBase;
+            string rootPath = exePath.Substring(0, exePath.LastIndexOf("Hearthstone/") + 1).Replace("file:///", "");
         }
 
         public static void newLog()

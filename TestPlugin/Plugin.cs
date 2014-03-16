@@ -287,7 +287,7 @@ namespace Plugin
                 if (GameState.Get().IsBlockingServer())
                     Thread.Sleep(500);
                 GameFunctions.populateZones();
-                BruteAI.SendEmoMessages();
+                //BruteAI.SendEmoMessages();
                 if (BruteAI.BruteHand())
                     ++BruteAI.loops;
                 else
@@ -367,7 +367,7 @@ namespace Plugin
 
         public static bool StartBot(string func, string[] args, string rawArgs)
         {
-            Log.say("Bot started");
+            Log.say("Bot starteda");
             Plugin.playVsHumans = true;
             Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
             Plugin.run = true;
