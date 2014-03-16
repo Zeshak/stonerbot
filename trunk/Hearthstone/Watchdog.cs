@@ -26,29 +26,12 @@ namespace Hearthstone
             fsw.Created += new FileSystemEventHandler(onChange_raw);
             fsw.EnableRaisingEvents = true;
             Log.debug("Watching filesystem for plugin changes in: " + pluginDirectory);
-
-            // If the user requests a plugin be run, reload it
-            CheatMgr.Get().RegisterCheatHandler("run", new CheatMgr.ProcessCheatCallback(this.RunCommand));
-
-            // Echo function, for testing
-            CheatMgr.Get().RegisterCheatHandler("echo", new CheatMgr.ProcessCheatCallback(this.EchoCommand));
         }
 
         public bool RunPlugin(string pluginName)
         {
             string path = pluginDirectory + Path.DirectorySeparatorChar + pluginName + ".dll";
             loader.exec(path);
-            return true;
-        }
-
-        public bool RunCommand(string func, string[] args, string rawArgs)
-        {
-            return RunPlugin(rawArgs);
-        }
-
-        public bool EchoCommand(string func, string[] args, string rawArgs)
-        {
-            Log.say(rawArgs);
             return true;
         }
 

@@ -13,7 +13,8 @@ namespace Plugin
         private static ZonePlay myPlayZone;
         private static ZoneWeapon myWeaponZone;
         private static ZoneSecret mySecretZone;
-      
+        public static int gameTurn;
+
 
         public static void populateZones()
         {
@@ -87,77 +88,19 @@ namespace Plugin
             List<CardDetails> listCards = new List<CardDetails>();
             foreach (Card card in GameFunctions.ePlayer.GetBattlefieldZone().GetCards())
             {
-                CardDetails cDet = (CardDetails.FindInCardDetails(card) ?? new CardDetails());
+                CardDetails cd = (CardDetails.FindInCardDetails(card) ?? new CardDetails());
                 Entity entity = card.GetEntity();
-                cDet.CardId = card.GetEntity().GetCardId();
-                cDet.CardName = card.name;
-                cDet.Card = card;
-                switch (entity.GetRarity())
+                cd.CardId = card.GetEntity().GetCardId();
+                cd.CardName = card.name;
+                cd.Card = card;
+                if (entity.GetRarity() == TAG_RARITY.LEGENDARY)
                 {
-                    case TAG_RARITY.LEGENDARY:
-                        cDet.DisableThis = true;
-                        break;
-                    case TAG_RARITY.EPIC:
-                        break;
-                    case TAG_RARITY.RARE:
-                        break;
-                    case TAG_RARITY.COMMON:
-                        break;
-                    case TAG_RARITY.FREE:
-                        break;
+                    cd.DisableThis = true;
                 }
-                SetNewValuesByCardStatus(ref cDet);
-                listCards.Add(cDet);
+                CardDetails.SetNewValuesByCardStatus(ref cd);
+                listCards.Add(cd);
             }
             return listCards;
-        }
-
-        public static void SetNewValuesByCardStatus(ref CardDetails cd)
-        {
-            Entity entity = cd.Card.GetEntity();
-            int currATK = entity.GetATK();
-            int currHP = entity.GetHealth();
-            int origATK = entity.GetOriginalATK();
-            int origHP = entity.GetOriginalHealth();
-            if (currATK - currHP > 1 && currHP < 4)
-            {
-                //Si el bicho tiene dif de atk/vida mayor a 1, y tiene menos de 4 de vida, trato de matarlo perdiendo poco (ej: 5-3)
-                cd.SetInitValues();
-                cd.KillThis = true;
-                if (currATK > 5)
-                    cd.DisableThis = true;
-            }
-            else if (entity.HasTaunt())
-            {
-                //Se usa silence si tiene: (*)Menos de 3 ataque y más de 2 de vida (no silencia las 2-2, las va a matar luego) (*)Si está bufeada y le sumaron 2 a algún atributo
-                if ((currATK < 3 && currHP > 2) || (currATK > origATK + 1) || ((currHP > origHP + 1)))
-                    cd.SilenceThis = true;
-                //Bicho con taunt a partir de 3-6 o 5-3 le tiro spell si tengo
-                if ((currATK > 2 && currHP > 5) || (currHP > 2 && currATK > 4))
-                    cd.DisableThis = true;
-            }
-            else if (currATK > 4 && currHP > 4)
-            {
-                //Si es bicho fuerte, 5-5 en adelante, trato de tirarle spell
-                cd.DisableThis = true;
-            }
-            else if (entity.HasDivineShield())
-            {
-                //Bicho relativamente fuerte, en adelante que pueda o no estar buffeado o tenga taunt con divine shield. Ej: Sunwalker
-                if ((currATK > 3 && currHP > 1) || (currATK > origATK + 1) ||(currHP > origHP + 1) || (entity.HasTaunt()))
-                    cd.DisableThis = true;
-
-                //Bicho originalmente débil, Escudera argenta o alguno con shield que haya sido buffeado, me conviene silenciarlo.
-                if ((origATK <= 2 && origHP <= 2) && ((currATK > origATK + 1) || (currHP > origHP + 1)))
-                    cd.SilenceThis = true;
-            }
-                
-            else if (entity.HasSpellPower())
-            {
-                cd.SilenceThis = true; //Por ahora lo deje así hasta que unifiquemos criterios :P
-            }
-
-            
         }
 
         public static bool DoDropWeapon(Card c)
@@ -461,6 +404,7 @@ namespace Plugin
             GameFunctions.DoEndTurn();
             TurnStartManager.Get().BeginListeningForTurnEvents();
             MulliganManager.Get().EndMulligan();
+            GameFunctions.gameTurn = 0;
             Log.say("Mulligan ended : " + num.ToString() + " cards changed");
             return true;
         }
@@ -468,6 +412,7 @@ namespace Plugin
         public static void DoEndTurn()
         {
             InputManager.Get().DoEndTurnButton();
+            GameFunctions.gameTurn++;
         }
 
         private static bool PlayPowerUpSpell(Card card)
@@ -510,6 +455,6 @@ namespace Plugin
             localPlayer.UpdateManaCounter();
         }
 
-        
+
     }
 }

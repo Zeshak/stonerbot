@@ -24,7 +24,7 @@ namespace Plugin
                 Plugin.saidHi = true;
             }
             if (GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 10 && !Plugin.saidGG
-				|| GameFunctions.ePlayer.GetHero().GetRemainingHP() <= 10 && !Plugin.saidGG)
+                || GameFunctions.ePlayer.GetHero().GetRemainingHP() <= 10 && !Plugin.saidGG)
             {
                 GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(EmoteType.GOOD_GAME);
                 Plugin.saidGG = true;
@@ -375,7 +375,8 @@ namespace Plugin
                             return 0;
                     }
                 );
-                if (thisAttack == attackee.GetEntity().GetHealth()){
+                if (thisAttack == attackee.GetEntity().GetHealth())
+                {
                     bestAvoidedIndexes = avoidedIndexes;
                     break;
                 }
@@ -410,20 +411,46 @@ namespace Plugin
         {
             if (attackee == null)
                 return null;
-            List<Card> list = Enumerable.ToList<Card>((IEnumerable<Card>)GameFunctions.myPlayer.GetBattlefieldZone().GetCards());
+            List<Card> list = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
             if (attackee != GameFunctions.ePlayer.GetHeroCard())
             {
                 Card c1 = null;
                 int bestSum = 0;
+                int thisSum = 0;
+                bool attackeeHasDivine = attackee.GetEntity().HasDivineShield();
                 foreach (Card c2 in list)
                 {
-                    Entity entity = c2.GetEntity();
-                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && entity.GetHealth() < attackee.GetEntity().GetATK() && GameFunctions.CanBeUsed(c2))
-                        return c2;
-                    int thisSum = entity.GetATK() + entity.GetHealth();
-                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && GameFunctions.CanBeUsed(c2) && (thisSum < bestSum || bestSum == 0))
+                    Entity myCardEntity = c2.GetEntity();
+                    CardDetails cd = CardDetails.FindInCardDetails(c2);
+                    //Para los que no son extreme, y no tienen taunt, sólo los ataco con esa si el ataque de la carta es mayor a la HP.
+                    if (cd != null && !cd.KillThisEXTREME && !attackee.GetEntity().HasTaunt() 
+                        && (!(myCardEntity.GetATK() > myCardEntity.GetHealth()) || !(myCardEntity.GetHealth() > attackee.GetEntity().GetATK())))
+                        continue;
+                    if (!attackeeHasDivine)
                     {
-                        c1 = c2;
+                        if (myCardEntity.GetATK() >= attackee.GetEntity().GetHealth() && myCardEntity.GetHealth() < attackee.GetEntity().GetATK() && GameFunctions.CanBeUsed(c2))
+                            return c2;
+                        thisSum = myCardEntity.GetATK() + myCardEntity.GetHealth();
+                        if (myCardEntity.GetATK() >= attackee.GetEntity().GetHealth() && GameFunctions.CanBeUsed(c2) && (thisSum < bestSum || bestSum == 0))
+                        {
+                            c1 = c2;
+                            bestSum = thisSum;
+                        }
+                    }
+                    else
+                    {
+                        thisSum = myCardEntity.GetATK();
+                        if (myCardEntity.GetHealth() < attackee.GetEntity().GetATK())
+                            return c2;
+                        else
+                        {
+                            thisSum = myCardEntity.GetATK();
+                            if (thisSum < bestSum || bestSum == 0)
+                            {
+                                c1 = c2;
+                                bestSum = thisSum;
+                            }
+                        }
                     }
                 }
                 if (c1 != null && GameFunctions.CanBeUsed(c1))
@@ -451,153 +478,91 @@ namespace Plugin
 
         public static Card NextBestAttackee()
         {
-            List<Card> list1 = Enumerable.ToList<Card>((IEnumerable<Card>)GameFunctions.ePlayer.GetBattlefieldZone().GetCards());
-            List<Card> list2 = new List<Card>();
+            List<Card> list1 = GameFunctions.ePlayer.GetBattlefieldZone().GetCards();
+            Card attackee = null;
+            bool selHasTaunt = false;
+            bool selEXTREME = false;
+            bool selKillThis = false;
             foreach (Card card in list1)
             {
                 Entity entity = card.GetEntity();
-                if (entity.HasTaunt() && entity.CanBeAttacked())
-                    return card;
-            }
-            if (GameFunctions.ePlayer.GetHeroCard().GetEntity().CanBeAttacked())
-                return GameFunctions.ePlayer.GetHeroCard();
-            foreach (Card card in list1)
-            {
-                if (card.GetEntity().CanBeAttacked())
-                    return card;
-            }
-            return null;
-        }
-
-        public static List<Card> NextBestAttackerCombinated(Card attackee)
-        {
-            List<Card> eligibleCards = new List<Card>();
-            List<Card> possibleCards = new List<Card>();
-            if (attackee == null)
-                return null;
-            List<Card> listCardInMyHand = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
-            if (attackee != GameFunctions.ePlayer.GetHeroCard())
-            {
-                //Acá entra en caso de que haya que atacar a un minion
-                foreach (Card card in listCardInMyHand)
+                if (!entity.CanBeAttacked())
+                    continue;
+                CardDetails cd = CardDetails.FindInCardDetails(card);
+                if (entity.HasTaunt())
                 {
-                    Entity entity = card.GetEntity();
-                    // EJ: Mia es 4-4 y la de él es 3-4
-                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && entity.GetHealth() < attackee.GetEntity().GetATK() && GameFunctions.CanBeUsed(card))
+                    //Si todavía no tengo ninguna, selecciona esta para atacar.
+                    if (attackee == null)
                     {
-                        eligibleCards.Add(card);
-                        return eligibleCards;
+                        selHasTaunt = true;
+                        attackee = card;
                     }
-
-                    // EJ: Mia es 4-3 la de él es 3-4
-                    if (entity.GetATK() >= attackee.GetEntity().GetHealth() && GameFunctions.CanBeUsed(card))
+                    else
                     {
-                        //Si no tengo cartas posibles, la agrego y sigo mirando
-                        if (possibleCards.Count == 0)
+                        //Primero elije una carta con taunt por sobre todo
+                        if (!selHasTaunt)
                         {
-                            possibleCards.Clear();
-                            possibleCards.Add(card);
-                            continue;
+                            selHasTaunt = true;
+                            attackee = card;
                         }
                         else
                         {
-                            //Si tengo cartas posibles elijo la de menor ataque.
-                            if (possibleCards[0].GetEntity().GetATK() > entity.GetATK())
+                            if (cd != null)
                             {
-                                possibleCards.Clear();
-                                possibleCards.Add(card);
+                                if (cd.KillThisEXTREME)
+                                {
+                                    selEXTREME = true;
+                                    attackee = card;
+                                }
+                                else if (cd.KillThis && !selEXTREME)
+                                {
+                                    selKillThis = true;
+                                    attackee = card;
+                                }
+                                else if (!selEXTREME && !selKillThis)
+                                {
+                                    selKillThis = true;
+                                    attackee = card;
+                                }
                             }
                         }
                     }
                 }
-
-                if (eligibleCards == null)
+                if (cd != null)
                 {
-                    GetCombinatedAttackersThatKill(listCardInMyHand, eligibleCards, attackee);
-                }
-
-                if (eligibleCards != null)
-                    return eligibleCards;
-            }
-            else
-            {
-                //Sino ataca al heroe primero con el héroe si puede
-                Entity hero = GameFunctions.myPlayer.GetHero();
-                if (hero != null && GameFunctions.CanBeUsed(hero.GetCard()))
-                {
-                    eligibleCards.Add(hero.GetCard());
-                    return eligibleCards;
-                }
-            }
-            foreach (Card c in listCardInMyHand)
-            {
-                //Sino empieza a atacar al héroe de manera random con todos los minions que se vaya pudiendo
-                c.GetEntity();
-                if (GameFunctions.CanBeUsed(c))
-                {
-                    if (new System.Random().NextDouble() > 0.5)
+                    if (cd.KillThis)
                     {
-                        eligibleCards.Clear();
-                        eligibleCards.Add(c);
-                        return eligibleCards;
+                        if (attackee == null)
+                        {
+                            selKillThis = true;
+                            attackee = card;
+                        }
+                        else if (attackee == card)
+                            selKillThis = true;
                     }
-                    eligibleCards.Add(c);
-                }
-            }
-            return eligibleCards;
-        }
-
-        private static void GetCombinatedAttackersThatKill(List<Card> listCardInMyHand, List<Card> eligibleCards, Card attackee)
-        {
-            List<Card> orderedList = new List<Card>(listCardInMyHand);
-            orderedList.Sort((x, y) => x.GetEntity().GetATK().CompareTo(y.GetEntity().GetATK()));
-            int bestAtk = 0;
-            int[] avoidedIndexes = new int[orderedList.Count];
-            int[] bestAvoidedIndexes = new int[orderedList.Count];
-            int possibleCombinations = GetCombinationsWithoutRepetition(orderedList.Count);
-            for (int i = 0; i < possibleCombinations; i++)
-            {
-                int thisAttack = 0;
-                thisAttack = orderedList.Sum(
-                    delegate(Card card)
+                    if (cd.KillThisEXTREME)
                     {
-                        int index = orderedList.FindIndex(s => s == card);
-                        if (!avoidedIndexes.Contains(index))
-                            return card.GetEntity().GetATK();
-                        else
-                            return 0;
+                        if (attackee == null || !selHasTaunt)
+                        {
+                            selEXTREME = true;
+                            attackee = card;
+                        }
+                        else if (attackee == card)
+                            selEXTREME = true;
                     }
-                );
-                if (thisAttack == attackee.GetEntity().GetHealth())
-                {
-                    bestAvoidedIndexes = avoidedIndexes;
-                    break;
                 }
-                else if (thisAttack > attackee.GetEntity().GetHealth() && (thisAttack < bestAtk || bestAtk == 0))
-                    bestAvoidedIndexes = avoidedIndexes;
             }
-        }
-
-        private static int GetCombinationsWithoutRepetition(int items)
-        {
-            int result = 0;
-            for (int i = 1; i <= items; i++)
+            if (attackee == null)
             {
-                result += GetPermutationsWithoutRepetition(items, i);
+                if (GameFunctions.ePlayer.GetHeroCard().GetEntity().CanBeAttacked())
+                    return GameFunctions.ePlayer.GetHeroCard();
+                foreach (Card card in list1)
+                {
+                    if (card.GetEntity().CanBeAttacked())
+                        return card;
+                }
             }
-            return result;
-        }
-
-        private static int GetPermutationsWithoutRepetition(int items, int count)
-        {
-            return (Factorial(items) / (Factorial(count) * Factorial(items - count)));
-        }
-
-        private static int Factorial(int i)
-        {
-            if (i <= 1)
-                return 1;
-            return i * Factorial(i - 1);
+            return attackee;
         }
     }
 }

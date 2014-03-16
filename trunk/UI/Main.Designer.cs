@@ -42,7 +42,7 @@
             this.txtSay = new System.Windows.Forms.TextBox();
             this.btnSay = new System.Windows.Forms.Button();
             this.folderPath = new System.Windows.Forms.Button();
-            this.label3 = new System.Windows.Forms.Label();
+            this.lblPath = new System.Windows.Forms.Label();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.SuspendLayout();
             // 
@@ -179,22 +179,22 @@
             this.folderPath.UseVisualStyleBackColor = true;
             this.folderPath.Click += new System.EventHandler(this.folderPath_Click);
             // 
-            // label3
+            // lblPath
             // 
-            this.label3.AutoSize = true;
-            this.label3.ForeColor = System.Drawing.Color.Red;
-            this.label3.Location = new System.Drawing.Point(210, 298);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(235, 13);
-            this.label3.TabIndex = 18;
-            this.label3.Text = "\"Before Inject, configure your Hearthstone path\"";
+            this.lblPath.AutoSize = true;
+            this.lblPath.ForeColor = System.Drawing.Color.Red;
+            this.lblPath.Location = new System.Drawing.Point(179, 298);
+            this.lblPath.Name = "lblPath";
+            this.lblPath.Size = new System.Drawing.Size(235, 13);
+            this.lblPath.TabIndex = 18;
+            this.lblPath.Text = "\"Before Inject, configure your Hearthstone path\"";
             // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(640, 369);
-            this.Controls.Add(this.label3);
+            this.ClientSize = new System.Drawing.Size(471, 343);
+            this.Controls.Add(this.lblPath);
             this.Controls.Add(this.folderPath);
             this.Controls.Add(this.btnSay);
             this.Controls.Add(this.txtSay);
@@ -234,7 +234,7 @@
         private System.Windows.Forms.TextBox txtSay;
         private System.Windows.Forms.Button btnSay;
         private System.Windows.Forms.Button folderPath;
-        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label lblPath;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
     }
 }
