@@ -245,8 +245,6 @@ namespace Plugin
             cd = new CardDetails();
             cd.CardId = "EX1_097";
             cd.CardName = "Abomination";
-            cd.DisableThis = true;
-            cd.DisableFirst = true;
             cd.SilenceThis = true;
             ListCardDetails.Add(cd);
             #endregion
@@ -255,6 +253,7 @@ namespace Plugin
             cd.CardId = "EX1_335";
             cd.CardName = "Lightspawn";
             cd.SilenceThis = true;
+            cd.KillThis = true;
             ListCardDetails.Add(cd);
             #endregion
             #region -[ Ragnaros ]-
@@ -278,6 +277,15 @@ namespace Plugin
             cd.CardId = "EX1_565";
             cd.CardName = "Flametongue Totem";
             cd.KillThis = true;
+            cd.SilenceThis = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region -[ Lightwell ]-
+            cd = new CardDetails();
+            cd.CardId = "EX1_341";
+            cd.CardName = "Lightwell";
+            cd.KillThis = true;
+            cd.KillThisEXTREME = true;
             cd.SilenceThis = true;
             ListCardDetails.Add(cd);
             #endregion
@@ -480,11 +488,14 @@ namespace Plugin
                 if (currATK > 5)
                     cd.DisableThis = true;
             }
-            else if (entity.HasTaunt())
+            //Se usa silence si tiene: (*)Menos de 3 ataque y más de 2 de vida (no silencia las 2-2, las va a matar luego) (*)Si está bufeada y le sumaron 2 a algún atributo
+            if ((currATK < 3 && currHP > 2) || (currATK > origATK + 1) || ((currHP > origHP + 1)))
+                cd.SilenceThis = true;
+            if (entity.HasTaunt())
             {
                 if (entity.HasDivineShield())
                 {
-                    //Se usa silence si tiene: (*)Menos de 3 ataque y más de 2 de vida (no silencia las 2-2, las va a matar luego) (*)Si está bufeada y le sumaron 2 a algún atributo
+                    //Se usa todo si es a partir de 4-4
                     if (currATK > 3 && currHP > 3)
                     {
                         cd.SilenceThis = true;
@@ -496,20 +507,17 @@ namespace Plugin
                 }
                 else
                 {
-                    //Se usa silence si tiene: (*)Menos de 3 ataque y más de 2 de vida (no silencia las 2-2, las va a matar luego) (*)Si está bufeada y le sumaron 2 a algún atributo
-                    if ((currATK < 3 && currHP > 2) || (currATK > origATK + 1) || ((currHP > origHP + 1)))
-                        cd.SilenceThis = true;
                     //Bicho con taunt a partir de 3-6 o 5-3 le tiro spell si tengo
                     if ((currATK > 2 && currHP > 5) || (currHP > 2 && currATK > 4))
                         cd.DisableThis = true;
                 }
             }
-            else if (currATK > 4 && currHP > 4)
+            if (currATK > 4 && currHP > 4)
             {
                 //Si es bicho fuerte, 5-5 en adelante, trato de tirarle spell
                 cd.DisableThis = true;
             }
-            else if (entity.HasDivineShield())
+            if (entity.HasDivineShield())
             {
                 //Bicho relativamente fuerte, en adelante que pueda o no estar buffeado o tenga taunt con divine shield. Ej: Sunwalker
                 if ((currATK > 3 && currHP > 1) || (currATK > origATK + 1) || (currHP > origHP + 1) || (entity.HasTaunt()))
@@ -519,10 +527,8 @@ namespace Plugin
                 if ((origATK <= 2 && origHP <= 2) && ((currATK > origATK + 1) || (currHP > origHP + 1)))
                     cd.SilenceThis = true;
             }
-            else if (entity.HasSpellPower())
-            {
-                cd.SilenceThis = true; //Por ahora lo deje así hasta que unifiquemos criterios :P
-            }
+            if (entity.HasWindfury())
+                cd.KillThisEXTREME = true;
         }
     }
 }
