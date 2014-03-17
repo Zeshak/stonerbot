@@ -377,6 +377,11 @@ namespace Plugin
             }
         }
 
+        public static void AddStatistics(bool win)
+        {
+            File.AppendAllText("stat.txt", "[Date]" + DateTime.Now.ToString() + "[ID]" + selDeck.DeckId.ToString() + "[Name]" + selDeck.Alias.ToString() + "[Result]" + win.ToString() + Environment.NewLine);
+        }
+
         #endregion
 
         #region -[ Cheat Handlers ]-
@@ -495,11 +500,6 @@ namespace Plugin
             Log.say("Bot stopped");
             Plugin.run = false;
             return true;
-        }
-
-        public static void AddStatistics(bool win)
-        {
-            File.AppendAllText("stat.txt", "[Date]" + DateTime.Now.ToString() + "[ID]" + selDeck.DeckId.ToString() + "[Name]" + selDeck.Alias.ToString() + "[Result]" + win.ToString() + Environment.NewLine);
         }
 
         #endregion

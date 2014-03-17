@@ -20,7 +20,7 @@ namespace Plugin
 
         public static void SendEmoMessages()
         {
-            
+
             if (GameFunctions.myPlayer.GetHero().GetRemainingHP() == 30 && !Plugin.saidHi)
             {
                 SendEmoType(EmoteType.GREETINGS);
@@ -29,7 +29,7 @@ namespace Plugin
             if (GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 10 && !Plugin.saidGG
                 || GameFunctions.ePlayer.GetHero().GetRemainingHP() <= 10 && !Plugin.saidGG)
             {
-                SendEmoType(EmoteType.WELL_PLAYED); 
+                SendEmoType(EmoteType.WELL_PLAYED);
                 Plugin.saidGG = true;
             }
         }
@@ -88,7 +88,7 @@ namespace Plugin
         {
             foreach (Card card in GameFunctions.myPlayer.GetHandZone().GetCards())
             {
-                if (CardDetails.IsViableToPlay(card.GetEntity(), null, true) && GameFunctions.CanBeUsed(card))
+                if (CardDetails.IsViableToPlay(card, null, true) && GameFunctions.CanBeUsed(card))
                     return card;
             }
             return null;
@@ -106,17 +106,14 @@ namespace Plugin
             foreach (Card card in GameFunctions.myPlayer.GetHandZone().GetCards())
             {
                 CardDetails cd = CardDetails.FindInCardDetails(card);
-                if (cd == null)
+                if (cd == null || !(CardDetails.IsViableToPlay(card)) || !(GameFunctions.CanBeUsed(card)))
                     continue;
-                if (targetEntity.DisableThis && cd.CanDisable && GameFunctions.CanBeUsed(card))
+                if (targetEntity.DisableThis && cd.CanDisable)
                 {
-                    if (CardDetails.IsViableToPlay(cd.Card.GetEntity(), targetEntity))
-                    {
-                        bestCard = card;
-                        isDisable = true;
-                    }
+                    bestCard = card;
+                    isDisable = true;
                 }
-                if (targetEntity.SilenceThis && cd.CanSilence && GameFunctions.CanBeUsed(card))
+                if (targetEntity.SilenceThis && cd.CanSilence)
                 {
                     if (cd.DisableFirst && isDisable)
                         continue;
@@ -428,7 +425,7 @@ namespace Plugin
                 return;
             Card attackee = GetBestAttackee(maxSelfDamageWithWeapon);
             if (attackee != null)
-                GameFunctions.DoAttack(hero.GetCard(), attackee);                 
+                GameFunctions.DoAttack(hero.GetCard(), attackee);
         }
 
         public static Card GetBestAttacker(Card attackee)
