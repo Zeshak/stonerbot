@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -23,7 +24,9 @@ namespace Plugin
             OnPracticeDeckSel,
             OnPracticeQueue,
             OnMatchDeckSel,
-            OnMatchDeckQueue
+            OnMatchDeckQueue,
+            OnMatchTurn,
+            OnEndGameScreen
         }
 
         public static BotStatusList BotStatus;
@@ -42,7 +45,6 @@ namespace Plugin
         public static long currentDeckId;
         public static int modulo;
         private static Thread socket;
-        private bool inQueue = false;
         public static bool saidHi = false;
         public static bool saidGG = false;
 
@@ -72,7 +74,7 @@ namespace Plugin
             if (UnityEngine.Time.realtimeSinceStartup - this.timeLastRun < Plugin.minTimeBetweenRuns)
                 return;
             this.timeLastRun = UnityEngine.Time.realtimeSinceStartup;
-            Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 4.0;
+            Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 3.5;
             try
             {
                 if (Plugin.run)
@@ -112,7 +114,6 @@ namespace Plugin
                 GameFunctions.ePlayer = GameFunctions.gs.GetFirstOpponentPlayer(GameFunctions.myPlayer);
                 CardDetails.SetCardDetails();
                 InactivePlayerKicker.Get().SetShouldCheckForInactivity(false);
-                inQueue = false;
             }
             catch (Exception ex)
             {
@@ -244,6 +245,7 @@ namespace Plugin
                 {
                     try
                     {
+                        BotStatus = BotStatusList.OnMulligan;
                         Plugin.mulliganDone = GameFunctions.DoMulligan();
                         return;
                     }
@@ -258,16 +260,21 @@ namespace Plugin
             {
                 try
                 {
-                    if (GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 0)
+                    if (!Plugin.statisticsAdded)
                     {
-                        Log.say("Defeat...");
+                        if (GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 0)
+                        {
+                            Log.say("Defeat...");
+                            Plugin.AddStatistics(Plugin.currentDeckId, false);
+                        }
+                        else
+                        {
+                            Log.say("Victory!");
+                            Plugin.AddStatistics(Plugin.currentDeckId, true);
+                        }
+                        Plugin.statisticsAdded = true;
                     }
-                    else
-                    {
-                        Log.say("Victory!");
-                    }
-                    Plugin.statisticsAdded = true;
-                    if (!((UnityEngine.Object)EndGameScreen.Get() != (UnityEngine.Object)null))
+                    if (EndGameScreen.Get() == null)
                         return;
                     EndGameScreen.Get().ContinueEvents();
                     saidHi = false;
@@ -287,7 +294,7 @@ namespace Plugin
                 if (GameState.Get().IsBlockingServer())
                     Thread.Sleep(500);
                 GameFunctions.populateZones();
-                //BruteAI.SendEmoMessages();
+                BruteAI.SendEmoMessages();
                 if (BruteAI.BruteHand())
                     ++BruteAI.loops;
                 else
@@ -312,7 +319,7 @@ namespace Plugin
             {
                 try
                 {
-                    if (!SceneMgr.Get().IsInGame() && !Network.IsMatching() && !Network.IsInDraftQueue() && !inQueue || (double)num1 > (double)Plugin.maxQueueTime)
+                    if (!SceneMgr.Get().IsInGame() && !Network.IsMatching() && !Network.IsInDraftQueue() && !(BotStatus == BotStatusList.OnMatchDeckQueue) && !(BotStatus == BotStatusList.OnPracticeQueue) || (double)num1 > (double)Plugin.maxQueueTime)
                     {
                         Plugin.statisticsAdded = false;
                         Plugin.mulliganDone = false;
@@ -329,23 +336,19 @@ namespace Plugin
                             Network.TrackClient(Network.TrackLevel.LEVEL_INFO, Network.TrackWhat.TRACK_PLAY_CASUAL_WITH_CUSTOM_DECK);
                             Network.UnrankedMatch(Plugin.currentDeckId);
                         }
-                        inQueue = true;
+                        BotStatus = BotStatusList.OnMatchDeckQueue;
                         Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
                         FriendChallengeMgr.Get().OnEnteredMatchmakerQueue();
-                        PresenceMgr.Get().SetStatus(new Enum[1]
-                                    {
-                                      (Enum) PresenceStatus.PLAY_QUEUE
-                                    });
+                        PresenceMgr.Get().SetStatus(PresenceStatus.PLAY_QUEUE);
                     }
                     else
                     {
-                        //Plugin.socketSendStatus("Q");
                         Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.error("Error in tournament loop... " + ex.StackTrace);
+                    Log.error(ex);
                 }
             }
             else
@@ -359,15 +362,9 @@ namespace Plugin
 
         #region -[ Cheat Handlers ]-
 
-        public static bool help(string func, string[] args, string rawArgs)
-        {
-            Log.say("'startbot'-'startvsai'-'startvsaiexpert'-'startbotranked'-'stopbot'-'analyze'-'deckid'-'finishthisgame'-'help'");
-            return true;
-        }
-
         public static bool StartBot(string func, string[] args, string rawArgs)
         {
-            Log.say("Bot starteda");
+            Log.say("Bot started");
             Plugin.playVsHumans = true;
             Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
             Plugin.run = true;
@@ -479,6 +476,11 @@ namespace Plugin
             Log.say("Bot stopped");
             Plugin.run = false;
             return true;
+        }
+
+        public static void AddStatistics(long deckId, bool win)
+        {
+            File.AppendAllText("stat.txt", deckId.ToString() + "_" + (win ? "1" : "0") + Environment.NewLine);
         }
 
         #endregion

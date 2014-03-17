@@ -10,12 +10,16 @@ namespace Hearthstone
 {
     public class Watchdog
     {
-        static string pluginDirectory = @"D:\StonerBot\plugins";
+        static string pluginDirectory;
         Loader loader;
         Hashtable mtimeDb = new Hashtable();
 
         public void startWatch()
         {
+            Microsoft.Win32.RegistryKey key;
+            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("StonerBot");
+            string rootPath = key.GetValue("RootPath").ToString();
+            pluginDirectory = Path.Combine(rootPath, "plugins");
             // init
             loader = new Loader();
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using UnityEngine;
 
 
@@ -10,6 +11,7 @@ namespace Plugin
     {
         public static int loops = 0;
         public static int maxLoops = 10;
+        private static int maxSelfDamageWithWeapon = 3;
 
         static BruteAI()
         {
@@ -20,13 +22,21 @@ namespace Plugin
         {
             if (GameFunctions.myPlayer.GetHero().GetRemainingHP() == 30 && !Plugin.saidHi)
             {
+                EmoteHandler.Get().ShowEmotes();
+                Thread.Sleep(1000);
                 GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(EmoteType.GREETINGS);
+                Network.Get().SendEmote(EmoteType.GREETINGS);
+                EmoteHandler.Get().HideEmotes();
                 Plugin.saidHi = true;
             }
             if (GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 10 && !Plugin.saidGG
                 || GameFunctions.ePlayer.GetHero().GetRemainingHP() <= 10 && !Plugin.saidGG)
             {
-                GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(EmoteType.GOOD_GAME);
+                EmoteHandler.Get().ShowEmotes();
+                Thread.Sleep(1000);
+                GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(EmoteType.WELL_PLAYED);
+                Network.Get().SendEmote(EmoteType.WELL_PLAYED);
+                EmoteHandler.Get().HideEmotes();
                 Plugin.saidGG = true;
             }
         }
@@ -160,6 +170,9 @@ namespace Plugin
             foreach (Card c in Enumerable.ToList<Card>(GameFunctions.myPlayer.GetHandZone().GetCards()))
             {
                 Entity entity = c.GetEntity();
+                CardDetails cd = CardDetails.FindInCardDetails(c);
+                if (cd != null && (cd.CanDisable || cd.CanSilence))
+                    continue;
                 if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSpell() && (entity.GetCardId() != "GAME_005" && GameFunctions.CanBeUsed(c)))
                     return c;
             }
@@ -229,7 +242,6 @@ namespace Plugin
         public static Card NextBestMinionDrop()
         {
             List<Card> listCardsInHand = GameFunctions.myPlayer.GetHandZone().GetCards();
-            Log.debug("Mi zona del campo tiene " + GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount().ToString() + " minions");
             if (GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount() >= 7)
                 return null;
             bool haveInPlayWithTaunt = false;
@@ -269,8 +281,8 @@ namespace Plugin
 
         public static bool BruteAttack()
         {
-            Card attackee = BruteAI.NextBestAttackee();
-            Card attacker = BruteAI.NextBestAttacker(attackee);
+            Card attackee = BruteAI.GetBestAttackee();
+            Card attacker = BruteAI.GetBestAttacker(attackee);
             if (attacker == null || attackee == null)
                 return false;
             return GameFunctions.DoAttack(attacker, attackee) ? true : true;
@@ -407,47 +419,60 @@ namespace Plugin
             return i * Factorial(i - 1);
         }
 
-        public static Card NextBestAttacker(Card attackee)
+        private static void DoKillablesWithWeapon()
+        {
+            Entity hero = GameFunctions.myPlayer.GetHero();
+            if (hero == null || !GameFunctions.CanBeUsed(hero.GetCard()) || hero.GetRealTimeRemainingHP() < 13)
+                return;
+            Card attackee = GetBestAttackee(maxSelfDamageWithWeapon);
+            if (attackee != null)
+                GameFunctions.DoAttack(hero.GetCard(), attackee);                 
+        }
+
+        public static Card GetBestAttacker(Card attackee)
         {
             if (attackee == null)
                 return null;
-            List<Card> list = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
+            List<Card> myCardsInPlay = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
+            int hisCardATK = attackee.GetEntity().GetATK();
             if (attackee != GameFunctions.ePlayer.GetHeroCard())
             {
                 Card c1 = null;
                 int bestSum = 0;
                 int thisSum = 0;
                 bool attackeeHasDivine = attackee.GetEntity().HasDivineShield();
-                foreach (Card c2 in list)
+                foreach (Card myCard in myCardsInPlay)
                 {
-                    Entity myCardEntity = c2.GetEntity();
-                    CardDetails cd = CardDetails.FindInCardDetails(c2);
-                    //Para los que no son extreme, y no tienen taunt, sólo los ataco con esa si el ataque de la carta es mayor a la HP.
-                    if (cd != null && !cd.KillThisEXTREME && !attackee.GetEntity().HasTaunt() 
-                        && (!(myCardEntity.GetATK() > myCardEntity.GetHealth()) || !(myCardEntity.GetHealth() > attackee.GetEntity().GetATK())))
+                    Entity myCardEntity = myCard.GetEntity();
+                    CardDetails cd = CardDetails.FindInCardDetails(myCard);
+                    int myCardHP = myCardEntity.GetHealth();
+                    int myCardATK = myCardEntity.GetHealth();
+                    //Para los que no son extreme, y no tienen taunt, sólo los ataco con esa si el ataque de la carta es mayor a la HP y si el bicho me mataría
+                    if (cd != null && !cd.KillThisEXTREME && !attackee.GetEntity().HasTaunt() && myCardHP <= hisCardATK)
                         continue;
                     if (!attackeeHasDivine)
                     {
-                        if (myCardEntity.GetATK() >= attackee.GetEntity().GetHealth() && myCardEntity.GetHealth() < attackee.GetEntity().GetATK() && GameFunctions.CanBeUsed(c2))
-                            return c2;
+                        if (myCardEntity.GetATK() >= attackee.GetEntity().GetHealth() && myCardEntity.GetHealth() < attackee.GetEntity().GetATK() && GameFunctions.CanBeUsed(myCard))
+                            return myCard;
                         thisSum = myCardEntity.GetATK() + myCardEntity.GetHealth();
-                        if (myCardEntity.GetATK() >= attackee.GetEntity().GetHealth() && GameFunctions.CanBeUsed(c2) && (thisSum < bestSum || bestSum == 0))
+                        if (myCardEntity.GetATK() >= attackee.GetEntity().GetHealth() && GameFunctions.CanBeUsed(myCard) && (thisSum < bestSum || bestSum == 0))
                         {
-                            c1 = c2;
+                            c1 = myCard;
                             bestSum = thisSum;
                         }
                     }
                     else
                     {
+                        //Mejorar esto, tendria que comprobar si lo puedo matar con Divine Shield.
                         thisSum = myCardEntity.GetATK();
-                        if (myCardEntity.GetHealth() < attackee.GetEntity().GetATK())
-                            return c2;
+                        if (myCardEntity.GetHealth() > attackee.GetEntity().GetATK())
+                            return myCard;
                         else
                         {
                             thisSum = myCardEntity.GetATK();
                             if (thisSum < bestSum || bestSum == 0)
                             {
-                                c1 = c2;
+                                c1 = myCard;
                                 bestSum = thisSum;
                             }
                         }
@@ -463,7 +488,7 @@ namespace Plugin
                     return hero.GetCard();
             }
             Card card = null;
-            foreach (Card c in list)
+            foreach (Card c in myCardsInPlay)
             {
                 c.GetEntity();
                 if (GameFunctions.CanBeUsed(c))
@@ -475,21 +500,25 @@ namespace Plugin
             }
             return card;
         }
-
-        public static Card NextBestAttackee()
+        public static Card GetBestAttackee()
         {
-            List<Card> list1 = GameFunctions.ePlayer.GetBattlefieldZone().GetCards();
+            return GetBestAttackee(0);
+        }
+
+        public static Card GetBestAttackee(int hisMaxATK)
+        {
+            List<Card> hisCardListInPlay = GameFunctions.ePlayer.GetBattlefieldZone().GetCards();
             Card attackee = null;
             bool selHasTaunt = false;
             bool selEXTREME = false;
             bool selKillThis = false;
-            foreach (Card card in list1)
+            foreach (Card card in hisCardListInPlay)
             {
-                Entity entity = card.GetEntity();
-                if (!entity.CanBeAttacked())
+                Entity hisCardEntity = card.GetEntity();
+                if ((!hisCardEntity.CanBeAttacked()) || (hisMaxATK != 0 && hisCardEntity.GetATK() > hisMaxATK))
                     continue;
                 CardDetails cd = CardDetails.FindInCardDetails(card);
-                if (entity.HasTaunt())
+                if (hisCardEntity.HasTaunt())
                 {
                     //Si todavía no tengo ninguna, selecciona esta para atacar.
                     if (attackee == null)
@@ -556,7 +585,7 @@ namespace Plugin
             {
                 if (GameFunctions.ePlayer.GetHeroCard().GetEntity().CanBeAttacked())
                     return GameFunctions.ePlayer.GetHeroCard();
-                foreach (Card card in list1)
+                foreach (Card card in hisCardListInPlay)
                 {
                     if (card.GetEntity().CanBeAttacked())
                         return card;

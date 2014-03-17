@@ -23,6 +23,18 @@ namespace UI
         public string HSpath;
         private string extPath;
         public string rootPath;
+        public Deck selDeck;
+        public class Deck
+        {
+            public long DeckId { get; set; }
+            public string Alias { get; set; }
+            public int Wins { get; set; }
+            public int Losses { get; set; }
+
+            public Deck()
+            {
+            }
+        }
 
         #region -[ Eventos ]-
 
@@ -34,6 +46,15 @@ namespace UI
             rootPath = exePath.Substring(0, exePath.LastIndexOf("/") + 1).Replace("file:///", "");
             if (rootPath.Contains("bin/Debug"))
                 rootPath = rootPath.Replace("/UI/bin/Debug", "");
+
+            Microsoft.Win32.RegistryKey key;
+            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("StonerBot");
+            if (key == null)
+            {
+                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("StonerBot");
+                key.SetValue("RootPath", rootPath);
+                key.Close();
+            }
             if (File.Exists(Path.Combine(rootPath, "Config.cfg")))
             {
                 HSpath = File.ReadAllText(Path.Combine(rootPath, "Config.cfg"));
@@ -129,8 +150,9 @@ namespace UI
                                 File.Copy(assemblyHearthstoneExt, destHearthstone, true);
                                 File.Copy(assemblyCSharpExtPatched, destAssemblyPath, true);
                                 File.Copy(assemblyMonoCecil, destMonoCecil, true);
-                                File.WriteAllText(Path.Combine(this.HSpath + "plugins.txt"), Path.Combine(rootPath, "plugins"));
-                                File.WriteAllText(Path.Combine(this.HSpath + "root.txt"), rootPath);
+                                //MessageBox.Show(Path.Combine(this.HSpath, "plugins.txt") + Environment.NewLine + Path.Combine(rootPath, "plugins") + Environment.NewLine + Path.Combine(this.HSpath, "root.txt"));
+                                File.WriteAllText(Path.Combine(this.HSpath, "plugins.txt"), Path.Combine(rootPath, "plugins"));
+                                File.WriteAllText(Path.Combine(this.HSpath, "root.txt"), rootPath);
                                 this.lblStatus.Text = "Injection done";
                             }
                             else
@@ -250,6 +272,63 @@ namespace UI
                 File.WriteAllText(Path.Combine(rootPath, "Config.cfg"), this.HSpath);
                 btnInject.Enabled = true;
             }
+        }
+
+        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tabControl1.SelectedIndex == 1)
+            {
+                string[] statLines = File.ReadAllLines(Path.Combine(this.HSpath, "stat.txt"));
+
+                List<Deck> listDecks = new List<Deck>();
+                Deck selDeck = new Deck();
+                selDeck.DeckId = 0;
+                selDeck.Alias = "";
+                selDeck.Losses = 0;
+                selDeck.Wins = 0;
+                listDecks.Add(selDeck);
+                selDeck = null;
+                foreach (string statLine in statLines)
+                {
+                    long statDeckId = Convert.ToInt64(statLine.Split('_')[0]);
+                    foreach (Deck deck in listDecks)
+                    {
+                        if (deck.DeckId == statDeckId)
+                        {
+                            selDeck = deck;
+                            break;
+                        }
+                    }
+                    if (selDeck == null)
+                    {
+                        selDeck = new Deck();
+                        selDeck.DeckId = statDeckId;
+                        selDeck.Alias = statDeckId.ToString();
+                        listDecks.Add(selDeck);
+                    }
+                    if (statLine.Split('_')[1] == "0")
+                        selDeck.Losses++;
+                    else
+                        selDeck.Wins++;
+                }
+
+                cmbDecks.DataSource = listDecks;
+                cmbDecks.ValueMember = "DeckId";
+                cmbDecks.DisplayMember = "Alias";
+            }
+        }
+
+        private void cmbDecks_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            selDeck = (Deck)cmbDecks.SelectedItem;
+            lblLose.Text = selDeck.Losses.ToString();
+            lblWin.Text = selDeck.Wins.ToString();
+            txtAlias.Text = selDeck.Alias;
+        }
+
+        private void btnSetAlias_Click(object sender, EventArgs e)
+        {
+            selDeck.Alias = txtAlias.Text;
         }
     }
 }
