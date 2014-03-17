@@ -325,9 +325,9 @@ namespace Plugin
         /// <param name="specialParameter">Las cartas especiales a veces necesitan parámetros</param>
         /// <param name="playPrority">Si se pasa este parámetro entonces se está forzando a jugar la carta UNICAMENTE si está acá y cumple la condición, si no está no se juega.</param>
         /// <returns>Si es viable para jugar, o no.</returns>
-        public static bool IsViableToPlay(Entity entity, object specialParameter = null, bool playPrority = false)
+        public static bool IsViableToPlay(Card card, object specialParameter = null, bool playPrority = false)
         {
-            switch (entity.GetName())
+            switch (card.name)
             {
                 #region -[ Hunter ]-
                 #region -[ Explosive Trap ]-
@@ -337,9 +337,9 @@ namespace Plugin
                         && GameFunctions.ePlayer.GetBattlefieldZone().GetCardCount() >= ExplosiveTrap.EnemyMinCardsInPlay)
                     {
                         int count = 0;
-                        foreach (Card card in GameFunctions.ePlayer.GetBattlefieldZone().GetCards())
+                        foreach (Card c in GameFunctions.ePlayer.GetBattlefieldZone().GetCards())
                         {
-                            if (card.GetEntity().GetRemainingHP() <= ExplosiveTrap.CardDamage)
+                            if (c.GetEntity().GetRemainingHP() <= ExplosiveTrap.CardDamage)
                                 count++;
                         }
                         if (count >= ExplosiveTrap.CardsDestroyed)
@@ -448,9 +448,9 @@ namespace Plugin
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public static bool IsViableToPlay(Entity entity)
+        public static bool IsViableToPlay(Card card)
         {
-            return IsViableToPlay(entity, null, false);
+            return IsViableToPlay(card, null, false);
         }
 
         /// <summary>
