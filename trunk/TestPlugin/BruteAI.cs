@@ -561,6 +561,7 @@ namespace Plugin
                 }
                 if (cd != null)
                 {
+                    Log.debug(cd.Card.name + " tiene detalles");
                     if (cd.KillThis)
                     {
                         if (attackee == null)

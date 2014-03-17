@@ -150,7 +150,6 @@ namespace UI
                                 File.Copy(assemblyHearthstoneExt, destHearthstone, true);
                                 File.Copy(assemblyCSharpExtPatched, destAssemblyPath, true);
                                 File.Copy(assemblyMonoCecil, destMonoCecil, true);
-                                //MessageBox.Show(Path.Combine(this.HSpath, "plugins.txt") + Environment.NewLine + Path.Combine(rootPath, "plugins") + Environment.NewLine + Path.Combine(this.HSpath, "root.txt"));
                                 File.WriteAllText(Path.Combine(this.HSpath, "plugins.txt"), Path.Combine(rootPath, "plugins"));
                                 File.WriteAllText(Path.Combine(this.HSpath, "root.txt"), rootPath);
                                 this.lblStatus.Text = "Injection done";
@@ -274,61 +273,50 @@ namespace UI
             }
         }
 
-        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (tabControl1.SelectedIndex == 1)
-            {
-                string[] statLines = File.ReadAllLines(Path.Combine(this.HSpath, "stat.txt"));
-
-                List<Deck> listDecks = new List<Deck>();
-                Deck selDeck = new Deck();
-                selDeck.DeckId = 0;
-                selDeck.Alias = "";
-                selDeck.Losses = 0;
-                selDeck.Wins = 0;
-                listDecks.Add(selDeck);
-                selDeck = null;
-                foreach (string statLine in statLines)
-                {
-                    long statDeckId = Convert.ToInt64(statLine.Split('_')[0]);
-                    foreach (Deck deck in listDecks)
-                    {
-                        if (deck.DeckId == statDeckId)
-                        {
-                            selDeck = deck;
-                            break;
-                        }
-                    }
-                    if (selDeck == null)
-                    {
-                        selDeck = new Deck();
-                        selDeck.DeckId = statDeckId;
-                        selDeck.Alias = statDeckId.ToString();
-                        listDecks.Add(selDeck);
-                    }
-                    if (statLine.Split('_')[1] == "0")
-                        selDeck.Losses++;
-                    else
-                        selDeck.Wins++;
-                }
-
-                cmbDecks.DataSource = listDecks;
-                cmbDecks.ValueMember = "DeckId";
-                cmbDecks.DisplayMember = "Alias";
-            }
-        }
-
         private void cmbDecks_SelectedIndexChanged(object sender, EventArgs e)
         {
             selDeck = (Deck)cmbDecks.SelectedItem;
             lblLose.Text = selDeck.Losses.ToString();
             lblWin.Text = selDeck.Wins.ToString();
-            txtAlias.Text = selDeck.Alias;
         }
 
-        private void btnSetAlias_Click(object sender, EventArgs e)
+        private void btnRefresh_Click(object sender, EventArgs e)
         {
-            selDeck.Alias = txtAlias.Text;
+            string[] statLines = File.ReadAllLines(Path.Combine(this.HSpath, "stat.txt"));
+
+            List<Deck> listDecks = new List<Deck>();
+            Deck selDeck = new Deck();
+            selDeck = null;
+            foreach (string statLine in statLines)
+            {
+                string statDate = Convert.ToString(statLine.Substring(statLine.IndexOf("[Date]") + 6, statLine.IndexOf("[ID]") - statLine.IndexOf("[Date]") - 6));
+                long statDeckId = Convert.ToInt64(statLine.Substring(statLine.IndexOf("[ID]") + 4, statLine.IndexOf("[Name]")- statLine.IndexOf("[ID]") - 4));
+                string statDeckName = Convert.ToString(statLine.Substring(statLine.IndexOf("[Name]") + 6, statLine.IndexOf("[Result]")- statLine.IndexOf("[Name]") - 6));
+                bool statIsWin = Convert.ToBoolean(statLine.Substring(statLine.IndexOf("[Result]") + 8));
+                foreach (Deck deck in listDecks)
+                {
+                    if (deck.DeckId == statDeckId)
+                    {
+                        selDeck = deck;
+                        break;
+                    }
+                }
+                if (selDeck == null)
+                {
+                    selDeck = new Deck();
+                    selDeck.DeckId = statDeckId;
+                    selDeck.Alias = statDeckName;
+                    listDecks.Add(selDeck);
+                }
+                if (statIsWin)
+                    selDeck.Wins++;
+                else
+                    selDeck.Losses++;
+            }
+
+            cmbDecks.DataSource = listDecks;
+            cmbDecks.ValueMember = "DeckId";
+            cmbDecks.DisplayMember = "Alias";
         }
     }
 }

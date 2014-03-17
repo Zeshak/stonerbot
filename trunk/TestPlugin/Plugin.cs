@@ -29,6 +29,19 @@ namespace Plugin
             OnEndGameScreen
         }
 
+        public class Deck
+        {
+            public long DeckId { get; set; }
+            public string Alias { get; set; }
+            public int Wins { get; set; }
+            public int Losses { get; set; }
+
+            public Deck()
+            {
+            }
+        }
+
+        public static Deck selDeck;
         public static BotStatusList BotStatus;
         private static double minTimeBetweenRuns = 1.0;
         public static float maxQueueTime = 120f;
@@ -42,7 +55,6 @@ namespace Plugin
         public static float timeLastQueued;
         public static bool statisticsAdded;
         public static bool mulliganDone;
-        public static long currentDeckId;
         public static int modulo;
         private static Thread socket;
         public static bool saidHi = false;
@@ -137,6 +149,9 @@ namespace Plugin
                     DoHub();
                     break;
                 case SceneMgr.Mode.GAMEPLAY:
+                    GameState gameState = GameState.Get();
+                    if (!gameState.IsInTargetMode())
+                        GameFunctions.Cancel();
                     DoGameplay();
                     break;
                 case SceneMgr.Mode.PRACTICE:
@@ -262,21 +277,14 @@ namespace Plugin
                 {
                     if (!Plugin.statisticsAdded)
                     {
-                        if (GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 0)
-                        {
-                            Log.say("Defeat...");
-                            Plugin.AddStatistics(Plugin.currentDeckId, false);
-                        }
-                        else
-                        {
-                            Log.say("Victory!");
-                            Plugin.AddStatistics(Plugin.currentDeckId, true);
-                        }
+                        Plugin.AddStatistics(!(GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 0));
                         Plugin.statisticsAdded = true;
+                        Log.debug("Game ended.");
                     }
                     if (EndGameScreen.Get() == null)
                         return;
                     EndGameScreen.Get().ContinueEvents();
+                        Log.debug("1");
                     saidHi = false;
                     saidGG = false;
                     return;
@@ -299,7 +307,6 @@ namespace Plugin
                     ++BruteAI.loops;
                 else
                 {
-                    Thread.Sleep(1000);
                     if (BruteAI.BruteAttack())
                         return;
                     GameFunctions.DoEndTurn();
@@ -323,18 +330,30 @@ namespace Plugin
                     {
                         Plugin.statisticsAdded = false;
                         Plugin.mulliganDone = false;
-                        Plugin.currentDeckId = DeckPickerTrayDisplay.Get().GetSelectedDeckID();
-                        Log.say("Queuing for game against human with deck " + (object)Plugin.currentDeckId);
-                        GameMgr.Get().SetNextGame(GameMode.UNRANKED_PLAY, MissionID.MULTIPLAYER_1v1);
+                        long currentDeckId = DeckPickerTrayDisplay.Get().GetSelectedDeckID();
+                        foreach (CollectionDeck coldeck in CollectionManager.Get().GetDecks().Values)
+                        {
+                            if (coldeck.ID == currentDeckId)
+                            {
+                                selDeck = new Deck();
+                                selDeck.DeckId = currentDeckId;
+                                selDeck.Alias = coldeck.Name;
+                                break;
+                            }
+                        }
+                        Log.debug("Deck name: " + selDeck.Alias);
+                        Log.say("Queuing for game against human with deck " + selDeck.DeckId);
                         if (Plugin.playRanked)
                         {
+                            GameMgr.Get().SetNextGame(GameMode.RANKED_PLAY, MissionID.MULTIPLAYER_1v1);
                             Network.TrackClient(Network.TrackLevel.LEVEL_INFO, Network.TrackWhat.TRACK_PLAY_TOURNAMENT_WITH_CUSTOM_DECK);
-                            Network.RankedMatch(Plugin.currentDeckId);
+                            Network.RankedMatch(selDeck.DeckId);
                         }
                         else
                         {
+                            GameMgr.Get().SetNextGame(GameMode.UNRANKED_PLAY, MissionID.MULTIPLAYER_1v1);
                             Network.TrackClient(Network.TrackLevel.LEVEL_INFO, Network.TrackWhat.TRACK_PLAY_CASUAL_WITH_CUSTOM_DECK);
-                            Network.UnrankedMatch(Plugin.currentDeckId);
+                            Network.UnrankedMatch(selDeck.DeckId);
                         }
                         BotStatus = BotStatusList.OnMatchDeckQueue;
                         Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
@@ -478,9 +497,9 @@ namespace Plugin
             return true;
         }
 
-        public static void AddStatistics(long deckId, bool win)
+        public static void AddStatistics(bool win)
         {
-            File.AppendAllText("stat.txt", deckId.ToString() + "_" + (win ? "1" : "0") + Environment.NewLine);
+            File.AppendAllText("stat.txt", "[Date]" + DateTime.Now.ToString() + "[ID]" + selDeck.DeckId.ToString() + "[Name]" + selDeck.Alias.ToString() + "[Result]" + win.ToString() + Environment.NewLine);
         }
 
         #endregion

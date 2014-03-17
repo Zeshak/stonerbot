@@ -47,15 +47,13 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabMain = new System.Windows.Forms.TabPage();
             this.tabStat = new System.Windows.Forms.TabPage();
-            this.label3 = new System.Windows.Forms.Label();
-            this.cmbDecks = new System.Windows.Forms.ComboBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.txtAlias = new System.Windows.Forms.TextBox();
-            this.btnSetAlias = new System.Windows.Forms.Button();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
             this.lblLose = new System.Windows.Forms.Label();
             this.lblWin = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.cmbDecks = new System.Windows.Forms.ComboBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.btnRefresh = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabMain.SuspendLayout();
             this.tabStat.SuspendLayout();
@@ -213,7 +211,6 @@
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(469, 407);
             this.tabControl1.TabIndex = 19;
-            this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             // 
             // tabMain
             // 
@@ -242,13 +239,11 @@
             // 
             // tabStat
             // 
+            this.tabStat.Controls.Add(this.btnRefresh);
             this.tabStat.Controls.Add(this.lblLose);
             this.tabStat.Controls.Add(this.lblWin);
             this.tabStat.Controls.Add(this.label6);
             this.tabStat.Controls.Add(this.label5);
-            this.tabStat.Controls.Add(this.btnSetAlias);
-            this.tabStat.Controls.Add(this.txtAlias);
-            this.tabStat.Controls.Add(this.label4);
             this.tabStat.Controls.Add(this.cmbDecks);
             this.tabStat.Controls.Add(this.label3);
             this.tabStat.Location = new System.Drawing.Point(4, 22);
@@ -259,14 +254,41 @@
             this.tabStat.Text = "Statistics";
             this.tabStat.UseVisualStyleBackColor = true;
             // 
-            // label3
+            // lblLose
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(38, 33);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(93, 13);
-            this.label3.TabIndex = 0;
-            this.label3.Text = "Select your deck: ";
+            this.lblLose.AutoSize = true;
+            this.lblLose.Location = new System.Drawing.Point(96, 121);
+            this.lblLose.Name = "lblLose";
+            this.lblLose.Size = new System.Drawing.Size(13, 13);
+            this.lblLose.TabIndex = 8;
+            this.lblLose.Text = "0";
+            // 
+            // lblWin
+            // 
+            this.lblWin.AutoSize = true;
+            this.lblWin.Location = new System.Drawing.Point(96, 90);
+            this.lblWin.Name = "lblWin";
+            this.lblWin.Size = new System.Drawing.Size(13, 13);
+            this.lblWin.TabIndex = 7;
+            this.lblWin.Text = "0";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(38, 121);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(36, 13);
+            this.label6.TabIndex = 6;
+            this.label6.Text = "Lose: ";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(38, 90);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(32, 13);
+            this.label5.TabIndex = 5;
+            this.label5.Text = "Win: ";
             // 
             // cmbDecks
             // 
@@ -277,67 +299,24 @@
             this.cmbDecks.TabIndex = 1;
             this.cmbDecks.SelectedIndexChanged += new System.EventHandler(this.cmbDecks_SelectedIndexChanged);
             // 
-            // label4
+            // label3
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(38, 78);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(129, 13);
-            this.label4.TabIndex = 2;
-            this.label4.Text = "Set an alias for this deck: ";
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(38, 33);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(93, 13);
+            this.label3.TabIndex = 0;
+            this.label3.Text = "Select your deck: ";
             // 
-            // txtAlias
+            // btnRefresh
             // 
-            this.txtAlias.Location = new System.Drawing.Point(181, 78);
-            this.txtAlias.Name = "txtAlias";
-            this.txtAlias.Size = new System.Drawing.Size(156, 20);
-            this.txtAlias.TabIndex = 3;
-            // 
-            // btnSetAlias
-            // 
-            this.btnSetAlias.Location = new System.Drawing.Point(344, 78);
-            this.btnSetAlias.Name = "btnSetAlias";
-            this.btnSetAlias.Size = new System.Drawing.Size(80, 23);
-            this.btnSetAlias.TabIndex = 4;
-            this.btnSetAlias.Text = "Set";
-            this.btnSetAlias.UseVisualStyleBackColor = true;
-            this.btnSetAlias.Click += new System.EventHandler(this.btnSetAlias_Click);
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(41, 125);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(32, 13);
-            this.label5.TabIndex = 5;
-            this.label5.Text = "Win: ";
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(41, 156);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(36, 13);
-            this.label6.TabIndex = 6;
-            this.label6.Text = "Lose: ";
-            // 
-            // lblLose
-            // 
-            this.lblLose.AutoSize = true;
-            this.lblLose.Location = new System.Drawing.Point(99, 156);
-            this.lblLose.Name = "lblLose";
-            this.lblLose.Size = new System.Drawing.Size(13, 13);
-            this.lblLose.TabIndex = 8;
-            this.lblLose.Text = "0";
-            // 
-            // lblWin
-            // 
-            this.lblWin.AutoSize = true;
-            this.lblWin.Location = new System.Drawing.Point(99, 125);
-            this.lblWin.Name = "lblWin";
-            this.lblWin.Size = new System.Drawing.Size(13, 13);
-            this.lblWin.TabIndex = 7;
-            this.lblWin.Text = "0";
+            this.btnRefresh.Location = new System.Drawing.Point(359, 33);
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(75, 23);
+            this.btnRefresh.TabIndex = 9;
+            this.btnRefresh.Text = "Refresh";
+            this.btnRefresh.UseVisualStyleBackColor = true;
+            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
             // Main
             // 
@@ -383,11 +362,9 @@
         private System.Windows.Forms.Label lblWin;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Button btnSetAlias;
-        private System.Windows.Forms.TextBox txtAlias;
-        private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ComboBox cmbDecks;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Button btnRefresh;
     }
 }
 

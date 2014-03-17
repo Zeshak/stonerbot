@@ -289,6 +289,31 @@ namespace Plugin
             cd.SilenceThis = true;
             ListCardDetails.Add(cd);
             #endregion
+            #region -[ Ysera ]-
+            cd = new CardDetails();
+            cd.CardId = "EX1_572";
+            cd.CardName = "Ysera";
+            cd.SilenceThis = true;
+            cd.DisableThis = true;
+            cd.KillThis = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region -[ Warsong Commander ]-
+            cd = new CardDetails();
+            cd.CardId = "EX1_084";
+            cd.CardName = "Warsong Commander";
+            cd.KillThis = true;
+            cd.KillThisEXTREME = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region -[ Raid Leader ]-
+            cd = new CardDetails();
+            cd.CardId = "CS2_122";
+            cd.CardName = "Raid Leader";
+            cd.KillThis = true;
+            cd.KillThisEXTREME = true;
+            ListCardDetails.Add(cd);
+            #endregion
             #endregion
         }
 
@@ -488,11 +513,11 @@ namespace Plugin
                 if (currATK > 5)
                     cd.DisableThis = true;
             }
-            //Se usa silence si tiene: (*)Menos de 3 ataque y más de 2 de vida (no silencia las 2-2, las va a matar luego) (*)Si está bufeada y le sumaron 2 a algún atributo
-            if ((currATK < 3 && currHP > 2) || (currATK > origATK + 1) || ((currHP > origHP + 1)))
-                cd.SilenceThis = true;
             if (entity.HasTaunt())
             {
+                //Se usa silence si tiene: (*)Menos de 3 ataque y más de 2 de vida (no silencia las 2-2, las va a matar luego) (*)Si está bufeada y le sumaron 2 a algún atributo
+                if ((currATK < 3 && currHP > 2) || (currATK > origATK + 1) || ((currHP > origHP + 1)))
+                    cd.SilenceThis = true;
                 if (entity.HasDivineShield())
                 {
                     //Se usa todo si es a partir de 4-4
@@ -502,8 +527,6 @@ namespace Plugin
                         cd.DisableFirst = true;
                         cd.DisableThis = true;
                     }
-                    else
-                        cd.SilenceThis = true;
                 }
                 else
                 {
