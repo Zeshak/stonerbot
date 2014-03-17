@@ -151,7 +151,6 @@ namespace UI
                                 File.Copy(assemblyCSharpExtPatched, destAssemblyPath, true);
                                 File.Copy(assemblyMonoCecil, destMonoCecil, true);
                                 File.WriteAllText(Path.Combine(this.HSpath, "plugins.txt"), Path.Combine(rootPath, "plugins"));
-                                File.WriteAllText(Path.Combine(this.HSpath, "root.txt"), rootPath);
                                 this.lblStatus.Text = "Injection done";
                             }
                             else
