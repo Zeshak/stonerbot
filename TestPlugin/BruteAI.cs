@@ -20,25 +20,27 @@ namespace Plugin
 
         public static void SendEmoMessages()
         {
+            
             if (GameFunctions.myPlayer.GetHero().GetRemainingHP() == 30 && !Plugin.saidHi)
             {
-                EmoteHandler.Get().ShowEmotes();
-                Thread.Sleep(1000);
-                GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(EmoteType.GREETINGS);
-                Network.Get().SendEmote(EmoteType.GREETINGS);
-                EmoteHandler.Get().HideEmotes();
+                SendEmoType(EmoteType.GREETINGS);
                 Plugin.saidHi = true;
             }
             if (GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 10 && !Plugin.saidGG
                 || GameFunctions.ePlayer.GetHero().GetRemainingHP() <= 10 && !Plugin.saidGG)
             {
-                EmoteHandler.Get().ShowEmotes();
-                Thread.Sleep(1000);
-                GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(EmoteType.WELL_PLAYED);
-                Network.Get().SendEmote(EmoteType.WELL_PLAYED);
-                EmoteHandler.Get().HideEmotes();
+                SendEmoType(EmoteType.WELL_PLAYED); 
                 Plugin.saidGG = true;
             }
+        }
+
+        private static void SendEmoType(EmoteType Emo)
+        {
+            EmoteHandler.Get().ShowEmotes();
+            Thread.Sleep(1000);
+            GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(Emo);
+            Network.Get().SendEmote(Emo);
+            EmoteHandler.Get().HideEmotes();
         }
 
         public static bool BruteHand()
