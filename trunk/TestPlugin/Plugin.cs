@@ -56,7 +56,7 @@ namespace Plugin
         public static bool statisticsAdded;
         public static bool mulliganDone;
         public static int modulo;
-        private static Thread socket;
+        private static Thread socketThread;
         public static bool saidHi = false;
         public static bool saidGG = false;
 
@@ -100,8 +100,8 @@ namespace Plugin
 
         public void Start()     // This is called after control is given back to Unity
         {
-            Plugin.socket = new Thread(new ThreadStart(SocketHandler.InitSocketListener));
-            Plugin.socket.Start();
+            Plugin.socketThread = new Thread(new ThreadStart(SocketHandler.InitSocketListener));
+            Plugin.socketThread.Start();
             rng = new System.Random();
             timeLastRun = Time.realtimeSinceStartup;
             timeLastQueued = Time.realtimeSinceStartup;
@@ -109,8 +109,7 @@ namespace Plugin
 
         public void OnDestroy()
         {
-            Log.debug("Hearthstone closing.");
-            Plugin.socket.Abort();
+            Plugin.socketThread.Abort();
             SocketHandler.tcpListener.Stop();
             SocketHandler.stream.Close();
             if (SocketHandler.tcpClient != null)

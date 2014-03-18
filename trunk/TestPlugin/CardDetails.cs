@@ -9,6 +9,16 @@ namespace Plugin
     {
         #region -[ Sección variables que pondremos en un XML ]-
 
+        #region -[ Common ]-
+        private class YseraAwakens
+        {
+            public static int MyMaxCardsInPlay = 2;
+            public static int MyMaxCardsDestroyed = 1;
+            public static int EnemyMinCardsInPlay = 3;
+            public static int CardDamage = 5;
+            public static int CardsDestroyed = 3;
+        }
+        #endregion
         #region -[ Hunter ]-
         private class ExplosiveTrap
         {
@@ -126,24 +136,13 @@ namespace Plugin
         public string CardId = "";
         public string CardName = "";
 
-        //Propiedades más usadas para minions propios y efectos
-        public bool CanHeal = false;
-        public int CanHealAmount = 0;
-        public bool CanDamage = false;
-        public int CanDamageAmount = 0;
-        public int CanDamageAmountOnCombo = 0;
-        public bool CanDamageOwn = false;
-        public bool CanDamageSeveral = false;
-        public bool CanSilence = false;
-        public bool CanDisable = false;
-
         //Propiedades más usadas para minions y cartas enemigas
         public bool KillThis = false;
         public bool KillThisEXTREME = false;
-        //SpellOnThis: Trato de usar spell que mate o disablee (Polymorph, Hex, Assasinate)
         public bool DisableThis = false;
         public bool SilenceThis = false;
-        public bool DisableFirst = false;
+        public bool SilenceFirst = false;
+        public bool DestroyThis = false;
 
 
 
@@ -180,65 +179,6 @@ namespace Plugin
         public static void SetCardDetails()
         {
             CardDetails cd;
-
-            #region -[ Cartas Propias ]-
-            #region -[ Polymorph ]-
-            cd = new CardDetails();
-            cd.CardId = "CS2_022";
-            cd.CardName = "Polymorph";
-            cd.CanDisable = true;
-            ListCardDetails.Add(cd);
-            #endregion
-            #region -[ Assassinate ]-
-            cd = new CardDetails();
-            cd.CardId = "CS2_076";
-            cd.CardName = "Assassinate";
-            cd.CanDisable = true;
-            ListCardDetails.Add(cd);
-            #endregion
-            #region -[ Hex ]-
-            cd = new CardDetails();
-            cd.CardId = "EX1_246";
-            cd.CardName = "Hex";
-            cd.CanDisable = true;
-            ListCardDetails.Add(cd);
-            #endregion
-            #region -[ Mind Control ]-
-            cd = new CardDetails();
-            cd.CardId = "CS1_113";
-            cd.CardName = "Mind Control";
-            cd.CanDisable = true;
-            ListCardDetails.Add(cd);
-            #endregion
-            #region -[ Shadow Word: Pain ]-
-            cd = new CardDetails();
-            cd.CardId = "CS2_234";
-            cd.CardName = "Shadow Word: Pain";
-            cd.CanDisable = true;
-            ListCardDetails.Add(cd);
-            #endregion
-            #region -[ Shadow Word: Death ]-
-            cd = new CardDetails();
-            cd.CardId = "EX1_622";
-            cd.CardName = "Shadow Word: Death";
-            cd.CanDisable = true;
-            ListCardDetails.Add(cd);
-            #endregion
-            #region -[ Ironbeak Owl ]-
-            cd = new CardDetails();
-            cd.CardId = "CS2_203";
-            cd.CardName = "Ironbeak Owl";
-            cd.CanSilence = true;
-            ListCardDetails.Add(cd);
-            #endregion
-            #region -[ Spellbreaker ]-
-            cd = new CardDetails();
-            cd.CardId = "EX1_048";
-            cd.CardName = "Spellbreaker";
-            cd.CanSilence = true;
-            ListCardDetails.Add(cd);
-            #endregion
-            #endregion
             
             #region -[ Cartas Enemigas ]-
             #region -[ Abomination ]-
@@ -315,20 +255,93 @@ namespace Plugin
             ListCardDetails.Add(cd);
             #endregion
             #endregion
+            
+            cd = new CardDetails();
+            cd.CardId = "CS2_182";
+            cd.CardName = "sdsa";
+            cd.DisableThis = true;
+            ListCardDetails.Add(cd);
+        }
+
+        /// <summary>
+        /// Para más info ver la otra sobrecarga.
+        /// </summary>
+        /// <param name="card"></param>
+        /// <returns></returns>
+        public static bool IsViableToPlay(Card card)
+        {
+            return IsViableToPlay(card, null, false);
         }
 
         /// <summary>
         /// Esta función a diferencia de la anterior se usa para cartas complejas y que requieren una toma de decisiones específica dependiendo del juego. 
         /// SIEMPRE antes de decidirse si jugar una carta, hay que correr esta función, SIN IMPORTAR que la carta no esté acá.
         /// </summary>
-        /// <param name="c">Carta en sí que deseamos jugar</param>
-        /// <param name="specialParameter">Las cartas especiales a veces necesitan parámetros</param>
-        /// <param name="playPrority">Si se pasa este parámetro entonces se está forzando a jugar la carta UNICAMENTE si está acá y cumple la condición, si no está no se juega.</param>
+        /// <param name="myCard">Carta en sí que deseamos jugar</param>
+        /// <param name="specialParameter">Las cartas especiales a veces necesitan parámetros (comúnmente se pasa el target).</param>
+        /// <param name="playPriority">Si se pasa este parámetro entonces se está forzando a jugar la carta UNICAMENTE si está acá y cumple la condición, si no está no se juega.</param>
         /// <returns>Si es viable para jugar, o no.</returns>
-        public static bool IsViableToPlay(Card card, object specialParameter = null, bool playPrority = false)
+        public static bool IsViableToPlay(Card myCard, object specialParameter, bool playPriority)
         {
-            switch (card.name)
+            //Si la carta no se puede jugar ni me gasto...
+            if (!GameFunctions.CanBeUsed(myCard))
+                return false;            
+            switch (myCard.GetEntity().GetCardId())
             {
+                #region -[ Common ]-
+                #region -[ The Coin ]-
+                case "GAME_005":
+                    return false;
+                #endregion
+                #region -[ Ysera Awakens ]-
+                case "DREAM_02":
+                    return CommonMultipleSpellDamageALL(YseraAwakens.CardDamage, YseraAwakens.CardsDestroyed, YseraAwakens.EnemyMinCardsInPlay, YseraAwakens.MyMaxCardsInPlay, YseraAwakens.MyMaxCardsDestroyed);
+                #endregion
+                #region -[ Dream ]-
+                case "DREAM_04":
+                    {
+                        if (specialParameter == null)
+                            return false;
+                        CardDetails targetEntity = (CardDetails)specialParameter;
+                        bool targetIsEnemy = GameFunctions.IsEnemyCard(targetEntity.Card);
+                        if (targetEntity.DisableThis && targetIsEnemy)
+                            return true;
+                        return false;
+                    }
+                #endregion
+                #region -[ Ironbeak Owl ]-
+                case "CS2_203":
+                    {
+                        if (specialParameter == null)
+                            return false;
+                        CardDetails targetEntity = (CardDetails)specialParameter;
+                        bool targetIsEnemy = GameFunctions.IsEnemyCard(targetEntity.Card);
+                        if (targetEntity.SilenceThis && targetIsEnemy)
+                            return true;
+                        return false;
+                    }
+                #endregion
+                #region -[ Spellbreaker ]-
+                case "EX1_048":
+                    {
+                        if (specialParameter == null)
+                            return false;
+                        CardDetails targetEntity = (CardDetails)specialParameter;
+                        bool targetIsEnemy = GameFunctions.IsEnemyCard(targetEntity.Card);
+                        if (targetEntity.SilenceThis && targetIsEnemy)
+                            return true;
+                        return false;
+                    }
+                #endregion
+                #region -[ Arcane Golem ]-
+                case "EX1_089":
+                    {
+                        if (GameFunctions.gameTurn > 6)
+                            return true;
+                        return false;
+                    }
+                #endregion                   
+                #endregion
                 #region -[ Hunter ]-
                 #region -[ Explosive Trap ]-
                 case "EX1_610":
@@ -349,6 +362,18 @@ namespace Plugin
                 #endregion
                 #endregion
                 #region -[ Mage ]-
+                #region -[ Polymorph ]-
+                case "CS2_022":
+                    {
+                        if (specialParameter == null)
+                            return false;
+                        CardDetails targetEntity = (CardDetails)specialParameter;
+                        bool targetIsEnemy = GameFunctions.IsEnemyCard(targetEntity.Card);
+                        if (targetEntity.DisableThis && targetIsEnemy)
+                            return true;
+                        return false;
+                    }
+                #endregion
                 #region -[ Arcane Explosion ]-
                 case "CS2_025":
                     return CommonMultipleSpell(ArcaneExplosion.CardDamage, ArcaneExplosion.CardsDestroyed, ArcaneExplosion.EnemyMinCardsInPlay);
@@ -372,7 +397,7 @@ namespace Plugin
                 #endregion
                 #region -[ Fireball ]-
                 case "CS2_029":
-                    if (GameFunctions.ePlayer.GetRealTimeRemainingHP() < 0)
+                    if (GameFunctions.ePlayer.GetRealTimeRemainingHP() < 7)
                         return true;
                     return false;
                 #endregion
@@ -385,8 +410,11 @@ namespace Plugin
                 #region -[ Shadow Word: Pain ]-
                 case "CS2_234":
                     {
+                        if (specialParameter == null)
+                            return false;
                         CardDetails targetEntity = (CardDetails)specialParameter;
-                        if (targetEntity.Card.GetEntity().GetATK() <= 3)
+                        bool targetIsEnemy = GameFunctions.IsEnemyCard(targetEntity.Card);
+                        if (targetEntity.Card.GetEntity().GetATK() <= 3 && targetIsEnemy && targetEntity.DestroyThis)
                             return true;
                         return false;
                     }
@@ -394,8 +422,11 @@ namespace Plugin
                 #region -[ Shadow Word: Death ]-
                 case "EX1_622":
                     {
+                        if (specialParameter == null)
+                            return false;
                         CardDetails targetEntity = (CardDetails)specialParameter;
-                        if (targetEntity.Card.GetEntity().GetATK() >= 5)
+                        bool targetIsEnemy = GameFunctions.IsEnemyCard(targetEntity.Card);
+                        if (targetEntity.Card.GetEntity().GetATK() >= 5 && targetIsEnemy && targetEntity.DestroyThis)
                             return true;
                         return false;
                     }
@@ -408,6 +439,18 @@ namespace Plugin
                 #endregion
                 #endregion
                 #region -[ Rogue ]-
+                #region -[ Assassinate ]-
+                case "CS2_076":
+                    {
+                        if (specialParameter == null)
+                            return false;
+                        CardDetails targetEntity = (CardDetails)specialParameter;
+                        bool targetIsEnemy = GameFunctions.IsEnemyCard(targetEntity.Card);
+                        if (targetEntity.DestroyThis && targetIsEnemy)
+                            return true;
+                        return false;
+                    }
+                #endregion
                 #region -[ Fan of Knives ]-
                 case "EX1_129":
                     return CommonMultipleSpell(FanOfKnives.CardDamage, FanOfKnives.CardsDestroyed, FanOfKnives.EnemyMinCardsInPlay);
@@ -421,6 +464,18 @@ namespace Plugin
                 #endregion
                 #endregion
                 #region -[ Shaman ]-
+                #region -[ Hex ]-
+                case "EX1_246":
+                    {
+                        if (specialParameter == null)
+                            return false;
+                        CardDetails targetEntity = (CardDetails)specialParameter;
+                        bool targetIsEnemy = GameFunctions.IsEnemyCard(targetEntity.Card);
+                        if (targetEntity.DisableThis && targetIsEnemy)
+                            return true;
+                        return false;
+                    }
+                #endregion
                 #region -[ Lightning Storm ]-
                 case "EX1_259":
                     return CommonMultipleSpell(LightningStorm.CardDamage, LightningStorm.CardsDestroyed, LightningStorm.EnemyMinCardsInPlay);
@@ -439,18 +494,8 @@ namespace Plugin
                 #endregion
                 #endregion
                 default:
-                    return !playPrority;
+                    return !playPriority;
             }
-        }
-
-        /// <summary>
-        /// Para más info ver la otra sobrecarga.
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        public static bool IsViableToPlay(Card card)
-        {
-            return IsViableToPlay(card, null, false);
         }
 
         /// <summary>
@@ -524,7 +569,6 @@ namespace Plugin
                     if (currATK > 3 && currHP > 3)
                     {
                         cd.SilenceThis = true;
-                        cd.DisableFirst = true;
                         cd.DisableThis = true;
                     }
                 }

@@ -19,7 +19,7 @@ namespace Plugin
         {
             TcpClient mscClient;
             string message;
-            string response;
+            string response = string.Empty;
             byte[] bytesSent;
 
             public void processMsg(TcpClient client, NetworkStream stream, byte[] bytesReceived)
@@ -49,17 +49,21 @@ namespace Plugin
                         Plugin.FinishThisGame(null, null, null);
                         break;
                     case "saywo":
-                        int length = Convert.ToInt32(message.Substring(5, 1));
-                        string messageSay = message.Substring(6, length);
-                        Log.say(messageSay);
+                        {
+                            int length = Convert.ToInt32(message.Substring(5, 2));
+                            string messageSay = message.Substring(7, length);
+                            Log.say(messageSay);
+                            break;
+                        }
+                    case "state":
+                        response = messageb + Plugin.BotStatus.ToString().Length.ToString().PadLeft(2, '0') + Plugin.BotStatus.ToString();
                         break;
                     default:
                         response = "Error";
                         break;
                 }
-                if (response != "Error")
+                if (response == "")
                     response = messageb;
-                Log.debug("El mensaje era:  " + messageb);
                 bytesSent = Encoding.ASCII.GetBytes(response);
                 stream.Write(bytesSent, 0, bytesSent.Length);
             }
@@ -84,7 +88,6 @@ namespace Plugin
             {
                 Thread.Sleep(10);
                 tcpClient = tcpListener.AcceptTcpClient();
-                Log.debug(" >> Accept connection from client");
                 byte[] bytes = new byte[256];
                 stream = tcpClient.GetStream();
                 stream.Read(bytes, 0, bytes.Length);

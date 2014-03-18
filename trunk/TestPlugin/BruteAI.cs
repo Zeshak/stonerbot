@@ -53,85 +53,49 @@ namespace Plugin
             else
             {
                 Card cardToPlay = new Card();
-                //Para empezar hasta tener todo programado, hago una primera recorrida de la mano, si alguna carta es viable, la juego, sino sigo de largo.                
-                cardToPlay = NextViableCard();
-                if (cardToPlay != null)
-                    GameFunctions.DoDrop(cardToPlay, null);
 
-                CardDetails targetEntity = NeedsToPlaySpellCard();
-                if (targetEntity != null)
+                Thread.Sleep(500);
+                CardDetails targetCardDetails = NeedsToPlayDisableDestroySilence();
+                if (targetCardDetails != null)
                 {
-                    cardToPlay = NextBestSpellCard(targetEntity);
+                    cardToPlay = NextDisableDestroySilence(targetCardDetails);
                     if (cardToPlay != null)
-                        return GameFunctions.DoDropSpell(cardToPlay, targetEntity.Card.GetEntity());
+                        return GameFunctions.DoDrop(cardToPlay, targetCardDetails.Card.GetEntity());
                 }
                 if (BruteAI.tryToPlayCoin())
                     return true;
                 cardToPlay = NextBestSecret();
                 if (cardToPlay != null)
-                    return GameFunctions.DoDropSecret(cardToPlay);
+                    return GameFunctions.DoDrop(cardToPlay);
                 cardToPlay = NextBestWeapon();
                 if (cardToPlay != null)
-                    return GameFunctions.DoDropWeapon(cardToPlay);
+                    return GameFunctions.DoDrop(cardToPlay);
                 cardToPlay = NextBestMinionDrop();
                 if (cardToPlay != null)
-                    return GameFunctions.DoDropMinion(cardToPlay);
+                    return GameFunctions.DoDrop(cardToPlay);
                 cardToPlay = NextBestSpell();
                 if (cardToPlay != null)
-                    return GameFunctions.DoDropSpell(cardToPlay);
+                    return GameFunctions.DoDrop(cardToPlay);
                 else
                     return LaunchHeroPower();
             }
         }
 
-        private static Card NextViableCard()
+        private static Card NextDisableDestroySilence(CardDetails targetCardDetails)
         {
             foreach (Card card in GameFunctions.myPlayer.GetHandZone().GetCards())
             {
-                if (CardDetails.IsViableToPlay(card, null, true) && GameFunctions.CanBeUsed(card))
+                if (CardDetails.IsViableToPlay(card, targetCardDetails, true))
                     return card;
             }
             return null;
         }
 
         /// <summary>
-        /// Verifica si tengo un spell o silence para tirarle a la carta que tengo apuntada
-        /// </summary> 
-        /// <param name="targetEntity">El CardDetails a la cual le apuntamos el spell</param>
-        /// <returns>Devuelve la carta que le puedo usar</returns>
-        private static Card NextBestSpellCard(CardDetails targetEntity)
-        {
-            Card bestCard = null;
-            bool isDisable = false;
-            foreach (Card card in GameFunctions.myPlayer.GetHandZone().GetCards())
-            {
-                CardDetails cd = CardDetails.FindInCardDetails(card);
-                if (cd == null || !(CardDetails.IsViableToPlay(card)) || !(GameFunctions.CanBeUsed(card)))
-                    continue;
-                if (targetEntity.DisableThis && cd.CanDisable)
-                {
-                    bestCard = card;
-                    isDisable = true;
-                }
-                if (targetEntity.SilenceThis && cd.CanSilence)
-                {
-                    if (cd.DisableFirst && isDisable)
-                        continue;
-                    else
-                    {
-                        bestCard = card;
-                        isDisable = false;
-                    }
-                }
-            }
-            return bestCard;
-        }
-
-        /// <summary>
         /// Verifica si es necesario jugar un spell antes que otra carta, siempre con prioridad en spell y luego en silence
         /// </summary>
         /// <returns>El CardDetails a la cual le apuntamos el spell</returns>
-        private static CardDetails NeedsToPlaySpellCard()
+        private static CardDetails NeedsToPlayDisableDestroySilence()
         {
             List<CardDetails> listCards = GameFunctions.GetBattlefieldCardDetails();
             bool spellPriority = false;
@@ -168,11 +132,11 @@ namespace Plugin
         {
             foreach (Card c in Enumerable.ToList<Card>(GameFunctions.myPlayer.GetHandZone().GetCards()))
             {
-                Entity entity = c.GetEntity();
                 CardDetails cd = CardDetails.FindInCardDetails(c);
-                if (cd != null && (cd.CanDisable || cd.CanSilence))
+                if (!(CardDetails.IsViableToPlay(c, null, true)))
                     continue;
-                if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSpell() && (entity.GetCardId() != "GAME_005" && GameFunctions.CanBeUsed(c)))
+                Entity entity = c.GetEntity();
+                if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSpell())
                     return c;
             }
             return null;
@@ -200,10 +164,13 @@ namespace Plugin
                 || !GameFunctions.CanBeUsed(GameFunctions.myPlayer.GetHeroPower().GetCard()))
                 return false;
 
+            Entity targetEntity = null;
             //Lógica de si conviene o no jugar el heropower
             switch (GameFunctions.myPlayer.GetHero().GetClass())
             {
                 case TAG_CLASS.WARLOCK:
+                    if (GameFunctions.myPlayer.GetHero().GetRemainingHP() > 10 && GameFunctions.myPlayer.GetHandZone().GetCardCount() <= 3)
+                        break;
                     return false;
                 case TAG_CLASS.HUNTER:
                 case TAG_CLASS.PALADIN:
@@ -211,13 +178,28 @@ namespace Plugin
                 case TAG_CLASS.SHAMAN:
                 case TAG_CLASS.WARRIOR:
                 case TAG_CLASS.MAGE:
+                    targetEntity = GetBestMageHeroPowerTarget();
+                    if (targetEntity != null)
+                    {
+                        Log.debug("Heropower mage en " + targetEntity.GetName());
+                        break;
+                    }
+                    GameFunctions.Cancel();
+                    return false;
                 case TAG_CLASS.PRIEST:
+                    if (GameFunctions.myPlayer.GetHero().CanBeTargetedByHeroPowers())
+                    {
+                        targetEntity = GameFunctions.myPlayer.GetHero();
+                        break;
+                    }
+                    GameFunctions.Cancel();
+                    return false;
                 case TAG_CLASS.DRUID:
                     break;
                 default:
                     return false;
             }
-            return GameFunctions.DoDropHeroPowerSpell();
+            return GameFunctions.DoDrop(GameFunctions.myPlayer.GetHeroPower().GetCard(), targetEntity);
         }
 
         public static bool tryToPlayCoin()
@@ -234,8 +216,42 @@ namespace Plugin
             }
             if (!flag || !(c != null))
                 return false;
-            GameFunctions.DoDropSpell(c);
+            GameFunctions.DoDrop(c);
             return true;
+        }
+
+        public static Entity GetBestMageHeroPowerTarget()
+        {
+            Log.debug("Corro para buscar el mejor Hero power target");
+            List<CardDetails> listCards = GameFunctions.GetBattlefieldCardDetails();
+            Entity target = new Entity();
+            int maxAtk = 0;
+            int index = -1;
+            foreach (CardDetails cd in listCards)
+            {
+                Entity possibleTarget = cd.Card.GetEntity();
+                if (possibleTarget.GetRemainingHP() == 1 || possibleTarget.HasDivineShield())
+                {
+                    int estimatedAtk = possibleTarget.GetATK();
+                    if (possibleTarget.HasWindfury())
+                        estimatedAtk *= 2;
+                    if (possibleTarget.HasTaunt())
+                        estimatedAtk += 1;
+                    if (maxAtk == 0 || estimatedAtk > maxAtk)
+                    {
+                        if (GameFunctions.CanBeTargetted(possibleTarget))
+                        {
+                            index = listCards.IndexOf(cd);
+                            maxAtk = estimatedAtk;
+                        }
+                    }
+                }
+            }
+            if (index != -1)
+                return listCards[index].Card.GetEntity();
+            else if (GameFunctions.CanBeTargetted(GameFunctions.ePlayer.GetHeroCard().GetEntity()))
+                return GameFunctions.ePlayer.GetHeroCard().GetEntity();
+            else return null;
         }
 
         public static Card NextBestMinionDrop()
@@ -253,8 +269,7 @@ namespace Plugin
             {
                 foreach (Card c in listCardsInHand)
                 {
-                    CardDetails cd = CardDetails.FindInCardDetails(c);
-                    if (cd != null && cd.CanSilence)
+                    if (!CardDetails.IsViableToPlay(c))
                         continue;
                     Entity entity = c.GetEntity();
                     if (c.GetEntity().HasTaunt() && entity.GetCardType() == TAG_CARDTYPE.MINION && (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && GameFunctions.CanBeUsed(c)))
@@ -264,8 +279,7 @@ namespace Plugin
             Card card = null;
             foreach (Card c in listCardsInHand)
             {
-                CardDetails cd = CardDetails.FindInCardDetails(c);
-                if (cd != null && cd.CanSilence)
+                if (!CardDetails.IsViableToPlay(c))
                     continue;
                 Entity entity = c.GetEntity();
                 if (entity.GetCardType() == TAG_CARDTYPE.MINION && entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources())
@@ -558,7 +572,6 @@ namespace Plugin
                 }
                 if (cd != null)
                 {
-                    Log.debug(cd.Card.name + " tiene detalles");
                     if (cd.KillThis)
                     {
                         if (attackee == null)
@@ -592,6 +605,50 @@ namespace Plugin
                 }
             }
             return attackee;
+        }
+
+        public static Entity GetGenericTarget()
+        {
+            Entity targetEntity = null;
+            var eHero = GameFunctions.ePlayer.GetHeroCard().GetEntity();
+            if (GameFunctions.gs.IsValidOptionTarget(eHero))
+            {
+                Log.debug("Can attack hero");
+                targetEntity = eHero;
+            }
+
+            List<Card> myPlayedCards = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
+            if (myPlayedCards.Count > 0 && targetEntity == null)
+            {
+                foreach (Card card in myPlayedCards)
+                {
+                    var e = card.GetEntity();
+                    if (GameFunctions.gs.IsValidOptionTarget(e))
+                    {
+                        Log.debug("is valid target: " + e.GetName());
+                        Log.debug("considering for battlecry: " + e.GetName());
+                        targetEntity = e;
+                    }
+                    else
+                    {
+                        Log.debug("is NOT valid target: " + e.GetName());
+                    }
+                }
+            }
+
+            List<Card> ePlayedCards = GameFunctions.ePlayer.GetBattlefieldZone().GetCards();
+            if (ePlayedCards.Count > 0 && targetEntity == null)
+            {
+                foreach (Card card in ePlayedCards)
+                {
+                    var e = card.GetEntity();
+                    if (GameFunctions.gs.IsValidOptionTarget(e))
+                    {
+                        targetEntity = e;
+                    }
+                }
+            }
+            return targetEntity;
         }
     }
 }
