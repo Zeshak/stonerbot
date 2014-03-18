@@ -47,13 +47,15 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabMain = new System.Windows.Forms.TabPage();
             this.tabStat = new System.Windows.Forms.TabPage();
+            this.btnRefresh = new System.Windows.Forms.Button();
             this.lblLose = new System.Windows.Forms.Label();
             this.lblWin = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.cmbDecks = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.btnRefresh = new System.Windows.Forms.Button();
+            this.lblLastCommand = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabMain.SuspendLayout();
             this.tabStat.SuspendLayout();
@@ -214,6 +216,8 @@
             // 
             // tabMain
             // 
+            this.tabMain.Controls.Add(this.lblLastCommand);
+            this.tabMain.Controls.Add(this.label7);
             this.tabMain.Controls.Add(this.btnInject);
             this.tabMain.Controls.Add(this.lblPath);
             this.tabMain.Controls.Add(this.btnStartBot);
@@ -253,6 +257,16 @@
             this.tabStat.TabIndex = 1;
             this.tabStat.Text = "Statistics";
             this.tabStat.UseVisualStyleBackColor = true;
+            // 
+            // btnRefresh
+            // 
+            this.btnRefresh.Location = new System.Drawing.Point(359, 33);
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(75, 23);
+            this.btnRefresh.TabIndex = 9;
+            this.btnRefresh.Text = "Refresh";
+            this.btnRefresh.UseVisualStyleBackColor = true;
+            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
             // lblLose
             // 
@@ -308,15 +322,23 @@
             this.label3.TabIndex = 0;
             this.label3.Text = "Select your deck: ";
             // 
-            // btnRefresh
+            // lblLastCommand
             // 
-            this.btnRefresh.Location = new System.Drawing.Point(359, 33);
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(75, 23);
-            this.btnRefresh.TabIndex = 9;
-            this.btnRefresh.Text = "Refresh";
-            this.btnRefresh.UseVisualStyleBackColor = true;
-            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            this.lblLastCommand.AutoSize = true;
+            this.lblLastCommand.Location = new System.Drawing.Point(99, 247);
+            this.lblLastCommand.Name = "lblLastCommand";
+            this.lblLastCommand.Size = new System.Drawing.Size(84, 13);
+            this.lblLastCommand.TabIndex = 19;
+            this.lblLastCommand.Text = "lblLastCommand";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(7, 247);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(83, 13);
+            this.label7.TabIndex = 20;
+            this.label7.Text = "Last Command: ";
             // 
             // Main
             // 
@@ -365,6 +387,8 @@
         private System.Windows.Forms.ComboBox cmbDecks;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.Label lblLastCommand;
+        private System.Windows.Forms.Label label7;
     }
 }
 

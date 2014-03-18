@@ -103,37 +103,17 @@ namespace Plugin
             return listCards;
         }
 
-        public static bool DoDropWeapon(Card c)
+        public static bool DoDrop(Card c)
         {
-            return GameFunctions.DoDrop(c, null);
-        }
-
-        public static bool DoDropBattlecry(Card c)
-        {
-            return GameFunctions.DoDrop(c, null);
-        }
-
-        public static bool DoDropSpell(Card c, Entity certainTarget = null)
-        {
-            return GameFunctions.DoDrop(c, certainTarget);
-        }
-
-        public static bool DoDropHeroPowerSpell()
-        {
-            return GameFunctions.DoDrop(GameFunctions.myPlayer.GetHeroPower().GetCard(), null);
-        }
-
-        public static bool DoDropSecret(Card c)
-        {
-            return GameFunctions.DoDrop(c, null);
-        }
-
-        public static bool DoDropMinion(Card c)
-        {
-            return GameFunctions.DoDrop(c, null);
+            return DoDrop(c, null, -1);
         }
 
         public static bool DoDrop(Card c, Entity certainTarget)
+        {
+            return DoDrop(c, certainTarget, -1);
+        }
+
+        public static bool DoDrop(Card c, Entity certainTarget, int battlefieldPosition)
         {
             Log.debug("DoDrop " + c.GetEntity().GetName());
             if (certainTarget != null)
@@ -166,9 +146,12 @@ namespace Plugin
                 else
                 {
                     destinationZone = GameFunctions.myPlayZone;
-                    dropPlace = destinationZone.GetCards().Count + 1;
-                    if (dropPlace >= 8)
+                    if (destinationZone.GetCards().Count + 1 >= 8)
                         return true;
+                    if (battlefieldPosition == -1)
+                        dropPlace = destinationZone.GetCards().Count + 1;
+                    else
+                        dropPlace = battlefieldPosition;
                 }
                 GameFunctions.gs.GetGameEntity().NotifyOfCardDropped(c.GetEntity());
                 GameFunctions.gs.SetSelectedOptionPosition(dropPlace);
@@ -201,77 +184,11 @@ namespace Plugin
 
                         if (certainTarget == null)
                         {
-                            if (c.GetEntity().IsHeroPower())
+                            targetEntity = BruteAI.GetGenericTarget();
+                            if (targetEntity == null)
                             {
-                                switch (GameFunctions.myPlayer.GetHero().GetClass())
-                                {
-                                    case TAG_CLASS.MAGE:
-                                        targetEntity = GetBestMageHeroPowerTarget();
-                                        if (targetEntity == null)
-                                        {
-                                            GameFunctions.Cancel();
-                                            return false;
-                                        }
-                                        Log.debug("Heropower mage en " + targetEntity.GetName());
-                                        break;
-                                    case TAG_CLASS.PRIEST:
-                                        targetEntity = GameFunctions.myPlayer.GetHero();
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
-                            else
-                            {
-                                var eHero = ePlayer.GetHeroCard().GetEntity();
-                                if (gs.IsValidOptionTarget(eHero))
-                                {
-                                    Log.debug("Can attack hero");
-                                    targetEntity = eHero;
-                                }
-
-                                List<Card> myPlayedCards = myPlayer.GetBattlefieldZone().GetCards();
-                                if (myPlayedCards.Count > 0 && targetEntity == null)
-                                {
-                                    foreach (Card card in myPlayedCards)
-                                    {
-                                        var e = card.GetEntity();
-                                        if (gs.IsValidOptionTarget(e))
-                                        {
-                                            Log.debug("is valid target: " + e.GetName());
-                                            Log.debug("considering for battlecry: " + e.GetName());
-                                            targetEntity = e;
-                                        }
-                                        else
-                                        {
-                                            Log.debug("is NOT valid target: " + e.GetName());
-                                        }
-                                    }
-                                }
-
-                                List<Card> ePlayedCards = ePlayer.GetBattlefieldZone().GetCards();
-                                if (ePlayedCards.Count > 0 && targetEntity == null)
-                                {
-                                    foreach (Card card in ePlayedCards)
-                                    {
-                                        var e = card.GetEntity();
-                                        if (gs.IsValidOptionTarget(e))
-                                        {
-                                            Log.debug("is valid target: " + e.GetName());
-                                            Log.debug("considering for battlecry: " + e.GetName());
-                                            targetEntity = e;
-                                        }
-                                        else
-                                        {
-                                            Log.debug("is NOT valid target: " + e.GetName());
-                                        }
-                                    }
-                                }
-                                if (targetEntity == null)
-                                {
-                                    Log.debug(" No target entity selected");
-                                    return false;
-                                }
+                                Cancel();
+                                return false;
                             }
                         }
                         else
@@ -292,40 +209,6 @@ namespace Plugin
                 Log.error(ex);
                 return false;
             }
-        }
-
-        private static Entity GetBestMageHeroPowerTarget()
-        {
-            Log.debug("Corro para buscar el mejor Hero power target");
-            List<CardDetails> listCards = GameFunctions.GetBattlefieldCardDetails();
-            Entity target = new Entity();
-            int maxAtk = 0;
-            int index = -1;
-            foreach (CardDetails cd in listCards)
-            {
-                Entity possibleTarget = cd.Card.GetEntity();
-                if (possibleTarget.GetRemainingHP() == 1 || possibleTarget.HasDivineShield())
-                {
-                    int estimatedAtk = possibleTarget.GetATK();
-                    if (possibleTarget.HasWindfury())
-                        estimatedAtk *= 2;
-                    if (possibleTarget.HasTaunt())
-                        estimatedAtk += 1;
-                    if (maxAtk == 0 || estimatedAtk > maxAtk)
-                    {
-                        if (GameFunctions.CanBeTargetted(possibleTarget))
-                        {
-                            index = listCards.IndexOf(cd);
-                            maxAtk = estimatedAtk;
-                        }
-                    }
-                }
-            }
-            if (index != -1)
-                return listCards[index].Card.GetEntity();
-            else if (GameFunctions.CanBeTargetted(ePlayer.GetHeroCard().GetEntity()))
-                return ePlayer.GetHeroCard().GetEntity();
-            else return null;
         }
 
         private static bool SetEntityTarget(Entity entity)
@@ -385,7 +268,12 @@ namespace Plugin
             if (c.GetActor() == null)
                 return false;
             else
-                return c.GetActor().GetActorStateType().Equals(ActorStateType.CARD_PLAYABLE) && CardDetails.IsViableToPlay(c.GetEntity());
+                return c.GetActor().GetActorStateType().Equals(ActorStateType.CARD_PLAYABLE);
+        }
+
+        public static bool IsEnemyCard(Card c)
+        {
+            return GameFunctions.ePlayer.GetBattlefieldZone().GetCards().Contains(c);
         }
 
         public static bool DoMulligan()
@@ -413,6 +301,7 @@ namespace Plugin
         {
             InputManager.Get().DoEndTurnButton();
             GameFunctions.gameTurn++;
+            Plugin.BotStatus = Plugin.BotStatusList.OnMatchTurn;
         }
 
         private static bool PlayPowerUpSpell(Card card)

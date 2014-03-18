@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows;
+using System.Timers;
 
 
 namespace UI
@@ -24,6 +25,8 @@ namespace UI
         private string extPath;
         public string rootPath;
         public Deck selDeck;
+        public static TcpClient client;
+        public static Thread socketThread;
         public class Deck
         {
             public long DeckId { get; set; }
@@ -40,6 +43,9 @@ namespace UI
 
         public Main()
         {
+            Control.CheckForIllegalCrossThreadCalls = false;
+            socketThread = new Thread(new ThreadStart(UpdateBotStatus));
+            socketThread.Start();
             InitializeComponent();
             this.extPath = "ext";
             string exePath = Assembly.GetExecutingAssembly().CodeBase;
@@ -100,7 +106,7 @@ namespace UI
 
         private void btnSay_Click(object sender, EventArgs e)
         {
-            SendConnectCmd("saywo" + txtSay.Text.Length.ToString() + txtSay.Text);
+            SendConnectCmd("saywo" + txtSay.Text.Length.ToString().PadLeft(2, '0') + txtSay.Text);
         }
 
         private void btnInject_Click(object sender, EventArgs e)
@@ -186,13 +192,23 @@ namespace UI
         {
             this.lblStatus.Text = "Awaiting";
             this.lblBotStatus.Text = "No status";
+            this.lblLastCommand.Text = string.Empty;
+        }
+
+        private void UpdateBotStatus()
+        {
+            while (true)
+            {
+                Thread.Sleep(50);
+                SendConnectCmd("state");
+            }
         }
 
         private void SendConnectCmd(string message)
         {
             try
             {
-                TcpClient client = new TcpClient("localhost", 8888);
+                client = new TcpClient("localhost", 8888);
 
                 Byte[] data = new Byte[256];
                 data = System.Text.Encoding.ASCII.GetBytes(message);
@@ -205,48 +221,58 @@ namespace UI
 
                 Int32 bytes = stream.Read(data, 0, data.Length);
                 responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
-                UpdateBotStatus(responseData);
+                UpdateBotStatusLabels(responseData);
 
                 stream.Close();
                 client.Close();
             }
             catch (Exception e)
             {
-                UpdateBotStatus("Error");
+                UpdateBotStatusLabels("Error");
             }
         }
 
-        private void UpdateBotStatus(string responseData)
+        private void UpdateBotStatusLabels(string responseData)
         {
-            switch (responseData)
+            string responseInit = responseData.Substring(0, 5);
+            switch (responseInit)
             {
                 case "stbot":
-                    lblBotStatus.Text = "Bot started";
+                    lblLastCommand.Text = "Bot started";
                     UpdateButtons(true);
                     break;
                 case "stran":
-                    lblBotStatus.Text = "Bot started ranked";
+                    lblLastCommand.Text = "Bot started ranked";
                     UpdateButtons(true);
                     break;
                 case "stain":
-                    lblBotStatus.Text = "Bot started vs AI";
+                    lblLastCommand.Text = "Bot started vs AI";
                     UpdateButtons(true);
                     break;
                 case "staie":
-                    lblBotStatus.Text = "Bot started vs AI Expert";
+                    lblLastCommand.Text = "Bot started vs AI Expert";
                     UpdateButtons(true);
                     break;
                 case "stopb":
-                    lblBotStatus.Text = "Bot stopped";
+                    lblLastCommand.Text = "Bot stopped";
                     UpdateButtons(false);
                     break;
                 case "stopa":
-                    lblBotStatus.Text = "Bot will stop after finish this game";
+                    lblLastCommand.Text = "Bot will stop after finish this game";
                     UpdateButtons(false);
                     break;
+                case "state":
+                    {
+                        int length = Convert.ToInt32(responseData.Substring(5, 2));
+                        string message = responseData.Substring(7, length);
+                        lblBotStatus.Text = message;
+                        break;
+                    }
+                case "disco":
+                    lblBotStatus.Text = "Disconnected";
+                    break;
                 default:
-                    lblBotStatus.Text = "Error";
-                    UpdateButtons(false);
+                    lblBotStatus.Text = responseData;
                     break;
             }
         }
@@ -289,8 +315,8 @@ namespace UI
             foreach (string statLine in statLines)
             {
                 string statDate = Convert.ToString(statLine.Substring(statLine.IndexOf("[Date]") + 6, statLine.IndexOf("[ID]") - statLine.IndexOf("[Date]") - 6));
-                long statDeckId = Convert.ToInt64(statLine.Substring(statLine.IndexOf("[ID]") + 4, statLine.IndexOf("[Name]")- statLine.IndexOf("[ID]") - 4));
-                string statDeckName = Convert.ToString(statLine.Substring(statLine.IndexOf("[Name]") + 6, statLine.IndexOf("[Result]")- statLine.IndexOf("[Name]") - 6));
+                long statDeckId = Convert.ToInt64(statLine.Substring(statLine.IndexOf("[ID]") + 4, statLine.IndexOf("[Name]") - statLine.IndexOf("[ID]") - 4));
+                string statDeckName = Convert.ToString(statLine.Substring(statLine.IndexOf("[Name]") + 6, statLine.IndexOf("[Result]") - statLine.IndexOf("[Name]") - 6));
                 bool statIsWin = Convert.ToBoolean(statLine.Substring(statLine.IndexOf("[Result]") + 8));
                 foreach (Deck deck in listDecks)
                 {
