@@ -168,15 +168,40 @@ namespace Plugin
             //Lógica de si conviene o no jugar el heropower
             switch (GameFunctions.myPlayer.GetHero().GetClass())
             {
+                #region -[ Warlock ]-
                 case TAG_CLASS.WARLOCK:
                     if (GameFunctions.myPlayer.GetHero().GetRemainingHP() > 10 && GameFunctions.myPlayer.GetHandZone().GetCardCount() <= 3)
                         break;
                     return false;
+                #endregion
+                #region -[ Hunter ]-
                 case TAG_CLASS.HUNTER:
+                    if (GameFunctions.myPlayer.GetNumAvailableResources() == 2 && noCardLowCost())
+                        break;
+                    return false;
+                #endregion
+                #region -[ Paladin ]-
                 case TAG_CLASS.PALADIN:
+                    if (GameFunctions.myPlayer.GetNumAvailableResources() == 2 && noCardLowCost())
+                        break;
+                    return false;
+                #endregion
+                #region -[ Rogue ]-
                 case TAG_CLASS.ROGUE:
+                    if (GameFunctions.myPlayer.GetNumAvailableResources() == 2 && noCardLowCost())
+                        break;
+                    return false;
+                    #endregion
+                #region -[ Shaman ]-
                 case TAG_CLASS.SHAMAN:
+                    #endregion
+                #region -[ Warrior ]-
                 case TAG_CLASS.WARRIOR:
+                    if (GameFunctions.myPlayer.GetNumAvailableResources() == 2 && noCardLowCost())
+                        break;
+                    return false;
+                #endregion
+                #region -[ Mage ]-
                 case TAG_CLASS.MAGE:
                     targetEntity = GetBestMageHeroPowerTarget();
                     if (targetEntity != null)
@@ -186,6 +211,8 @@ namespace Plugin
                     }
                     GameFunctions.Cancel();
                     return false;
+                    #endregion
+                #region -[ Priest ]-
                 case TAG_CLASS.PRIEST:
                     if (GameFunctions.myPlayer.GetHero().CanBeTargetedByHeroPowers())
                     {
@@ -194,12 +221,30 @@ namespace Plugin
                     }
                     GameFunctions.Cancel();
                     return false;
+                #endregion
+                #region -[ Druid ]-
                 case TAG_CLASS.DRUID:
                     break;
+                    #endregion
                 default:
                     return false;
             }
             return GameFunctions.DoDrop(GameFunctions.myPlayer.GetHeroPower().GetCard(), targetEntity);
+        }
+
+        private static bool noCardLowCost()
+        {
+            //Recorro mis cartas, si encuentra una carta mayor/igual a 2 devuelve falso y no deberia usar el hero power, pero si esa carta.
+            List<Card> CardsInMyHand = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
+            foreach (Card card in CardsInMyHand)
+            {
+                Entity entity = card.GetEntity();
+
+                if (entity.GetCost() >= 2)
+                    return false;
+                
+            }
+            return true;
         }
 
         public static bool tryToPlayCoin()
@@ -314,6 +359,7 @@ namespace Plugin
                 foreach (Card card in listCardInMyHand)
                 {
                     Entity entity = card.GetEntity();
+                   
                     // EJ: Mia es 4-4 y la de él es 3-4
                     if (entity.GetATK() >= attackee.GetEntity().GetHealth() && entity.GetHealth() < attackee.GetEntity().GetATK() && GameFunctions.CanBeUsed(card))
                     {
