@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="BruteAI.cs" />
     <Compile Include="CardDetails.cs" />
+    <Compile Include="EvalProvider.cs" />
     <Compile Include="GameFunctions.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Plugin.cs" />

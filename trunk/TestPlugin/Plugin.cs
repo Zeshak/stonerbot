@@ -41,6 +41,9 @@ namespace Plugin
             }
         }
 
+        private DateTime delay_start;
+        private long delay_length;
+
         public static Deck selDeck;
         public static BotStatusList BotStatus;
         private static double minTimeBetweenRuns = 1.0;
@@ -50,7 +53,7 @@ namespace Plugin
         public static bool playExpert = false;
         private float timeLastRun;
         private System.Random rng;
-        private static bool run;
+        private static bool itsOn;
         private static bool finishAfterThisGame;
         public static float timeLastQueued;
         public static bool statisticsAdded;
@@ -85,11 +88,13 @@ namespace Plugin
         {
             if (UnityEngine.Time.realtimeSinceStartup - this.timeLastRun < Plugin.minTimeBetweenRuns)
                 return;
+            if ((DateTime.Now - this.delay_start).TotalMilliseconds < this.delay_length)
+                return;
             this.timeLastRun = UnityEngine.Time.realtimeSinceStartup;
             Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 3.5;
             try
             {
-                if (Plugin.run)
+                if (Plugin.itsOn)
                     this.Mainloop();
             }
             catch (Exception ex)
@@ -136,16 +141,41 @@ namespace Plugin
 
         #region -[ Private Members ]-
 
+        private void Delay(long msec)
+        {
+            this.delay_start = DateTime.Now;
+            this.delay_length = msec;
+        }
+
         private void Mainloop()
         {
             SceneMgr.Mode curMode = SceneMgr.Get().GetMode();
             switch (curMode)
             {
+                case SceneMgr.Mode.INVALID:
+                case SceneMgr.Mode.FATAL_ERROR:
+                case SceneMgr.Mode.RESET:
+                    Log.say("Fatal Error, in AI.tick()");
+                    Log.say("Force closing game!");
+                    OnDestroy();
+                    Environment.FailFast(null);
+                    break;
+                case SceneMgr.Mode.STARTUP:
+                case SceneMgr.Mode.COLLECTIONMANAGER:
+                case SceneMgr.Mode.PACKOPENING:
+                case SceneMgr.Mode.FRIENDLY:
+                case SceneMgr.Mode.DRAFT:
+                case SceneMgr.Mode.CREDITS:
+                    SceneMgr.Get().SetNextMode(SceneMgr.Mode.HUB);
+                    this.Delay(5000L);
+                    break;
                 case SceneMgr.Mode.LOGIN:
+                    this.Delay(500L);
                     DoLogin();
                     break;
                 case SceneMgr.Mode.HUB:
                     DoHub();
+                    this.Delay(5000L);
                     break;
                 case SceneMgr.Mode.GAMEPLAY:
                     GameState gameState = GameState.Get();
@@ -278,12 +308,10 @@ namespace Plugin
                     {
                         Plugin.AddStatistics(!(GameFunctions.myPlayer.GetHero().GetRemainingHP() <= 0));
                         Plugin.statisticsAdded = true;
-                        Log.debug("Game ended.");
                     }
                     if (EndGameScreen.Get() == null)
                         return;
-                    EndGameScreen.Get().ContinueEvents();
-                        Log.debug("1");
+                    EndGameScreen.Get().m_hitbox.TriggerRelease();
                     saidHi = false;
                     saidGG = false;
                     return;
@@ -371,7 +399,7 @@ namespace Plugin
             }
             else
             {
-                Plugin.run = false;
+                Plugin.itsOn = false;
                 Plugin.finishAfterThisGame = false;
             }
         }
@@ -390,7 +418,7 @@ namespace Plugin
             Log.say("Bot started");
             Plugin.playVsHumans = true;
             Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
-            Plugin.run = true;
+            Plugin.itsOn = true;
             Plugin.playRanked = false;
             return true;
         }
@@ -400,7 +428,7 @@ namespace Plugin
             Log.say("Bot started VS AI");
             Plugin.playVsHumans = false;
             Plugin.playExpert = false;
-            Plugin.run = true;
+            Plugin.itsOn = true;
             return true;
         }
 
@@ -409,13 +437,259 @@ namespace Plugin
             Log.say("Bot started VS AI Expert");
             Plugin.playVsHumans = false;
             Plugin.playExpert = true;
-            Plugin.run = true;
+            Plugin.itsOn = true;
             return true;
         }
 
-        public static bool GetDeckId(string func, string[] args, string rawArgs)
+        public static bool AnalyzeMyHand(string func, string[] args, string rawArgs)
         {
-            Log.say("Deck id : " + DeckPickerTrayDisplay.Get().GetSelectedDeckID().ToString());
+            if (rawArgs == null)
+            {
+                Log.say("---------------------------------- My hand ----------------------------------");
+                foreach (Card card in GameState.Get().GetLocalPlayer().GetHandZone().GetCards())
+                {
+                    Entity entity = card.GetEntity();
+                    Log.debug("-------------------------------------------------------------");
+                    Log.debug("Damage: " + entity.GetDamage());
+                    Log.debug("GetRaceText: " + entity.GetRaceText());
+                    Power pow = entity.GetAttackPower();
+                    Log.debug("AttackPower:");
+                    if (pow != null)
+                    {
+                        PlayErrors.PlayRequirementInfo asd = pow.GetPlayRequirementInfo();
+                        Log.debug("paramMaxAtk: " + asd.paramMaxAtk);
+                        Log.debug("paramMinAtk: " + asd.paramMinAtk);
+                        Log.debug("paramMinNumEnemyMinions: " + asd.paramMinNumEnemyMinions);
+                        Log.debug("paramMinNumTotalMinions: " + asd.paramMinNumTotalMinions);
+                        Log.debug("paramNumMinionSlots: " + asd.paramNumMinionSlots);
+                        Log.debug("paramNumMinionSlotsWithTarget: " + asd.paramNumMinionSlotsWithTarget);
+                        Log.debug("paramRace: " + asd.paramRace);
+                        Log.debug("requirementsMap: " + asd.requirementsMap);
+                    }
+                    pow = entity.GetMasterPower();
+                    Log.debug("MasterPower:");
+                    if (pow != null)
+                    {
+                        PlayErrors.PlayRequirementInfo asd = pow.GetPlayRequirementInfo();
+                        Log.debug("paramMaxAtk: " + asd.paramMaxAtk);
+                        Log.debug("paramMinAtk: " + asd.paramMinAtk);
+                        Log.debug("paramMinNumEnemyMinions: " + asd.paramMinNumEnemyMinions);
+                        Log.debug("paramMinNumTotalMinions: " + asd.paramMinNumTotalMinions);
+                        Log.debug("paramNumMinionSlots: " + asd.paramNumMinionSlots);
+                        Log.debug("paramNumMinionSlotsWithTarget: " + asd.paramNumMinionSlotsWithTarget);
+                        Log.debug("paramRace: " + asd.paramRace);
+                        Log.debug("requirementsMap: " + asd.requirementsMap);
+                    }
+                    Log.debug("ATK: " + entity.GetStringTag(entity.GetTag(GAME_TAG.ATK)));
+                    Log.debug("SPELLPOWER: " + entity.GetStringTag(entity.GetTag(GAME_TAG.SPELLPOWER)));
+                    Log.debug("SPELLPOWER_DOUBLE: " + entity.GetStringTag(entity.GetTag(GAME_TAG.SPELLPOWER_DOUBLE)));
+
+                    Spell spell = card.GetBattlecrySpell();
+                    if (spell != null)
+                    {
+                        GUIText asd = spell.guiText;
+                        if (asd != null)
+                            Log.debug("GUIText" + asd.text);
+
+                        Log.debug("GetBattlecrySpell " + spell.name);
+                        Card e = spell.GetPowerSourceCard();
+                        if (e != null)
+                            Log.debug("GetPowerSourceCard " + e.name);
+                        SuperSpell sspell = spell.GetSuperSpellParent();
+                    }
+
+                    spell = card.GetAttackSpell();
+                    if (spell != null)
+                    {
+                        GUIText asd = spell.guiText;
+                        if (asd != null)
+                            Log.debug("GUIText" + asd.text);
+
+                        Log.debug("GetAttackSpell " + spell.name);
+                        Card e = spell.GetPowerSourceCard();
+                        if (e != null)
+                            Log.debug("GetPowerSourceCard " + e.name);
+                        SuperSpell sspell = spell.GetSuperSpellParent();
+                    }
+
+                    spell = card.GetBestDeathSpell();
+                    if (spell != null)
+                    {
+                        GUIText asd = spell.guiText;
+                        if (asd != null)
+                            Log.debug("GUIText" + asd.text);
+
+                        Log.debug("GetBestDeathSpell " + spell.name);
+                        Card e = spell.GetPowerSourceCard();
+                        if (e != null)
+                            Log.debug("GetPowerSourceCard " + e.name);
+                        SuperSpell sspell = spell.GetSuperSpellParent();
+                    }
+
+                    spell = card.GetBestSpawnSpell();
+                    if (spell != null)
+                    {
+                        GUIText asd = spell.guiText;
+                        if (asd != null)
+                            Log.debug("GUIText" + asd.text);
+
+                        Log.debug("GetBestSpawnSpell " + spell.name);
+                        Card e = spell.GetPowerSourceCard();
+                        if (e != null)
+                            Log.debug("GetPowerSourceCard " + e.name);
+                        SuperSpell sspell = spell.GetSuperSpellParent();
+                    }
+
+                    spell = card.GetBestSummonSpell();
+                    if (spell != null)
+                    {
+                        GUIText asd = spell.guiText;
+                        if (asd != null)
+                            Log.debug("GUIText" + asd.text);
+
+                        Log.debug("GetBestSummonSpell " + spell.name);
+                        Card e = spell.GetPowerSourceCard();
+                        if (e != null)
+                            Log.debug("GetPowerSourceCard " + e.name);
+                        SuperSpell sspell = spell.GetSuperSpellParent();
+                    }
+
+                    spell = card.GetDeathSpell();
+                    if (spell != null)
+                    {
+                        GUIText asd = spell.guiText;
+                        if (asd != null)
+                            Log.debug("GUIText" + asd.text);
+
+                        Log.debug("GetDeathSpell " + spell.name);
+                        Card e = spell.GetPowerSourceCard();
+                        if (e != null)
+                            Log.debug("GetPowerSourceCard " + e.name);
+                        SuperSpell sspell = spell.GetSuperSpellParent();
+                    }
+
+                    spell = card.GetPlaySpell();
+                    if (spell != null)
+                    {
+                        GUIText asd = spell.guiText;
+                        if (asd != null)
+                            Log.debug("GUIText" + asd.text);
+
+                        Log.debug("GetPlaySpell " + spell.name);
+                        Card e = spell.GetPowerSourceCard();
+                        if (e != null)
+                            Log.debug("GetPowerSourceCard " + e.name);
+                        SuperSpell sspell = spell.GetSuperSpellParent();
+                    }
+
+                    spell = card.GetLifetimeSpell();
+                    if (spell != null)
+                    {
+                        GUIText asd = spell.guiText;
+                        if (asd != null)
+                            Log.debug("GUIText" + asd.text);
+
+                        Log.debug("GetLifetimeSpell " + spell.name);
+                        Card e = spell.GetPowerSourceCard();
+                        if (e != null)
+                            Log.debug("GetPowerSourceCard " + e.name);
+                        SuperSpell sspell = spell.GetSuperSpellParent();
+                    }
+
+
+                    Log.debug("Card : " + card.ToString());
+                    if (entity.HasBattlecry())
+                        Log.debug("Battlecry : " + card.GetBattlecrySpell().GetType().ToString());
+                    Log.debug("ActorState : " + ((object)card.GetActor().GetActorStateType()).ToString());
+                    Log.debug("-------------------------------------------------------------");
+
+                }
+                Log.say("-----------------------------------------------------------------------------");
+            }
+            else
+            {
+                Card card = GameState.Get().GetLocalPlayer().GetHandZone().GetCardAtPos(Convert.ToInt32(rawArgs));
+                Entity entity = card.GetEntity();
+                Log.debug("-------------------------------------------------------------");
+                Log.debug("Damage: " + entity.GetDamage());
+                Log.debug("GetRaceText: " + entity.GetRaceText());
+                Power pow = entity.GetAttackPower();
+                if (pow != null)
+                    Log.debug("GetAttackPower: " + pow.GetDefinition());
+                pow = entity.GetMasterPower();
+                Log.debug("MasterPower:");
+                if (pow != null)
+                {
+                    PlayErrors.PlayRequirementInfo asd = pow.GetPlayRequirementInfo();
+                    Log.debug("paramMaxAtk: " + asd.paramMaxAtk);
+                    Log.debug("paramMinAtk: " + asd.paramMinAtk);
+                    Log.debug("paramMinNumEnemyMinions: " + asd.paramMinNumEnemyMinions);
+                    Log.debug("paramMinNumTotalMinions: " + asd.paramMinNumTotalMinions);
+                    Log.debug("paramNumMinionSlots: " + asd.paramNumMinionSlots);
+                    Log.debug("paramNumMinionSlotsWithTarget: " + asd.paramNumMinionSlotsWithTarget);
+                    Log.debug("paramRace: " + asd.paramRace);
+                    Log.debug("requirementsMap: " + asd.requirementsMap);
+                }
+
+                Spell spell = card.GetPlaySpell();
+                if (spell != null)
+                {
+                    GUIText asd = spell.guiText;
+                    if (asd != null)
+                        Log.debug("GUIText" + asd.text);
+
+                    Log.debug("spellname " + spell.name);
+
+                    Card e = spell.GetPowerSourceCard();
+                    if (e != null)
+                        Log.debug("GetPowerSourceCard " + e.name);
+                    SuperSpell sspell = spell.GetSuperSpellParent();
+                }
+                Log.debug("Card : " + card.ToString());
+                if (entity.HasBattlecry())
+                    Log.debug("Battlecry : " + card.GetBattlecrySpell().GetType().ToString());
+                Log.debug("ActorState : " + ((object)card.GetActor().GetActorStateType()).ToString());
+                Log.debug("-------------------------------------------------------------");
+            }
+            return true;
+        }
+
+        public static bool AnalyzeMyField(string func, string[] args, string rawArgs)
+        {
+            if (rawArgs == null)
+            {
+                Log.say("---------------------------------- My field ----------------------------------");
+                foreach (Card card in GameState.Get().GetLocalPlayer().GetBattlefieldZone().GetCards())
+                {
+                    Entity entity = card.GetEntity();
+                    Log.debug("Card : " + card.ToString());
+                    Log.debug("Type : " + entity.GetType().ToString());
+                    if (entity.HasBattlecry())
+                        Log.debug("Battlecry : " + card.GetBattlecrySpell().GetType().ToString());
+                    Log.debug("ActorState : " + ((object)card.GetActor().GetActorStateType()).ToString());
+                }
+                Log.say("------------------------------------------------------------------------");
+            }
+            else
+            {
+                Card card = GameState.Get().GetLocalPlayer().GetBattlefieldZone().GetCardAtPos(Convert.ToInt32(rawArgs));
+                Entity entity = card.GetEntity();
+                Spell spell = card.GetPlaySpell();
+                if (spell != null)
+                {
+                    Log.debug(spell.guiText.text);
+                }
+                Log.debug("Card : " + card.ToString());
+                Log.debug("Type : " + entity.GetType().ToString());
+                if (entity.HasBattlecry())
+                    Log.debug("Battlecry : " + card.GetBattlecrySpell().GetType().ToString());
+                Log.debug("ActorState : " + ((object)card.GetActor().GetActorStateType()).ToString());
+            }
+            return true;
+        }
+
+        public static bool AnalyzeHisField(string func, string[] args, string rawArgs)
+        {
             return true;
         }
 
@@ -488,7 +762,7 @@ namespace Plugin
         {
             Log.say("Bot started in ranked mode");
             Plugin.timeLastQueued = UnityEngine.Time.realtimeSinceStartup;
-            Plugin.run = true;
+            Plugin.itsOn = true;
             Plugin.playVsHumans = true;
             Plugin.playRanked = true;
             return true;
@@ -497,7 +771,7 @@ namespace Plugin
         public static bool StopBot(string func, string[] args, string rawArgs)
         {
             Log.say("Bot stopped");
-            Plugin.run = false;
+            Plugin.itsOn = false;
             return true;
         }
 

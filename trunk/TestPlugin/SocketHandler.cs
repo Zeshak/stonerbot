@@ -58,6 +58,24 @@ namespace Plugin
                     case "state":
                         response = messageb + Plugin.BotStatus.ToString().Length.ToString().PadLeft(2, '0') + Plugin.BotStatus.ToString();
                         break;
+                    case "debug":
+                        {
+                            int length = Convert.ToInt32(message.Substring(5, 2));
+                            string messageSay = message.Substring(7, length);
+                            Log.debug(@"return " + messageSay + ";");
+                            //var evalFunction = EvalProvider.CreateEvalMethod<int, string>(@"return " + messageSay + ";");                            
+                            //Log.debug(evalFunction(0));
+                            break;
+                        }
+                    case "anamy":
+                        {
+                            int pos;
+                            if (int.TryParse(message.Substring(5, 1), out pos))
+                                Plugin.AnalyzeMyHand(null, null, pos.ToString());
+                            else
+                                Plugin.AnalyzeMyHand(null, null, null);
+                            break;
+                        }
                     default:
                         response = "Error";
                         break;

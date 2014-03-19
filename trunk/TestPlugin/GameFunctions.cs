@@ -233,7 +233,7 @@ namespace Plugin
                 return false;
             gs.GetGameEntity().NotifyOfBattlefieldCardClicked(target, true);
             myPlayer.GetBattlefieldZone().UnHighlightBattlefield();
-            if (!GameFunctions.CanBeTargetted(target))
+            if (!target.CanBeTargetedByOpponents())
             {
                 GameFunctions.Cancel();
                 return false;
@@ -255,14 +255,6 @@ namespace Plugin
             }
         }
 
-        public static bool CanBeTargetted(Entity e)
-        {
-            if (e.GetCard().GetActor() == null)
-                return false;
-            else
-                return e.GetCard().GetActor().GetActorStateType().Equals(ActorStateType.CARD_VALID_TARGET);
-        }
-
         public static bool CanBeUsed(Card c)
         {
             if (c.GetActor() == null)
@@ -280,20 +272,17 @@ namespace Plugin
         {
             if (MulliganManager.Get().GetMulliganButton() == null || !MulliganManager.Get().GetMulliganButton().IsEnabled())
                 return false;
-            int num = 0;
+            List<Card> swap = new List<Card>();
             foreach (Card card in GameFunctions.myPlayer.GetHandZone().GetCards())
-            {
                 if (card.GetEntity().GetCost() >= 4)
-                {
-                    MulliganManager.Get().ToggleHoldState(card);
-                    num++;
-                }
-            }
-            GameFunctions.DoEndTurn();
-            TurnStartManager.Get().BeginListeningForTurnEvents();
+                    swap.Add(card);
+
+            foreach (Card card in swap)
+                MulliganManager.Get().ToggleHoldState(card);
             MulliganManager.Get().EndMulligan();
+            GameFunctions.DoEndTurn();
             GameFunctions.gameTurn = 0;
-            Log.say("Mulligan ended : " + num.ToString() + " cards changed");
+            Log.say("Mulligan ended : " + swap.Count.ToString() + " cards changed");
             return true;
         }
 

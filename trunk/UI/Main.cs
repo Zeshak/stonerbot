@@ -106,7 +106,12 @@ namespace UI
 
         private void btnSay_Click(object sender, EventArgs e)
         {
-            SendConnectCmd("saywo" + txtSay.Text.Length.ToString().PadLeft(2, '0') + txtSay.Text);
+            if (txtSay.Text.StartsWith("debug"))
+                SendConnectCmd("debug" + txtSay.Text.Replace("debug ", "").Length.ToString().PadLeft(2, '0') + txtSay.Text.Replace("debug ", ""));
+            else if (txtSay.Text.StartsWith("anamy"))
+                SendConnectCmd(txtSay.Text);
+            else
+                SendConnectCmd("saywo" + txtSay.Text.Length.ToString().PadLeft(2, '0') + txtSay.Text);
         }
 
         private void btnInject_Click(object sender, EventArgs e)

@@ -37,7 +37,6 @@ namespace Plugin
         private static void SendEmoType(EmoteType Emo)
         {
             EmoteHandler.Get().ShowEmotes();
-            Thread.Sleep(1000);
             GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(Emo);
             Network.Get().SendEmote(Emo);
             EmoteHandler.Get().HideEmotes();
@@ -54,7 +53,6 @@ namespace Plugin
             {
                 Card cardToPlay = new Card();
 
-                Thread.Sleep(500);
                 CardDetails targetCardDetails = NeedsToPlayDisableDestroySilence();
                 if (targetCardDetails != null)
                 {
@@ -165,43 +163,21 @@ namespace Plugin
                 return false;
 
             Entity targetEntity = null;
+            Log.debug("LaunchHeroPower");
             //Lógica de si conviene o no jugar el heropower
             switch (GameFunctions.myPlayer.GetHero().GetClass())
             {
-                #region -[ Warlock ]-
                 case TAG_CLASS.WARLOCK:
                     if (GameFunctions.myPlayer.GetHero().GetRemainingHP() > 10 && GameFunctions.myPlayer.GetHandZone().GetCardCount() <= 3)
                         break;
                     return false;
-                #endregion
-                #region -[ Hunter ]-
                 case TAG_CLASS.HUNTER:
-                    if (GameFunctions.myPlayer.GetNumAvailableResources() == 2 && noCardLowCost())
-                        break;
-                    return false;
-                #endregion
-                #region -[ Paladin ]-
                 case TAG_CLASS.PALADIN:
-                    if (GameFunctions.myPlayer.GetNumAvailableResources() == 2 && noCardLowCost())
-                        break;
-                    return false;
-                #endregion
-                #region -[ Rogue ]-
                 case TAG_CLASS.ROGUE:
-                    if (GameFunctions.myPlayer.GetNumAvailableResources() == 2 && noCardLowCost())
-                        break;
-                    return false;
-                    #endregion
-                #region -[ Shaman ]-
                 case TAG_CLASS.SHAMAN:
-                    #endregion
-                #region -[ Warrior ]-
                 case TAG_CLASS.WARRIOR:
-                    if (GameFunctions.myPlayer.GetNumAvailableResources() == 2 && noCardLowCost())
-                        break;
-                    return false;
-                #endregion
-                #region -[ Mage ]-
+                case TAG_CLASS.DRUID:
+                    break;
                 case TAG_CLASS.MAGE:
                     targetEntity = GetBestMageHeroPowerTarget();
                     if (targetEntity != null)
@@ -211,8 +187,6 @@ namespace Plugin
                     }
                     GameFunctions.Cancel();
                     return false;
-                    #endregion
-                #region -[ Priest ]-
                 case TAG_CLASS.PRIEST:
                     if (GameFunctions.myPlayer.GetHero().CanBeTargetedByHeroPowers())
                     {
@@ -221,30 +195,10 @@ namespace Plugin
                     }
                     GameFunctions.Cancel();
                     return false;
-                #endregion
-                #region -[ Druid ]-
-                case TAG_CLASS.DRUID:
-                    break;
-                    #endregion
                 default:
                     return false;
             }
             return GameFunctions.DoDrop(GameFunctions.myPlayer.GetHeroPower().GetCard(), targetEntity);
-        }
-
-        private static bool noCardLowCost()
-        {
-            //Recorro mis cartas, si encuentra una carta mayor/igual a 2 devuelve falso y no deberia usar el hero power, pero si esa carta.
-            List<Card> CardsInMyHand = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
-            foreach (Card card in CardsInMyHand)
-            {
-                Entity entity = card.GetEntity();
-
-                if (entity.GetCost() >= 2)
-                    return false;
-                
-            }
-            return true;
         }
 
         public static bool tryToPlayCoin()
@@ -267,7 +221,6 @@ namespace Plugin
 
         public static Entity GetBestMageHeroPowerTarget()
         {
-            Log.debug("Corro para buscar el mejor Hero power target");
             List<CardDetails> listCards = GameFunctions.GetBattlefieldCardDetails();
             Entity target = new Entity();
             int maxAtk = 0;
@@ -275,7 +228,7 @@ namespace Plugin
             foreach (CardDetails cd in listCards)
             {
                 Entity possibleTarget = cd.Card.GetEntity();
-                if (possibleTarget.GetRemainingHP() == 1 || possibleTarget.HasDivineShield())
+                if (possibleTarget.GetHealth() == 1 || possibleTarget.HasDivineShield())
                 {
                     int estimatedAtk = possibleTarget.GetATK();
                     if (possibleTarget.HasWindfury())
@@ -284,7 +237,7 @@ namespace Plugin
                         estimatedAtk += 1;
                     if (maxAtk == 0 || estimatedAtk > maxAtk)
                     {
-                        if (GameFunctions.CanBeTargetted(possibleTarget))
+                        if (possibleTarget.CanBeTargetedByHeroPowers())
                         {
                             index = listCards.IndexOf(cd);
                             maxAtk = estimatedAtk;
@@ -294,7 +247,7 @@ namespace Plugin
             }
             if (index != -1)
                 return listCards[index].Card.GetEntity();
-            else if (GameFunctions.CanBeTargetted(GameFunctions.ePlayer.GetHeroCard().GetEntity()))
+            else if (GameFunctions.ePlayer.GetHeroCard().GetEntity().CanBeDamaged())
                 return GameFunctions.ePlayer.GetHeroCard().GetEntity();
             else return null;
         }
@@ -359,7 +312,7 @@ namespace Plugin
                 foreach (Card card in listCardInMyHand)
                 {
                     Entity entity = card.GetEntity();
-                   
+
                     // EJ: Mia es 4-4 y la de él es 3-4
                     if (entity.GetATK() >= attackee.GetEntity().GetHealth() && entity.GetHealth() < attackee.GetEntity().GetATK() && GameFunctions.CanBeUsed(card))
                     {
