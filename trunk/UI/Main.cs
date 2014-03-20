@@ -110,6 +110,8 @@ namespace UI
                 SendConnectCmd("debug" + txtSay.Text.Replace("debug ", "").Length.ToString().PadLeft(2, '0') + txtSay.Text.Replace("debug ", ""));
             else if (txtSay.Text.StartsWith("anamy"))
                 SendConnectCmd(txtSay.Text);
+            else if (txtSay.Text.StartsWith("anamf"))
+                SendConnectCmd(txtSay.Text);
             else
                 SendConnectCmd("saywo" + txtSay.Text.Length.ToString().PadLeft(2, '0') + txtSay.Text);
         }

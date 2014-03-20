@@ -336,7 +336,7 @@ namespace Plugin
                 #region -[ Arcane Golem ]-
                 case "EX1_089":
                     {
-                        if (GameFunctions.gameTurn > 6)
+                        if (GameFunctions.gameTurn > 6 && GameFunctions.turnState == GameFunctions.TurnStates.DROP_MINIONS)
                             return true;
                         return false;
                     }
@@ -352,7 +352,7 @@ namespace Plugin
                         int count = 0;
                         foreach (Card c in GameFunctions.ePlayer.GetBattlefieldZone().GetCards())
                         {
-                            if (c.GetEntity().GetRemainingHP() <= ExplosiveTrap.CardDamage)
+                            if (c.GetEntity().GetRealTimeRemainingHP() <= ExplosiveTrap.CardDamage)
                                 count++;
                         }
                         if (count >= ExplosiveTrap.CardsDestroyed)
@@ -457,7 +457,7 @@ namespace Plugin
                 #endregion
                 #region -[ Blade Flurry ]-
                 case "CS2_233":
-                    int cardDamage = GameFunctions.myPlayer.GetHero().GetWeaponCard().GetEntity().GetATK();
+                    int cardDamage = GameFunctions.myPlayer.GetHero().GetWeaponCard().GetEntity().GetRealTimeAttack();
                     if (GameFunctions.myPlayer.GetHero().GetWeaponCard().GetEntity().GetDurability() <= BladeFlurry.MinWeaponDurability)
                         return CommonMultipleSpell(cardDamage, BladeFlurry.CardsDestroyed, BladeFlurry.EnemyMinCardsInPlay);
                     return false;
@@ -512,7 +512,7 @@ namespace Plugin
             int count = 0;
             foreach (Card card in GameFunctions.ePlayer.GetBattlefieldZone().GetCards())
             {
-                if (card.GetEntity().GetRemainingHP() <= CardDamage && !card.GetEntity().HasDivineShield())
+                if (card.GetEntity().GetRealTimeRemainingHP() <= CardDamage && !card.GetEntity().HasDivineShield())
                     count++;
             }
             if (count >= CardsDestroyed)
@@ -534,7 +534,7 @@ namespace Plugin
                 int count = 0;
                 foreach (Card card in GameFunctions.myPlayer.GetBattlefieldZone().GetCards())
                 {
-                    if (card.GetEntity().GetRemainingHP() <= CardDamage)
+                    if (card.GetEntity().GetRealTimeRemainingHP() <= CardDamage)
                         count++;
                 }
                 if (count <= MyMaxCardsDestroyed)
@@ -546,8 +546,8 @@ namespace Plugin
         public static void SetNewValuesByCardStatus(ref CardDetails cd)
         {
             Entity entity = cd.Card.GetEntity();
-            int currATK = entity.GetATK();
-            int currHP = entity.GetHealth();
+            int currATK = entity.GetRealTimeAttack();
+            int currHP = entity.GetRealTimeRemainingHP();
             int origATK = entity.GetOriginalATK();
             int origHP = entity.GetOriginalHealth();
             if (currATK - currHP > 1 && currHP < 4)

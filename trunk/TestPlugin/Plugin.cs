@@ -41,8 +41,8 @@ namespace Plugin
             }
         }
 
-        private DateTime delay_start;
-        private long delay_length;
+        private static DateTime delay_start;
+        private static long delay_length;
 
         public static Deck selDeck;
         public static BotStatusList BotStatus;
@@ -88,7 +88,7 @@ namespace Plugin
         {
             if (UnityEngine.Time.realtimeSinceStartup - this.timeLastRun < Plugin.minTimeBetweenRuns)
                 return;
-            if ((DateTime.Now - this.delay_start).TotalMilliseconds < this.delay_length)
+            if ((DateTime.Now - delay_start).TotalMilliseconds < delay_length)
                 return;
             this.timeLastRun = UnityEngine.Time.realtimeSinceStartup;
             Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 3.5;
@@ -141,10 +141,10 @@ namespace Plugin
 
         #region -[ Private Members ]-
 
-        private void Delay(long msec)
+        public static void Delay(long msec)
         {
-            this.delay_start = DateTime.Now;
-            this.delay_length = msec;
+            delay_start = DateTime.Now;
+            delay_length = msec;
         }
 
         private void Mainloop()
@@ -167,15 +167,15 @@ namespace Plugin
                 case SceneMgr.Mode.DRAFT:
                 case SceneMgr.Mode.CREDITS:
                     SceneMgr.Get().SetNextMode(SceneMgr.Mode.HUB);
-                    this.Delay(5000L);
+                    Delay(5000);
                     break;
                 case SceneMgr.Mode.LOGIN:
-                    this.Delay(500L);
+                    Delay(500);
                     DoLogin();
                     break;
                 case SceneMgr.Mode.HUB:
                     DoHub();
-                    this.Delay(5000L);
+                    Delay(5000);
                     break;
                 case SceneMgr.Mode.GAMEPLAY:
                     GameState gameState = GameState.Get();
@@ -663,9 +663,16 @@ namespace Plugin
                 {
                     Entity entity = card.GetEntity();
                     Log.debug("Card : " + card.ToString());
-                    Log.debug("Type : " + entity.GetType().ToString());
                     if (entity.HasBattlecry())
                         Log.debug("Battlecry : " + card.GetBattlecrySpell().GetType().ToString());
+                    Log.debug("GetRealTimeRemainingHP" + entity.GetRealTimeRemainingHP());
+                    Log.debug("GetRemainingHP" + entity.GetRemainingHP());
+                    Log.debug("GetHealth" + entity.GetHealth());
+                    Log.debug("GetOriginalHealth" + entity.GetOriginalHealth());
+                    Log.debug("GetRealTimeAttack" + entity.GetRealTimeAttack());
+                    Log.debug("GetDamage" + entity.GetDamage());
+                    Log.debug("GetATK" + entity.GetATK());
+                    Log.debug("GetOriginalATK" + entity.GetOriginalATK());
                     Log.debug("ActorState : " + ((object)card.GetActor().GetActorStateType()).ToString());
                 }
                 Log.say("------------------------------------------------------------------------");
@@ -674,15 +681,17 @@ namespace Plugin
             {
                 Card card = GameState.Get().GetLocalPlayer().GetBattlefieldZone().GetCardAtPos(Convert.ToInt32(rawArgs));
                 Entity entity = card.GetEntity();
-                Spell spell = card.GetPlaySpell();
-                if (spell != null)
-                {
-                    Log.debug(spell.guiText.text);
-                }
                 Log.debug("Card : " + card.ToString());
-                Log.debug("Type : " + entity.GetType().ToString());
                 if (entity.HasBattlecry())
                     Log.debug("Battlecry : " + card.GetBattlecrySpell().GetType().ToString());
+                Log.debug("GetRealTimeRemainingHP" + entity.GetRealTimeRemainingHP());
+                Log.debug("GetRemainingHP" + entity.GetRemainingHP());
+                Log.debug("GetHealth" + entity.GetHealth());
+                Log.debug("GetOriginalHealth" + entity.GetOriginalHealth());
+                Log.debug("GetRealTimeAttack" + entity.GetRealTimeAttack());
+                Log.debug("GetDamage" + entity.GetDamage());
+                Log.debug("GetATK" + entity.GetATK());
+                Log.debug("GetOriginalATK" + entity.GetOriginalATK());
                 Log.debug("ActorState : " + ((object)card.GetActor().GetActorStateType()).ToString());
             }
             return true;

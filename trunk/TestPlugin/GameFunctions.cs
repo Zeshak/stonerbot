@@ -14,6 +14,17 @@ namespace Plugin
         private static ZoneWeapon myWeaponZone;
         private static ZoneSecret mySecretZone;
         public static int gameTurn;
+        public static TurnStates? turnState;
+        public enum TurnStates
+        {
+            CHECK_CANWIN,
+            DROP_FIRSTSPELL,
+            DROP_MINIONS,
+            DROP_SECRETS,
+            DROP_WEAPONS,
+            DROP_SECONDSPELL,
+            DO_HEROPOWER
+        }
 
 
         public static void populateZones()
@@ -51,7 +62,6 @@ namespace Plugin
 
         public static bool DoAttack(Card attacker, Card attackee)
         {
-            Log.debug("DoAttack " + attacker.GetEntity().GetName() + " -> " + attackee.GetEntity().GetName());
             try
             {
                 attacker.SetDoNotSort(true);
@@ -72,6 +82,7 @@ namespace Plugin
                         EnemyActionHandler.Get().NotifyOpponentOfTargetEnd();
                         GameFunctions.myPlayer.GetHandZone().UpdateLayout(-1, true);
                         GameFunctions.myPlayer.GetBattlefieldZone().UpdateLayout();
+                        Plugin.Delay(500L);
                         return true;
                     }
                 }
@@ -291,6 +302,7 @@ namespace Plugin
             InputManager.Get().DoEndTurnButton();
             GameFunctions.gameTurn++;
             Plugin.BotStatus = Plugin.BotStatusList.OnMatchTurn;
+            GameFunctions.turnState = null;
         }
 
         private static bool PlayPowerUpSpell(Card card)

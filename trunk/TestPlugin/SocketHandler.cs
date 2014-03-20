@@ -76,6 +76,15 @@ namespace Plugin
                                 Plugin.AnalyzeMyHand(null, null, null);
                             break;
                         }
+                    case "anamf":
+                        {
+                            int pos;
+                            if (int.TryParse(message.Substring(5, 1), out pos))
+                                Plugin.AnalyzeMyField(null, null, pos.ToString());
+                            else
+                                Plugin.AnalyzeMyField(null, null, null);
+                            break;
+                        }
                     default:
                         response = "Error";
                         break;
