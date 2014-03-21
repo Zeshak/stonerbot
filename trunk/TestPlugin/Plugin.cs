@@ -46,12 +46,10 @@ namespace Plugin
 
         public static Deck selDeck;
         public static BotStatusList BotStatus;
-        private static double minTimeBetweenRuns = 1.0;
         public static float maxQueueTime = 120f;
         public static bool playVsHumans = true;
         public static bool playRanked = false;
         public static bool playExpert = false;
-        private float timeLastRun;
         private System.Random rng;
         private static bool itsOn;
         private static bool finishAfterThisGame;
@@ -62,6 +60,8 @@ namespace Plugin
         private static Thread socketThread;
         public static bool saidHi = false;
         public static bool saidGG = false;
+        public static bool needsToSetQuestSet = false;
+        public static string questString;
 
         #endregion
 
@@ -86,12 +86,9 @@ namespace Plugin
 
         public void Update()    // This is called every frame from Unity's main thread
         {
-            if (UnityEngine.Time.realtimeSinceStartup - this.timeLastRun < Plugin.minTimeBetweenRuns)
-                return;
             if ((DateTime.Now - delay_start).TotalMilliseconds < delay_length)
                 return;
-            this.timeLastRun = UnityEngine.Time.realtimeSinceStartup;
-            Plugin.minTimeBetweenRuns = new System.Random().NextDouble() * 2.0 + 3.5;
+            Delay(2000);
             try
             {
                 if (Plugin.itsOn)
@@ -101,6 +98,7 @@ namespace Plugin
             {
                 Log.error(ex);
             }
+            return;
         }
 
         public void Start()     // This is called after control is given back to Unity
@@ -108,7 +106,6 @@ namespace Plugin
             Plugin.socketThread = new Thread(new ThreadStart(SocketHandler.InitSocketListener));
             Plugin.socketThread.Start();
             rng = new System.Random();
-            timeLastRun = Time.realtimeSinceStartup;
             timeLastQueued = Time.realtimeSinceStartup;
         }
 
@@ -170,24 +167,30 @@ namespace Plugin
                     Delay(5000);
                     break;
                 case SceneMgr.Mode.LOGIN:
-                    Delay(500);
                     DoLogin();
+                    Delay(1500);
                     break;
                 case SceneMgr.Mode.HUB:
+                    if (!needsToSetQuestSet)
+                        Delay(5000);
+                    else
+                        Delay(1500);
                     DoHub();
-                    Delay(5000);
                     break;
                 case SceneMgr.Mode.GAMEPLAY:
                     GameState gameState = GameState.Get();
                     if (!gameState.IsInTargetMode())
                         GameFunctions.Cancel();
+                    Delay(1500);
                     DoGameplay();
                     break;
                 case SceneMgr.Mode.PRACTICE:
                     DoPractice();
+                    Delay(3000);
                     break;
                 case SceneMgr.Mode.TOURNAMENT:
                     DoTournament();
+                    Delay(3000);
                     break;
                 default:
                     Log.error("Mainloop derrapó a default. Mode: " + curMode.ToString());
@@ -261,13 +264,34 @@ namespace Plugin
             BotStatus = BotStatusList.OnLogin;
             if (WelcomeQuests.Get() == null)
                 return;
-            Log.say("Clicking through welcome quest");
             WelcomeQuests.Get().m_clickCatcher.TriggerRelease();
             BotStatus = BotStatusList.OnHub;
         }
 
+        public static void FindTotalDominance()
+        {
+            string race = questString.Split(' ')[0];
+            List<Achievement> list = AchieveManager.Get().GetActiveQuests();
+            if (list.Count == 0 || !AchieveManager.Get().CanCancelQuest(list[0].ID))
+            {
+                Plugin.StopBot(null, null, null);
+                return;
+            }
+            if (list[0].Name.Contains(race) && list[0].Name.Contains("Dominance"))
+            {
+                Plugin.StopBot(null, null, null);
+                return;
+            }
+            AchieveManager.Get().CancelQuest(list[0].ID);
+        }
+
         private void DoHub()
         {
+            if (needsToSetQuestSet)
+            {
+                FindTotalDominance();
+                return;
+            }
             if (playVsHumans)
             {
                 SceneMgr.Get().SetNextMode(SceneMgr.Mode.TOURNAMENT);
@@ -328,7 +352,7 @@ namespace Plugin
             {
                 if (GameState.Get().IsBlockingServer())
                     Thread.Sleep(500);
-                GameFunctions.populateZones();
+                GameFunctions.PopulateZones();
                 BruteAI.SendEmoMessages();
                 if (BruteAI.BruteHand())
                     ++BruteAI.loops;
@@ -780,6 +804,7 @@ namespace Plugin
         public static bool StopBot(string func, string[] args, string rawArgs)
         {
             Log.say("Bot stopped");
+            Plugin.needsToSetQuestSet = false;
             Plugin.itsOn = false;
             return true;
         }
