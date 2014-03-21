@@ -55,6 +55,16 @@ namespace Plugin
                             Log.say(messageSay);
                             break;
                         }
+                    case "quest":
+                        {
+                            int length = Convert.ToInt32(message.Substring(5, 2));
+                            string messageSay = message.Substring(7, length);
+                            Log.debug(messageSay);
+                            Plugin.questString = messageSay;
+                            Plugin.needsToSetQuestSet = true;
+                            Plugin.StartBotVsAI(null, null, null);
+                            break;
+                        }
                     case "state":
                         response = messageb + Plugin.BotStatus.ToString().Length.ToString().PadLeft(2, '0') + Plugin.BotStatus.ToString();
                         break;

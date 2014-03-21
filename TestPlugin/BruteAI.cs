@@ -37,6 +37,7 @@ namespace Plugin
         private static void SendEmoType(EmoteType Emo)
         {
             EmoteHandler.Get().ShowEmotes();
+            Thread.Sleep(1000);
             GameState.Get().GetLocalPlayer().GetHeroCard().PlayEmote(Emo);
             Network.Get().SendEmote(Emo);
             EmoteHandler.Get().HideEmotes();
@@ -332,11 +333,22 @@ namespace Plugin
 
         public static bool BruteAttack()
         {
-            Card attackee = BruteAI.GetBestAttackee();
-            Card attacker = BruteAI.GetBestAttacker(attackee);
-            if (attacker == null || attackee == null)
-                return false;
-            return GameFunctions.DoAttack(attacker, attackee) ? true : true;
+            if (GameFunctions.massiveAttackList == null || GameFunctions.massiveAttackList.Count == 0)
+            {
+                GameFunctions.massiveAttackList = new List<Card>();
+                GameFunctions.massiveAttackAttackee = BruteAI.GetBestAttackee();
+                GameFunctions.massiveAttackList = BruteAI.NextBestAttackerCombinated(GameFunctions.massiveAttackAttackee);
+                if (GameFunctions.massiveAttackAttackee == null || GameFunctions.massiveAttackList.Count == 0)
+                    return false;
+                return (GameFunctions.DoMassiveAttack(GameFunctions.massiveAttackList, GameFunctions.massiveAttackAttackee)) ? true : true;
+            }
+            else
+            {
+                if (GameFunctions.massiveAttackAttackee == null)
+                    return true;
+                GameFunctions.DoAttack(GameFunctions.massiveAttackList[0], GameFunctions.massiveAttackAttackee);
+                return true;
+            }
         }
 
         public static List<Card> NextBestAttackerCombinated(Card hisCardInPlay, bool maximizeDamage = false)
@@ -461,14 +473,13 @@ namespace Plugin
             int thisGroupCardsDead = 0;
             int thisGroupCardsDamage = 0;
             int thisGroupDamageTaken = 0;
-            int deadValue = 2;
             bool first = true;
             foreach (List<Card> thisList in listOfCardCombinations)
             {
                 thisGroupCardsDead = 0;
                 thisGroupCardsDamage = 0;
                 thisGroupDamageTaken = 0;
-                GetCombinationResults(hisCard, ref thisGroupCardsDead, ref thisGroupCardsDamage, ref thisGroupDamageTaken, deadValue, thisList);
+                GetCombinationResults(hisCard, ref thisGroupCardsDead, ref thisGroupCardsDamage, ref thisGroupDamageTaken, thisList);
                 if (first)
                 {
                     first = false;
@@ -484,7 +495,7 @@ namespace Plugin
                 {
                     if (maximizeDamage)
                     {
-                        if (thisGroupCardsDamage < bestGroupCardsDamage|| bestGroupCardsDamage <= hisCard.GetEntity().GetRealTimeRemainingHP())
+                        if (thisGroupCardsDamage < bestGroupCardsDamage || bestGroupCardsDamage <= hisCard.GetEntity().GetRealTimeRemainingHP())
                         {
                             bestCards = thisList;
                             bestGroupCardsDead = thisGroupCardsDead;
@@ -494,9 +505,10 @@ namespace Plugin
                     }
                     else
                     {
-                        if (((thisGroupCardsDamage < bestGroupCardsDamage || thisGroupCardsDamage <= hisCard.GetEntity().GetRealTimeRemainingHP() + 1) 
-                            && (thisGroupDamageTaken < bestGroupDamageTaken))
-                            || bestGroupCardsDamage <= hisCard.GetEntity().GetRealTimeRemainingHP())
+                        //Log.debug("Llega a preguntar. TGCD: " + thisGroupCardsDamage.ToString() + " - BGCD: " + bestGroupCardsDamage.ToString() + " - TGDK: " + thisGroupDamageTaken.ToString() + " - BGDT: " + bestGroupDamageTaken.ToString() + " - HP: " + hisCard.GetEntity().GetRealTimeRemainingHP().ToString() + " ");
+                        if
+                            ((thisGroupCardsDamage < bestGroupCardsDamage && thisGroupDamageTaken < bestGroupDamageTaken)
+                            || bestGroupCardsDamage < hisCard.GetEntity().GetRealTimeRemainingHP())
                         {
                             bestCards = thisList;
                             bestGroupCardsDead = thisGroupCardsDead;
@@ -510,15 +522,20 @@ namespace Plugin
             //En caso de que ni con todas las cartas la mate, elijo el último item que va a tener todas mis cartas
             if (bestGroupCardsDamage < hisCard.GetEntity().GetRealTimeRemainingHP())
                 bestCards = listOfCardCombinations[listOfCardCombinations.Count - 1];
+            foreach (Card c in bestCards)
+                Log.debug("Mis atacantes: " + c.ToString());
 
 
             return bestCards;
         }
 
-        private static void GetCombinationResults(Card hisCard, ref int thisGroupCardsDead, ref int thisGroupCardsDamage, ref int thisGroupDamageTaken, int deadValue, List<Card> thisList)
+        private static void GetCombinationResults(Card hisCard, ref int thisGroupCardsDead, ref int thisGroupCardsDamage, ref int thisGroupDamageTaken, List<Card> thisList)
         {
+            int deadValue = 2;
             foreach (Card thisListCard in thisList)
             {
+                if (!GameFunctions.CanBeUsed(thisListCard))
+                    continue;
                 thisGroupCardsDamage += thisListCard.GetEntity().GetRealTimeAttack();
                 if (thisListCard.GetEntity().GetRealTimeRemainingHP() <= hisCard.GetEntity().GetRealTimeAttack())
                 {

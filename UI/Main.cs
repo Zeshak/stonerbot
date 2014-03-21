@@ -55,6 +55,20 @@ namespace UI
 
             Microsoft.Win32.RegistryKey key;
             key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("StonerBot");
+            string[] quests = new string[]
+            {
+                "Priest Dominance", 
+                "Warlock Dominance",
+                "Hunter Dominance",
+                "Mage Dominance",
+                "Rogue Dominance",
+                "Druid Dominance",
+                "Shaman Dominance",
+                "Paladin Dominance",
+                "Warrior Dominance",
+                "Total Dominance"
+            };
+            cmbQuests.DataSource = quests;
             if (key == null)
             {
                 key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("StonerBot");
@@ -349,6 +363,14 @@ namespace UI
             cmbDecks.DataSource = listDecks;
             cmbDecks.ValueMember = "DeckId";
             cmbDecks.DisplayMember = "Alias";
+        }
+
+        private void btnGetQuest_Click(object sender, EventArgs e)
+        {
+            string message = "quest" + cmbQuests.SelectedItem.ToString().Length.ToString().PadLeft(2, '0') + cmbQuests.SelectedItem.ToString();
+            int length = Convert.ToInt32(message.Substring(5, 2));
+            string messageSay = message.Substring(7, length);
+            SendConnectCmd("quest" + cmbQuests.SelectedItem.ToString().Length.ToString().PadLeft(2, '0') + cmbQuests.SelectedItem.ToString());
         }
     }
 }

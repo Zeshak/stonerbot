@@ -13,6 +13,8 @@ namespace Plugin
         private static ZonePlay myPlayZone;
         private static ZoneWeapon myWeaponZone;
         private static ZoneSecret mySecretZone;
+        public static List<Card> massiveAttackList;
+        public static Card massiveAttackAttackee;
         public static int gameTurn;
         public static TurnStates? turnState;
         public enum TurnStates
@@ -27,25 +29,21 @@ namespace Plugin
         }
 
 
-        public static void populateZones()
+        public static void PopulateZones()
         {
-            using (List<Zone>.Enumerator enumerator = ZoneMgr.Get().GetZones().GetEnumerator())
+            foreach (Zone zone in ZoneMgr.Get().GetZones())
             {
-                while (enumerator.MoveNext())
+                if (zone.m_Side == Player.Side.FRIENDLY)
                 {
-                    Zone current = enumerator.Current;
-                    if (current.m_Side == Player.Side.FRIENDLY)
-                    {
-                        if (current is ZoneHand)
-                            GameFunctions.myHandZone = (ZoneHand)current;
-                        else if (current is ZonePlay)
-                            GameFunctions.myPlayZone = (ZonePlay)current;
-                        else if (current is ZoneWeapon)
-                            GameFunctions.myWeaponZone = (ZoneWeapon)current;
-                        else if (current is ZoneSecret)
-                            GameFunctions.mySecretZone = (ZoneSecret)current;
+                    if (zone is ZoneHand)
+                        GameFunctions.myHandZone = (ZoneHand)zone;
+                    else if (zone is ZonePlay)
+                        GameFunctions.myPlayZone = (ZonePlay)zone;
+                    else if (zone is ZoneWeapon)
+                        GameFunctions.myWeaponZone = (ZoneWeapon)zone;
+                    else if (zone is ZoneSecret)
+                        GameFunctions.mySecretZone = (ZoneSecret)zone;
 
-                    }
                 }
             }
         }
@@ -60,29 +58,54 @@ namespace Plugin
             gameState.GetGameEntity().NotifyOfTargetModeCancelled();
         }
 
-        public static bool DoAttack(Card attacker, Card attackee)
+        public static bool DoMassiveAttack(List<Card> myAttackers, Card hisAttackee)
+        {
+            massiveAttackList = myAttackers;
+            massiveAttackAttackee = hisAttackee;
+            if (massiveAttackList.Count > 0)
+            {
+                if (DoAttack(massiveAttackList[0], hisAttackee))
+                    return true;
+            }
+            return false;
+        }
+
+        public static bool DoAttack(Card myAttacker, Card hisAttackee)
         {
             try
             {
-                attacker.SetDoNotSort(true);
-                iTween.Stop(attacker.gameObject);
+                Log.debug("Tratando de atacar con " + myAttacker.ToString() + " ---> " + hisAttackee.ToString());
+                if (!myAttacker.GetEntity().CanAttack() || !hisAttackee.GetEntity().CanBeAttacked())
+                    return true;
+                myAttacker.SetDoNotSort(true);
+                iTween.Stop(myAttacker.gameObject);
                 KeywordHelpPanelManager.Get().HideKeywordHelp();
                 CardTypeBanner.Hide();
-                attacker.NotifyPickedUp();
-                GameFunctions.gs.GetGameEntity().NotifyOfCardGrabbed(attacker.GetEntity());
+                myAttacker.NotifyPickedUp();
+                GameFunctions.gs.GetGameEntity().NotifyOfCardGrabbed(myAttacker.GetEntity());
                 GameFunctions.myPlayer.GetBattlefieldZone().UnHighlightBattlefield();
-                if (InputManager.Get().DoNetworkResponse(attacker.GetEntity()))
+                if (myAttacker.GetEntity().GetRealTimeAttack() >= hisAttackee.GetEntity().GetRealTimeRemainingHP())
                 {
-                    EnemyActionHandler.Get().NotifyOpponentOfCardPickedUp(attacker);
-                    EnemyActionHandler.Get().NotifyOpponentOfTargetModeBegin(attacker);
-                    GameFunctions.gs.GetGameEntity().NotifyOfBattlefieldCardClicked(attackee.GetEntity(), true);
+                    massiveAttackAttackee = null;
+                    massiveAttackList.Clear();
+                    Plugin.Delay(5000L);
+                }
+                else
+                {
+                    massiveAttackList.RemoveAt(0);
+                    Plugin.Delay(2000L);
+                }
+                if (InputManager.Get().DoNetworkResponse(myAttacker.GetEntity()))
+                {
+                    EnemyActionHandler.Get().NotifyOpponentOfCardPickedUp(myAttacker);
+                    EnemyActionHandler.Get().NotifyOpponentOfTargetModeBegin(myAttacker);
+                    GameFunctions.gs.GetGameEntity().NotifyOfBattlefieldCardClicked(hisAttackee.GetEntity(), true);
                     GameFunctions.myPlayer.GetBattlefieldZone().UnHighlightBattlefield();
-                    if (InputManager.Get().DoNetworkResponse(attackee.GetEntity()))
+                    if (InputManager.Get().DoNetworkResponse(hisAttackee.GetEntity()))
                     {
                         EnemyActionHandler.Get().NotifyOpponentOfTargetEnd();
                         GameFunctions.myPlayer.GetHandZone().UpdateLayout(-1, true);
                         GameFunctions.myPlayer.GetBattlefieldZone().UpdateLayout();
-                        Plugin.Delay(500L);
                         return true;
                     }
                 }
@@ -303,6 +326,7 @@ namespace Plugin
             GameFunctions.gameTurn++;
             Plugin.BotStatus = Plugin.BotStatusList.OnMatchTurn;
             GameFunctions.turnState = null;
+            Plugin.Delay(10000);
         }
 
         private static bool PlayPowerUpSpell(Card card)

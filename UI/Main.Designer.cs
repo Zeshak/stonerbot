@@ -46,6 +46,8 @@
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabMain = new System.Windows.Forms.TabPage();
+            this.lblLastCommand = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             this.tabStat = new System.Windows.Forms.TabPage();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.lblLose = new System.Windows.Forms.Label();
@@ -54,11 +56,17 @@
             this.label5 = new System.Windows.Forms.Label();
             this.cmbDecks = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.lblLastCommand = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.cmbQuests = new System.Windows.Forms.ComboBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.btnGetQuest = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabMain.SuspendLayout();
             this.tabStat.SuspendLayout();
+            this.tabPage1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnStartBot
@@ -208,6 +216,7 @@
             // 
             this.tabControl1.Controls.Add(this.tabMain);
             this.tabControl1.Controls.Add(this.tabStat);
+            this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Location = new System.Drawing.Point(1, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -240,6 +249,24 @@
             this.tabMain.TabIndex = 0;
             this.tabMain.Text = "Main";
             this.tabMain.UseVisualStyleBackColor = true;
+            // 
+            // lblLastCommand
+            // 
+            this.lblLastCommand.AutoSize = true;
+            this.lblLastCommand.Location = new System.Drawing.Point(99, 247);
+            this.lblLastCommand.Name = "lblLastCommand";
+            this.lblLastCommand.Size = new System.Drawing.Size(84, 13);
+            this.lblLastCommand.TabIndex = 19;
+            this.lblLastCommand.Text = "lblLastCommand";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(7, 247);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(83, 13);
+            this.label7.TabIndex = 20;
+            this.label7.Text = "Last Command: ";
             // 
             // tabStat
             // 
@@ -322,23 +349,76 @@
             this.label3.TabIndex = 0;
             this.label3.Text = "Select your deck: ";
             // 
-            // lblLastCommand
+            // tabPage1
             // 
-            this.lblLastCommand.AutoSize = true;
-            this.lblLastCommand.Location = new System.Drawing.Point(99, 247);
-            this.lblLastCommand.Name = "lblLastCommand";
-            this.lblLastCommand.Size = new System.Drawing.Size(84, 13);
-            this.lblLastCommand.TabIndex = 19;
-            this.lblLastCommand.Text = "lblLastCommand";
+            this.tabPage1.Controls.Add(this.btnGetQuest);
+            this.tabPage1.Controls.Add(this.label10);
+            this.tabPage1.Controls.Add(this.label9);
+            this.tabPage1.Controls.Add(this.label8);
+            this.tabPage1.Controls.Add(this.label4);
+            this.tabPage1.Controls.Add(this.cmbQuests);
+            this.tabPage1.Location = new System.Drawing.Point(4, 22);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage1.Size = new System.Drawing.Size(461, 381);
+            this.tabPage1.TabIndex = 2;
+            this.tabPage1.Text = "Quests";
+            this.tabPage1.UseVisualStyleBackColor = true;
             // 
-            // label7
+            // label9
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(7, 247);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(83, 13);
-            this.label7.TabIndex = 20;
-            this.label7.Text = "Last Command: ";
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(11, 24);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(319, 13);
+            this.label9.TabIndex = 3;
+            this.label9.Text = "Sometimes you can\'t get a quest too many times in the same week";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(8, 7);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(339, 13);
+            this.label8.TabIndex = 2;
+            this.label8.Text = "If the time is between 9PM and 2AM PST (-7) you can use this feature.";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(66, 68);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(163, 13);
+            this.label4.TabIndex = 1;
+            this.label4.Text = "Select the quest you want to get.";
+            // 
+            // cmbQuests
+            // 
+            this.cmbQuests.FormattingEnabled = true;
+            this.cmbQuests.Location = new System.Drawing.Point(66, 87);
+            this.cmbQuests.Name = "cmbQuests";
+            this.cmbQuests.Size = new System.Drawing.Size(308, 21);
+            this.cmbQuests.TabIndex = 0;
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(14, 41);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(397, 13);
+            this.label10.TabIndex = 4;
+            this.label10.Text = "this means that maybe you cant get Total Dominance twice in a less than 3-4 days." +
+    "";
+            // 
+            // btnGetQuest
+            // 
+            this.btnGetQuest.Location = new System.Drawing.Point(66, 115);
+            this.btnGetQuest.Name = "btnGetQuest";
+            this.btnGetQuest.Size = new System.Drawing.Size(308, 23);
+            this.btnGetQuest.TabIndex = 5;
+            this.btnGetQuest.Text = "Get that quest!";
+            this.btnGetQuest.UseVisualStyleBackColor = true;
+            this.btnGetQuest.Click += new System.EventHandler(this.btnGetQuest_Click);
             // 
             // Main
             // 
@@ -355,6 +435,8 @@
             this.tabMain.PerformLayout();
             this.tabStat.ResumeLayout(false);
             this.tabStat.PerformLayout();
+            this.tabPage1.ResumeLayout(false);
+            this.tabPage1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -389,6 +471,13 @@
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.Label lblLastCommand;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.ComboBox cmbQuests;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Button btnGetQuest;
+        private System.Windows.Forms.Label label10;
     }
 }
 
