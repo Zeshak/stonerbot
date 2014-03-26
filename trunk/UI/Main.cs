@@ -27,6 +27,7 @@ namespace UI
         public Deck selDeck;
         public static TcpClient client;
         public static Thread socketThread;
+
         public class Deck
         {
             public long DeckId { get; set; }
