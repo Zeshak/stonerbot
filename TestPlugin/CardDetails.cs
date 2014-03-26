@@ -132,6 +132,7 @@ namespace Plugin
 
         public static List<CardDetails> ListCardDetails = new List<CardDetails>();
         public Card Card;
+        
 
         public string CardId = "";
         public string CardName = "";
@@ -527,6 +528,15 @@ namespace Plugin
                 #region -[ Whirlwind ]-
                 case "EX1_400":
                     return CommonMultipleSpellDamageALL(Whirlwind.CardDamage, Whirlwind.CardsDestroyed, Whirlwind.EnemyMinCardsInPlay, Whirlwind.MyMaxCardsInPlay, Whirlwind.MyMaxCardsDestroyed);
+                #endregion
+                #region -[ Execute ]-
+                case "CS2_108":
+                   {
+                        CardDetails targetEntity = (CardDetails)specialParameter;
+                       if (targetEntity.Card.GetEntity().GetHealth() != targetEntity.Card.GetEntity().GetOriginalHealth())
+                         return true;
+                      return false;
+                   }
                 #endregion
                 #endregion
                 default:
