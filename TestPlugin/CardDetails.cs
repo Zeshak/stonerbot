@@ -366,6 +366,16 @@ namespace Plugin
                         return false;
                     }
                 #endregion
+                #region -[ Coldlight Seer ]-
+                case "EX1_103":
+                    {
+                        if (GameFunctions.turnState == GameFunctions.TurnStates.DROP_MINIONS && GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount() > 2)
+                            return true;
+                        return false;
+                    }
+                #endregion
+
+
                 #endregion
                 #region -[ Hunter ]-
                 #region -[ Explosive Trap ]-
@@ -575,7 +585,7 @@ namespace Plugin
         /// <returns>Devuelve si cumple la condición.</returns>
         private static bool CommonMultipleSpellDamageALL(int CardDamage, int CardsDestroyed, int EnemyMinCardsInPlay, int MyMaxCardsInPlay, int MyMaxCardsDestroyed)
         {
-            if (MyMaxCardsInPlay <= GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount())
+            if (MyMaxCardsInPlay >= GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount())
             {
                 int count = 0;
                 foreach (Card card in GameFunctions.myPlayer.GetBattlefieldZone().GetCards())
