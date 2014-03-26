@@ -25,7 +25,8 @@ namespace Plugin
             OnPracticeQueue,
             OnMatchDeckSel,
             OnMatchDeckQueue,
-            OnMatchTurn,
+            OnMatchTurnOwn,
+            OnMatchTurnEnemy,
             OnEndGameScreen
         }
 
@@ -168,29 +169,29 @@ namespace Plugin
                     break;
                 case SceneMgr.Mode.LOGIN:
                     DoLogin();
-                    Delay(1500);
+                    Delay(2500);
                     break;
                 case SceneMgr.Mode.HUB:
                     if (!needsToSetQuestSet)
                         Delay(5000);
                     else
-                        Delay(1500);
+                        Delay(2500);
                     DoHub();
                     break;
                 case SceneMgr.Mode.GAMEPLAY:
                     GameState gameState = GameState.Get();
                     if (!gameState.IsInTargetMode())
                         GameFunctions.Cancel();
-                    Delay(1500);
+                    Delay(2500);
                     DoGameplay();
                     break;
                 case SceneMgr.Mode.PRACTICE:
                     DoPractice();
-                    Delay(3000);
+                    Delay(5000);
                     break;
                 case SceneMgr.Mode.TOURNAMENT:
                     DoTournament();
-                    Delay(3000);
+                    Delay(5000);
                     break;
                 default:
                     Log.error("Mainloop derrapó a default. Mode: " + curMode.ToString());
@@ -282,6 +283,7 @@ namespace Plugin
                 Plugin.StopBot(null, null, null);
                 return;
             }
+            Log.debug("Cancelling " + list[0].Name);
             AchieveManager.Get().CancelQuest(list[0].ID);
         }
 
@@ -347,9 +349,13 @@ namespace Plugin
                 }
             }
             if (!GameFunctions.gs.IsLocalPlayerTurn())
+            {
+                Plugin.BotStatus = Plugin.BotStatusList.OnMatchTurnEnemy;
                 return;
+            }
             try
             {
+                Plugin.BotStatus = Plugin.BotStatusList.OnMatchTurnOwn;
                 if (GameState.Get().IsBlockingServer())
                     Thread.Sleep(500);
                 GameFunctions.PopulateZones();
@@ -386,13 +392,13 @@ namespace Plugin
                         {
                             if (coldeck.ID == currentDeckId)
                             {
+                                Log.debug("Deck name: " + coldeck.Name + " Col id: " + coldeck.ID.ToString());
                                 selDeck = new Deck();
                                 selDeck.DeckId = currentDeckId;
                                 selDeck.Alias = coldeck.Name;
                                 break;
                             }
                         }
-                        Log.debug("Deck name: " + selDeck.Alias);
                         Log.say("Queuing for game against human with deck " + selDeck.DeckId);
                         if (Plugin.playRanked)
                         {
@@ -430,7 +436,10 @@ namespace Plugin
 
         public static void AddStatistics(bool win)
         {
-            File.AppendAllText("stat.txt", "[Date]" + DateTime.Now.ToString() + "[ID]" + selDeck.DeckId.ToString() + "[Name]" + selDeck.Alias.ToString() + "[Result]" + win.ToString() + Environment.NewLine);
+            if (selDeck != null)
+                File.AppendAllText("stat.txt", "[Date]" + DateTime.Now.ToString() + "[ID]" + selDeck.DeckId.ToString() + "[Name]" + selDeck.Alias.ToString() + "[Result]" + win.ToString() + Environment.NewLine);
+            else
+                File.AppendAllText("stat.txt", "[Date]" + DateTime.Now.ToString() + "[ID]El bot fue detenido[Name]El bot fue detenido[Result]" + win.ToString() + Environment.NewLine);
         }
 
         #endregion

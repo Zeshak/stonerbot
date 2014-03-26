@@ -13,9 +13,9 @@ namespace Plugin
         private static ZonePlay myPlayZone;
         private static ZoneWeapon myWeaponZone;
         private static ZoneSecret mySecretZone;
+        public static List<Card> massiveDropList = new List<Card>();
         public static List<Card> massiveAttackList;
         public static Card massiveAttackAttackee;
-        public static int gameTurn;
         public static TurnStates? turnState;
         public enum TurnStates
         {
@@ -65,7 +65,9 @@ namespace Plugin
             if (massiveAttackList.Count > 0)
             {
                 if (DoAttack(massiveAttackList[0], hisAttackee))
+                {
                     return true;
+                }
             }
             return false;
         }
@@ -75,7 +77,7 @@ namespace Plugin
             try
             {
                 Log.debug("Tratando de atacar con " + myAttacker.ToString() + " ---> " + hisAttackee.ToString());
-                if (!myAttacker.GetEntity().CanAttack() || !hisAttackee.GetEntity().CanBeAttacked())
+                if (!GameFunctions.CanAttack(myAttacker) || !hisAttackee.GetEntity().CanBeAttacked())
                     return true;
                 myAttacker.SetDoNotSort(true);
                 iTween.Stop(myAttacker.gameObject);
@@ -88,12 +90,16 @@ namespace Plugin
                 {
                     massiveAttackAttackee = null;
                     massiveAttackList.Clear();
-                    Plugin.Delay(5000L);
+                    Plugin.Delay(5000);
                 }
                 else
                 {
-                    massiveAttackList.RemoveAt(0);
-                    Plugin.Delay(2000L);
+                    if (massiveAttackList != null && massiveAttackList.Count > 0)
+                    {
+                        Log.debug("Saco a " + massiveAttackList[0].ToString() + " de la lista de atacantes");
+                        massiveAttackList.RemoveAt(0);
+                    }
+                    Plugin.Delay(3000);
                 }
                 if (InputManager.Get().DoNetworkResponse(myAttacker.GetEntity()))
                 {
@@ -130,6 +136,7 @@ namespace Plugin
                 if (entity.GetRarity() == TAG_RARITY.LEGENDARY)
                 {
                     cd.DisableThis = true;
+                    cd.DestroyThis = true;
                 }
                 CardDetails.SetNewValuesByCardStatus(ref cd);
                 listCards.Add(cd);
@@ -147,75 +154,168 @@ namespace Plugin
             return DoDrop(c, certainTarget, -1);
         }
 
-        public static bool DoDrop(Card c, Entity certainTarget, int battlefieldPosition)
+        public static bool DoDrop(Card myCard, Entity certainTarget, int battlefieldPosition)
         {
-            Log.debug("DoDrop " + c.GetEntity().GetName());
+            Log.debug("DoDrop " + myCard.GetEntity().GetName());
             if (certainTarget != null)
                 Log.debug("DoDrop on " + certainTarget.GetName());
             try
             {
                 PegCursor.Get().SetMode(PegCursor.Mode.STOPDRAG);
-                c.SetDoNotSort(true);
-                iTween.Stop(c.gameObject);
-                KeywordHelpPanelManager.Get().HideKeywordHelp();
-                CardTypeBanner.Hide();
-                DragCardSoundEffects component = c.GetActor().GetComponent<DragCardSoundEffects>();
-                if ((UnityEngine.Object)component != (UnityEngine.Object)null)
-                    component.Disable();
-                ProjectedShadow componentInChildren = c.GetActor().GetComponentInChildren<ProjectedShadow>();
-                if ((UnityEngine.Object)componentInChildren != (UnityEngine.Object)null)
+                ReflectionFunctions.GrabCard(myCard);
+
+                InputManager input_man = InputManager.Get();
+                if (input_man.heldObject == null)
+                {
+                    Log.log("Nothing held, when trying to drop");
+                    return false;
+                }
+                ZonePlay m_myPlayZone = ReflectionFunctions.get_m_myPlayZone();
+                ZoneHand m_myHandZone = ReflectionFunctions.get_m_myHandZone();
+
+                myCard.SetDoNotSort(false);
+                iTween.Stop(myCard.gameObject);
+                Entity myCardEntity = myCard.GetEntity();
+                myCard.NotifyLeftPlayfield();
+                GameState.Get().GetGameEntity().NotifyOfCardDropped(myCardEntity);
+                m_myPlayZone.UnHighlightBattlefield();
+                DragCardSoundEffects component2 = myCard.GetComponent<DragCardSoundEffects>();
+                if (component2)
+                {
+                    component2.Disable();
+                }
+                UnityEngine.Object.Destroy(input_man.heldObject.GetComponent<DragRotator>());
+                input_man.heldObject = null;
+                ProjectedShadow componentInChildren = myCard.GetActor().GetComponentInChildren<ProjectedShadow>();
+                if (componentInChildren != null)
+                {
                     componentInChildren.DisableShadow();
-                c.NotifyPickedUp();
-                GameFunctions.gs.GetGameEntity().NotifyOfCardGrabbed(c.GetEntity());
-                c.SetDoNotSort(false);
-                c.NotifyLeftPlayfield();
+                }
+
+                // Check that the card is on the hand or is spellpower
+                Zone card_zone = myCard.GetZone();
+                if (((card_zone == null) || card_zone.m_ServerTag != TAG_ZONE.HAND) && !myCardEntity.IsHeroPower())
+                {
+                    return false;
+                }
+
                 bool needsTargeting = false;
-                int dropPlace = 0;
-                Zone destinationZone;
-                if (c.GetEntity().IsWeapon())
+                bool is_minion = myCardEntity.IsMinion();
+                bool is_weapon = myCardEntity.IsWeapon();
+
+                if (is_minion || is_weapon)
                 {
-                    dropPlace = 1;
-                    destinationZone = GameFunctions.myWeaponZone;
-                }
-                else
-                {
-                    destinationZone = GameFunctions.myPlayZone;
-                    if (destinationZone.GetCards().Count + 1 >= 8)
-                        return true;
-                    if (battlefieldPosition == -1)
-                        dropPlace = destinationZone.GetCards().Count + 1;
-                    else
-                        dropPlace = battlefieldPosition;
-                }
-                GameFunctions.gs.GetGameEntity().NotifyOfCardDropped(c.GetEntity());
-                GameFunctions.gs.SetSelectedOptionPosition(dropPlace);
-                if (InputManager.Get().DoNetworkResponse(c.GetEntity()))
-                {
-                    c.GetEntity().GetZonePosition();
-                    if (!c.GetEntity().IsHeroPower())
+                    Zone destinationZone = (!is_weapon) ? (Zone)m_myPlayZone : (Zone)m_myHandZone;
+                    if (destinationZone)
                     {
-                        if (c.GetEntity().IsSecret())
-                            ZoneMgr.Get().AddLocalZoneChange(c, (Zone)GameFunctions.mySecretZone, GameFunctions.mySecretZone.GetLastPos());
+                        GameState gameState = GameState.Get();
+                        int card_position = Network.NoPosition;
+                        if (is_minion)
+                        {
+                            if (destinationZone.GetCards().Count + 1 >= 8)
+                                return true;
+                            if (battlefieldPosition == -1)
+                                battlefieldPosition = destinationZone.GetCards().Count + 1;
+                            card_position = ZoneMgr.Get().PredictZonePosition(destinationZone, battlefieldPosition);
+                            gameState.SetSelectedOptionPosition(card_position);
+                        }
                         else
-                            ZoneMgr.Get().AddLocalZoneChange(c, destinationZone, dropPlace);
+                            battlefieldPosition = 1;
+                        if (input_man.DoNetworkResponse(myCardEntity))
+                        {
+                            if (is_weapon)
+                            {
+                                ReflectionFunctions.set_m_lastZoneChangeList(ZoneMgr.Get().AddLocalZoneChange(myCard, destinationZone, destinationZone.GetLastPos()));
+                            }
+                            else
+                            {
+                                ReflectionFunctions.set_m_lastZoneChangeList(ZoneMgr.Get().AddPredictedLocalZoneChange(myCard, destinationZone, battlefieldPosition, card_position));
+                            }
+                            ReflectionFunctions.ForceManaUpdate(myCardEntity);
+                            if (is_minion && gameState.EntityHasTargets(myCardEntity))
+                            {
+                                needsTargeting = true;
+                                if (TargetReticleManager.Get())
+                                {
+                                    bool showArrow = true;
+                                    TargetReticleManager.Get().CreateFriendlyTargetArrow(myCardEntity, myCardEntity, true, showArrow, null);
+                                }
+                                ReflectionFunctions.set_m_battlecrySourceCard(myCard);
+                            }
+                        }
+                        else
+                        {
+                            gameState.SetSelectedOptionPosition(Network.NoPosition);
+                        }
                     }
-                    GameFunctions.myPlayer.NotifyOfSpentMana(c.GetEntity().GetRealTimeCost());
-                    GameFunctions.myPlayer.UpdateManaCounter();
-                    ManaCrystalMgr.Get().UpdateSpentMana(c.GetEntity().GetRealTimeCost());
-                    if (GameFunctions.gs.EntityHasTargets(c.GetEntity()))
-                        needsTargeting = true;
                 }
                 else
-                    GameFunctions.gs.SetSelectedOptionPosition(Network.NoPosition);
-                GameFunctions.myPlayer.GetHandZone().UpdateLayout(-1, true);
-                GameFunctions.myPlayer.GetBattlefieldZone().SortWithSpotForHeldCard(-1);
+                {
+                    if (myCardEntity.IsSpell())
+                    {
+                        Plugin.Delay(5000);
+                        if (GameState.Get().EntityHasTargets(myCardEntity))
+                        {
+                            needsTargeting = true;
+                            if (TargetReticleManager.Get())
+                            {
+                                bool showArrow = true;
+                                TargetReticleManager.Get().CreateFriendlyTargetArrow(myCardEntity, myCardEntity, true, showArrow, null);
+                            }
+                            ReflectionFunctions.set_m_battlecrySourceCard(myCard);
+                        }
+                        if (!GameState.Get().HasResponse(myCardEntity))
+                        {
+                            PlayErrors.DisplayPlayError(PlayErrors.GetPlayEntityError(myCardEntity), myCardEntity);
+                        }
+                        else
+                        {
+                            input_man.DoNetworkResponse(myCardEntity);
+                            if (myCardEntity.IsSecret())
+                            {
+                                ZoneSecret m_mySecretZone = ReflectionFunctions.get_m_mySecretZone();
+                                ReflectionFunctions.set_m_lastZoneChangeList(ZoneMgr.Get().AddLocalZoneChange(myCard, m_mySecretZone, m_mySecretZone.GetLastPos()));
+                            }
+                            else
+                            {
+                                ReflectionFunctions.set_m_lastZoneChangeList(ZoneMgr.Get().AddLocalZoneChange(myCard, TAG_ZONE.PLAY));
+                            }
+                            ReflectionFunctions.ForceManaUpdate(myCardEntity);
+                            ReflectionFunctions.PlayPowerUpSpell(myCard);
+                            ReflectionFunctions.PlayPlaySpell(myCard);
+                        }
+                    }
+                    else if (myCardEntity.IsHeroPower())
+                    {
+                        Plugin.Delay(5000);
+                        if (input_man.DoNetworkResponse(myCardEntity))
+                        {
+                            GameFunctions.myPlayer.NotifyOfSpentMana(myCardEntity.GetRealTimeCost());
+                            GameFunctions.myPlayer.UpdateManaCounter();
+                            ManaCrystalMgr.Get().UpdateSpentMana(myCardEntity.GetRealTimeCost());
+                            if (GameFunctions.gs.EntityHasTargets(myCardEntity))
+                            {
+                                needsTargeting = true;
+                                if (TargetReticleManager.Get())
+                                {
+                                    bool showArrow = true;
+                                    TargetReticleManager.Get().CreateFriendlyTargetArrow(myCardEntity, myCardEntity, true, showArrow, null);
+                                }
+                            }
+                        }
+                    }
+                }
+                GameFunctions.myHandZone.UpdateLayout(-1, true);
+                GameFunctions.myPlayZone.SortWithSpotForHeldCard(-1);
+                Plugin.Delay(3000);
+
                 if (needsTargeting)
                 {
-                    if (EnemyActionHandler.Get() != null)
+                    if (EnemyActionHandler.Get())
                     {
-                        EnemyActionHandler.Get().NotifyOpponentOfTargetModeBegin(c);
-                        Entity targetEntity = null;
+                        EnemyActionHandler.Get().NotifyOpponentOfTargetModeBegin(myCard);
 
+                        Entity targetEntity = null;
                         if (certainTarget == null)
                         {
                             targetEntity = BruteAI.GetGenericTarget();
@@ -229,12 +329,15 @@ namespace Plugin
                             targetEntity = certainTarget;
 
                         Log.debug("Por castear algo directo en: " + targetEntity.GetName());
-                        DoTargetting(targetEntity);
-
-
+                        GameFunctions.DoTargetting(targetEntity);
                     }
-                    else
+                }
+                else
+                {
+                    if (GameState.Get().GetResponseMode() != GameState.ResponseMode.SUB_OPTION)
+                    {
                         EnemyActionHandler.Get().NotifyOpponentOfCardDropped();
+                    }
                 }
                 return true;
             }
@@ -297,6 +400,11 @@ namespace Plugin
                 return c.GetActor().GetActorStateType().Equals(ActorStateType.CARD_PLAYABLE);
         }
 
+        public static bool CanAttack(Card c)
+        {
+            return (c.GetEntity().CanAttack() && !c.GetEntity().IsExhausted() && !c.GetEntity().IsFrozen() && c.GetEntity().GetRealTimeAttack() > 0);
+        }
+
         public static bool IsEnemyCard(Card c)
         {
             return GameFunctions.ePlayer.GetBattlefieldZone().GetCards().Contains(c);
@@ -315,18 +423,13 @@ namespace Plugin
                 MulliganManager.Get().ToggleHoldState(card);
             MulliganManager.Get().EndMulligan();
             GameFunctions.DoEndTurn();
-            GameFunctions.gameTurn = 0;
-            Log.say("Mulligan ended : " + swap.Count.ToString() + " cards changed");
             return true;
         }
 
         public static void DoEndTurn()
         {
             InputManager.Get().DoEndTurnButton();
-            GameFunctions.gameTurn++;
-            Plugin.BotStatus = Plugin.BotStatusList.OnMatchTurn;
             GameFunctions.turnState = null;
-            Plugin.Delay(10000);
         }
 
         private static bool PlayPowerUpSpell(Card card)

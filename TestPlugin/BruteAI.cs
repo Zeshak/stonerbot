@@ -45,6 +45,7 @@ namespace Plugin
 
         public static bool BruteHand()
         {
+            Log.debug("**************BruteHand****************");
             if (BruteAI.loops >= BruteAI.maxLoops)
             {
                 Log.debug(BruteAI.maxLoops.ToString() + " loops done... Skip this turn");
@@ -52,11 +53,21 @@ namespace Plugin
             }
             else
             {
-
-                /*if (CanWinThisTurn())
+                if (GameFunctions.massiveDropList != null && GameFunctions.massiveDropList.Count > 0)
                 {
-
-                }*/
+                    Log.debug("**************massiveDropList****************");
+                    GameFunctions.DoDrop(GameFunctions.massiveDropList[0]);
+                    GameFunctions.massiveDropList.RemoveAt(0);
+                    Log.debug("**************EndmassiveDropList****************");
+                    return true;
+                }
+                else
+                {
+                    /*if (BruteAI.CanWinThisTurn())
+                    {
+                        Log.debug("Este turno puedo ganar");
+                    }*/
+                }
                 Card cardToPlay = new Card();
                 CardDetails targetCardDetails = NeedsToPlayDisableDestroySilence();
                 if (targetCardDetails != null)
@@ -64,7 +75,10 @@ namespace Plugin
                     GameFunctions.turnState = GameFunctions.TurnStates.DROP_FIRSTSPELL;
                     cardToPlay = NextDisableDestroySilence(targetCardDetails);
                     if (cardToPlay != null)
+                    {
+                        Plugin.Delay(5000);
                         return GameFunctions.DoDrop(cardToPlay, targetCardDetails.Card.GetEntity());
+                    }
                 }
                 if (BruteAI.tryToPlayCoin())
                     return true;
@@ -97,26 +111,79 @@ namespace Plugin
 
         public static bool CanWinThisTurn()
         {
+            Log.debug("**************CanWinThisTurn****************");
+            GameFunctions.turnState = GameFunctions.TurnStates.CHECK_CANWIN;
             List<Card> tauntCards = new List<Card>();
             foreach (Card hisCard in GameFunctions.ePlayer.GetBattlefieldZone().GetCards())
             {
                 Entity hisEntity = hisCard.GetEntity();
-                /*if (hisEntity.HasTaunt())
-                {*/
-                tauntCards.Add(hisCard);
-                //}
+                if (hisEntity.HasTaunt())
+                    tauntCards.Add(hisCard);
             }
-            foreach (Card myCards in tauntCards)
+            List<Card> remainingCards = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
+            foreach (Card hisCard in tauntCards)
             {
-                Entity myEntity = myCards.GetEntity();
-                List<Card> list = NextBestAttackerCombinated(myCards, true);
-                Log.debug("----------------------Card " + myCards.ToString() + "------------------------");
-                foreach (Card c in list)
-                    Log.debug(c.ToString());
-                Log.debug("---------------------------------------------------");
+                Entity myEntity = hisCard.GetEntity();
+                List<Card> list = GetBestAttackerCombination(hisCard, remainingCards, true);
+                if (list != null && list.Count > 0)
+                {
+                    foreach (Card card in list)
+                    {
+                        remainingCards.Remove(card);
+                    }
+                }
             }
-
-
+            int hpSum = 0;
+            foreach (Card card in remainingCards)
+            {
+                if (GameFunctions.CanAttack(card))
+                    hpSum += card.GetEntity().GetRealTimeAttack();
+            }
+            /*
+            List<Card> damageCards = new List<Card>();
+            foreach (Card myHandCard in GameFunctions.myPlayer.GetHandZone().GetCards())
+            {
+                if (myHandCard.GetEntity().HasCharge())
+                    damageCards.Add(myHandCard);
+            }
+            List<List<Card>> listOfCardCombinationsDamage = GetAllCardsCombinations(damageCards);
+            int bestCombinationDamage = 0;
+            List<Card> bestCombination = new List<Card>();
+            foreach (List<Card> myCombination in listOfCardCombinationsDamage)
+            {
+                int thisCombinationDamage = 0;
+                int thisCrystals = 0;
+                foreach (Card myCombinationCard in myCombination)
+                {
+                    thisCrystals += myCombinationCard.GetEntity().GetRealTimeCost();
+                    if (thisCrystals <= GameFunctions.myPlayer.GetNumAvailableResources())
+                    {
+                        Log.debug("Esta combinación puedo jugarla");
+                        thisCombinationDamage += myCombinationCard.GetEntity().GetATK();
+                    }
+                    else
+                    {
+                        Log.debug("Aca2");
+                        thisCombinationDamage = 0;
+                        continue;
+                    }
+                }
+                if (thisCombinationDamage > bestCombinationDamage)
+                {
+                    Log.debug("Aca3");
+                    bestCombination = myCombination;
+                    bestCombinationDamage = thisCombinationDamage;
+                }
+            }
+            hpSum += bestCombinationDamage;
+             */
+            //Realtime da la armor del enemy enemigo?
+            if (hpSum >= GameFunctions.ePlayer.GetHero().GetRealTimeRemainingHP())
+            {
+                /*if (bestCombination.Count > 0)
+                    GameFunctions.massiveDropList = new List<Card>(bestCombination);*/
+                return true;
+            }
             return false;
         }
 
@@ -124,7 +191,7 @@ namespace Plugin
         {
             foreach (Card card in GameFunctions.myPlayer.GetHandZone().GetCards())
             {
-                if (CardDetails.IsViableToPlay(card, targetCardDetails, true))
+                if (card.GetEntity().GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && GameFunctions.CanBeUsed(card) && CardDetails.IsViableToPlay(card, targetCardDetails, true))
                     return card;
             }
             return null;
@@ -209,7 +276,8 @@ namespace Plugin
             switch (GameFunctions.myPlayer.GetHero().GetClass())
             {
                 case TAG_CLASS.WARLOCK:
-                    if (GameFunctions.myPlayer.GetHero().GetRemainingHP() > 10 && GameFunctions.myPlayer.GetHandZone().GetCardCount() <= 3)
+                    if ((GameFunctions.myPlayer.GetHero().GetRemainingHP() > 10 && GameFunctions.myPlayer.GetHandZone().GetCardCount() <= 3)
+                        || GameFunctions.myPlayer.GetHero().GetRemainingHP() > 18)
                         break;
                     return false;
                 case TAG_CLASS.HUNTER:
@@ -333,13 +401,18 @@ namespace Plugin
 
         public static bool BruteAttack()
         {
+            Log.debug("**************Brute Attack****************");
             if (GameFunctions.massiveAttackList == null || GameFunctions.massiveAttackList.Count == 0)
             {
                 GameFunctions.massiveAttackList = new List<Card>();
                 GameFunctions.massiveAttackAttackee = BruteAI.GetBestAttackee();
-                GameFunctions.massiveAttackList = BruteAI.NextBestAttackerCombinated(GameFunctions.massiveAttackAttackee);
-                if (GameFunctions.massiveAttackAttackee == null || GameFunctions.massiveAttackList.Count == 0)
+                Log.debug("El attackee resultó ser: " + GameFunctions.massiveAttackAttackee.ToString());
+                GameFunctions.massiveAttackList = BruteAI.GetBestAttackerCombination(GameFunctions.massiveAttackAttackee, GameFunctions.myPlayer.GetBattlefieldZone().GetCards());
+                if (GameFunctions.massiveAttackAttackee == null || GameFunctions.massiveAttackList == null || GameFunctions.massiveAttackList.Count == 0)
+                {
+                    Log.debug("massiveAttackList está vacía");
                     return false;
+                }
                 return (GameFunctions.DoMassiveAttack(GameFunctions.massiveAttackList, GameFunctions.massiveAttackAttackee)) ? true : true;
             }
             else
@@ -351,19 +424,30 @@ namespace Plugin
             }
         }
 
-        public static List<Card> NextBestAttackerCombinated(Card hisCardInPlay, bool maximizeDamage = false)
+        public static List<Card> GetBestAttackerCombination(Card hisCardInPlay, List<Card> listCardsInMyBF, bool maximizeDamage = false)
         {
+            Log.debug("**************GetBestAttackerComb****************");
             List<Card> eligibleCards = new List<Card>();
             if (hisCardInPlay == null)
                 return null;
-            List<Card> listCardsInMyBF = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
-            if (hisCardInPlay != GameFunctions.ePlayer.GetHeroCard())
+            if (hisCardInPlay != GameFunctions.ePlayer.GetHeroCard() && listCardsInMyBF != null && listCardsInMyBF.Count > 0)
             {
+                //Sino ataca al heroe primero con el héroe si puede
+                Entity myHero = GameFunctions.myPlayer.GetHero();
+                if (myHero != null && GameFunctions.CanAttack(myHero.GetCard()))
+                {
+                    if (hisCardInPlay.GetEntity().GetRealTimeAttack() <= 3 && hisCardInPlay.GetEntity().GetRealTimeRemainingHP() <= myHero.GetRealTimeAttack())
+                    {
+                        eligibleCards.Clear();
+                        eligibleCards.Add(myHero.GetCard());
+                        return eligibleCards;
+                    }
+                }
                 bool moreDamageAndAlive = false;
                 //Acá entra en caso de que haya que atacar a un minion
                 foreach (Card myCardInPlay in listCardsInMyBF)
                 {
-                    if (!GameFunctions.CanBeUsed(myCardInPlay))
+                    if (!GameFunctions.CanAttack(myCardInPlay))
                         continue;
                     Entity myEntityInPlay = myCardInPlay.GetEntity();
                     Entity hisEntityInPlay = hisCardInPlay.GetEntity();
@@ -426,14 +510,14 @@ namespace Plugin
                     eligibleCards = GetCombinatedAttackersThatKill(hisCardInPlay, maximizeDamage);
                 }
 
-                if (eligibleCards.Count > 0)
+                if (eligibleCards != null && eligibleCards.Count > 0)
                     return eligibleCards;
             }
             else
             {
                 //Sino ataca al heroe primero con el héroe si puede
                 Entity hero = GameFunctions.myPlayer.GetHero();
-                if (hero != null && GameFunctions.CanBeUsed(hero.GetCard()))
+                if (hero != null && GameFunctions.CanBeUsed(hero.GetCard())  && GameFunctions.CanAttack(hero.GetCard()))
                 {
                     eligibleCards.Add(hero.GetCard());
                     return eligibleCards;
@@ -443,7 +527,7 @@ namespace Plugin
             {
                 //Sino empieza a atacar al héroe de manera random con todos los minions que se vaya pudiendo
                 c.GetEntity();
-                if (GameFunctions.CanBeUsed(c))
+                if (GameFunctions.CanAttack(c))
                 {
                     if (new System.Random().NextDouble() > 0.5)
                     {
@@ -454,7 +538,7 @@ namespace Plugin
                     eligibleCards.Add(c);
                 }
             }
-            if (eligibleCards.Count > 0)
+            if (eligibleCards != null && eligibleCards.Count > 0)
                 return eligibleCards;
             else
                 return null;
@@ -462,8 +546,11 @@ namespace Plugin
 
         public static List<Card> GetCombinatedAttackersThatKill(Card hisCard, bool maximizeDamage)
         {
+            Log.debug("**************GetCombinatedAttackersThatKill****************");
             List<Card> myCardsInBF = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
-            List<List<Card>> listOfCardCombinations = GetAllAttackersCombinations(myCardsInBF);
+            if (myCardsInBF == null || myCardsInBF.Count == 0)
+                return new List<Card>();
+            List<List<Card>> listOfCardCombinations = GetAllCardsCombinations(myCardsInBF);
 
             List<Card> bestCards = new List<Card>();
             int bestGroupCardsDead = 0;
@@ -474,8 +561,16 @@ namespace Plugin
             int thisGroupCardsDamage = 0;
             int thisGroupDamageTaken = 0;
             bool first = true;
+            Log.debug("****Cartas para jugar en Combinated****");
+            Log.debug("Su carta es: " + hisCard.ToString() + " ATK: " + hisCard.GetEntity().GetRealTimeAttack() + " HP: " + hisCard.GetEntity().GetRealTimeRemainingHP());
+            Log.debug("Tengo " + myCardsInBF.Count.ToString() + " cartas en juego");
+            Log.debug("Puedo hacer " + listOfCardCombinations.Count.ToString() + " combinaciones");
+            Log.debug("En juego tengo:");
+            foreach (Card c in myCardsInBF)
+                Log.debug(c.ToString() + " ATK: " + c.GetEntity().GetRealTimeAttack() + " HP: " + c.GetEntity().GetRealTimeRemainingHP());
             foreach (List<Card> thisList in listOfCardCombinations)
             {
+                Log.debug("Marcando cuantas veces pasa por acá");
                 thisGroupCardsDead = 0;
                 thisGroupCardsDamage = 0;
                 thisGroupDamageTaken = 0;
@@ -518,13 +613,21 @@ namespace Plugin
                     }
                 }
             }
-
+            if (bestGroupCardsDamage == 0)
+                return new List<Card>();
             //En caso de que ni con todas las cartas la mate, elijo el último item que va a tener todas mis cartas
-            if (bestGroupCardsDamage < hisCard.GetEntity().GetRealTimeRemainingHP())
-                bestCards = listOfCardCombinations[listOfCardCombinations.Count - 1];
+            if (bestGroupCardsDamage < hisCard.GetEntity().GetRealTimeRemainingHP() && listOfCardCombinations.Count > 0)
+            {
+                bestCards = new List<Card>();
+                foreach (Card card in listOfCardCombinations[listOfCardCombinations.Count - 1])
+                {
+                    if (GameFunctions.CanAttack(card))
+                        bestCards.Add(card);
+                }
+            }
             foreach (Card c in bestCards)
                 Log.debug("Mis atacantes: " + c.ToString());
-
+            Log.debug("***************************************");
 
             return bestCards;
         }
@@ -534,8 +637,13 @@ namespace Plugin
             int deadValue = 2;
             foreach (Card thisListCard in thisList)
             {
-                if (!GameFunctions.CanBeUsed(thisListCard))
-                    continue;
+                if (!GameFunctions.CanAttack(thisListCard))
+                {
+                    thisGroupCardsDead = 0;
+                    thisGroupCardsDamage = 0;
+                    thisGroupDamageTaken = 0;
+                    break;
+                }
                 thisGroupCardsDamage += thisListCard.GetEntity().GetRealTimeAttack();
                 if (thisListCard.GetEntity().GetRealTimeRemainingHP() <= hisCard.GetEntity().GetRealTimeAttack())
                 {
@@ -549,7 +657,7 @@ namespace Plugin
             }
         }
 
-        public static List<List<Card>> GetAllAttackersCombinations(List<Card> list)
+        public static List<List<Card>> GetAllCardsCombinations(List<Card> list)
         {
             List<List<Card>> allAttackersCombinations = new List<List<Card>>();
             List<Card> thisCombination = new List<Card>();
@@ -580,7 +688,7 @@ namespace Plugin
                 GameFunctions.DoAttack(hero.GetCard(), attackee);
         }
 
-        public static Card GetBestAttacker(Card attackee)
+        /*public static Card GetBestAttacker(Card attackee)
         {
             if (attackee == null)
                 return null;
@@ -662,7 +770,9 @@ namespace Plugin
                 }
             }
             return card;
-        }
+        }*/
+
+
         public static Card GetBestAttackee()
         {
             return GetBestAttackee(0);
@@ -670,6 +780,7 @@ namespace Plugin
 
         public static Card GetBestAttackee(int hisMaxATK)
         {
+            Log.debug("**************GetBestAttackee****************");
             List<Card> hisCardListInPlay = GameFunctions.ePlayer.GetBattlefieldZone().GetCards();
             Card attackee = null;
             bool selHasTaunt = false;
