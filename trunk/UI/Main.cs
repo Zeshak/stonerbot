@@ -58,6 +58,7 @@ namespace UI
             key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("StonerBot");
             string[] quests = new string[]
             {
+                "",
                 "Priest Dominance", 
                 "Warlock Dominance",
                 "Hunter Dominance",
@@ -69,7 +70,9 @@ namespace UI
                 "Warrior Dominance",
                 "Total Dominance"
             };
-            cmbQuests.DataSource = quests;
+            cmbQuests1.DataSource = quests.Clone();
+            cmbQuests2.DataSource = quests.Clone();
+            cmbQuests3.DataSource = quests.Clone();
             if (key == null)
             {
                 key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("StonerBot");
@@ -138,10 +141,19 @@ namespace UI
 
         private void btnGetQuest_Click(object sender, EventArgs e)
         {
-            string message = "quest" + cmbQuests.SelectedItem.ToString().Length.ToString().PadLeft(2, '0') + cmbQuests.SelectedItem.ToString();
-            int length = Convert.ToInt32(message.Substring(5, 2));
-            string messageSay = message.Substring(7, length);
-            SendConnectCmd("quest" + cmbQuests.SelectedItem.ToString().Length.ToString().PadLeft(2, '0') + cmbQuests.SelectedItem.ToString());
+            if (cmbQuests1.SelectedItem.ToString() == "")
+                return;
+            int totalLenght = cmbQuests1.SelectedItem.ToString().Length + cmbQuests2.SelectedItem.ToString().Length + cmbQuests3.SelectedItem.ToString().Length;
+            string message = "quest" + totalLenght.ToString().PadLeft(2, '0');
+
+            if (cmbQuests1.SelectedItem.ToString().Length > 0)
+                message += cmbQuests1.SelectedItem.ToString();
+            if (cmbQuests2.SelectedItem.ToString().Length > 0)
+                message += " " + cmbQuests2.SelectedItem.ToString();
+            if (cmbQuests3.SelectedItem.ToString().Length > 0)
+                message += " " + cmbQuests3.SelectedItem.ToString();
+
+            SendConnectCmd(message);
         }
 
         private void Main_FormClosed(object sender, FormClosedEventArgs e)

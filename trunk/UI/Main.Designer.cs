@@ -58,11 +58,13 @@
             this.label3 = new System.Windows.Forms.Label();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.btnGetQuest = new System.Windows.Forms.Button();
+            this.cmbQuests3 = new System.Windows.Forms.ComboBox();
+            this.cmbQuests2 = new System.Windows.Forms.ComboBox();
             this.label10 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.cmbQuests = new System.Windows.Forms.ComboBox();
+            this.cmbQuests1 = new System.Windows.Forms.ComboBox();
             this.tabControl1.SuspendLayout();
             this.tabMain.SuspendLayout();
             this.tabStat.SuspendLayout();
@@ -352,11 +354,13 @@
             // tabPage1
             // 
             this.tabPage1.Controls.Add(this.btnGetQuest);
+            this.tabPage1.Controls.Add(this.cmbQuests3);
+            this.tabPage1.Controls.Add(this.cmbQuests2);
             this.tabPage1.Controls.Add(this.label10);
             this.tabPage1.Controls.Add(this.label9);
             this.tabPage1.Controls.Add(this.label8);
             this.tabPage1.Controls.Add(this.label4);
-            this.tabPage1.Controls.Add(this.cmbQuests);
+            this.tabPage1.Controls.Add(this.cmbQuests1);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
@@ -367,13 +371,29 @@
             // 
             // btnGetQuest
             // 
-            this.btnGetQuest.Location = new System.Drawing.Point(66, 115);
+            this.btnGetQuest.Location = new System.Drawing.Point(66, 169);
             this.btnGetQuest.Name = "btnGetQuest";
             this.btnGetQuest.Size = new System.Drawing.Size(308, 23);
-            this.btnGetQuest.TabIndex = 5;
+            this.btnGetQuest.TabIndex = 9;
             this.btnGetQuest.Text = "Get that quest!";
             this.btnGetQuest.UseVisualStyleBackColor = true;
             this.btnGetQuest.Click += new System.EventHandler(this.btnGetQuest_Click);
+            // 
+            // cmbQuests3
+            // 
+            this.cmbQuests3.FormattingEnabled = true;
+            this.cmbQuests3.Location = new System.Drawing.Point(66, 141);
+            this.cmbQuests3.Name = "cmbQuests3";
+            this.cmbQuests3.Size = new System.Drawing.Size(308, 21);
+            this.cmbQuests3.TabIndex = 8;
+            // 
+            // cmbQuests2
+            // 
+            this.cmbQuests2.FormattingEnabled = true;
+            this.cmbQuests2.Location = new System.Drawing.Point(66, 114);
+            this.cmbQuests2.Name = "cmbQuests2";
+            this.cmbQuests2.Size = new System.Drawing.Size(308, 21);
+            this.cmbQuests2.TabIndex = 6;
             // 
             // label10
             // 
@@ -408,17 +428,17 @@
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(66, 68);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(163, 13);
+            this.label4.Size = new System.Drawing.Size(168, 13);
             this.label4.TabIndex = 1;
-            this.label4.Text = "Select the quest you want to get.";
+            this.label4.Text = "Select the quests you want to get.";
             // 
-            // cmbQuests
+            // cmbQuests1
             // 
-            this.cmbQuests.FormattingEnabled = true;
-            this.cmbQuests.Location = new System.Drawing.Point(66, 87);
-            this.cmbQuests.Name = "cmbQuests";
-            this.cmbQuests.Size = new System.Drawing.Size(308, 21);
-            this.cmbQuests.TabIndex = 0;
+            this.cmbQuests1.FormattingEnabled = true;
+            this.cmbQuests1.Location = new System.Drawing.Point(66, 87);
+            this.cmbQuests1.Name = "cmbQuests1";
+            this.cmbQuests1.Size = new System.Drawing.Size(308, 21);
+            this.cmbQuests1.TabIndex = 0;
             // 
             // Main
             // 
@@ -473,12 +493,14 @@
         private System.Windows.Forms.Label lblLastCommand;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.ComboBox cmbQuests;
+        private System.Windows.Forms.ComboBox cmbQuests1;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Button btnGetQuest;
         private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Button btnGetQuest;
+        private System.Windows.Forms.ComboBox cmbQuests3;
+        private System.Windows.Forms.ComboBox cmbQuests2;
     }
 }
 

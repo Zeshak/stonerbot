@@ -57,12 +57,11 @@ namespace Plugin
         public static float timeLastQueued;
         public static bool statisticsAdded;
         public static bool mulliganDone;
-        public static int modulo;
         private static Thread socketThread;
         public static bool saidHi = false;
         public static bool saidGG = false;
         public static bool needsToSetQuestSet = false;
-        public static string questString;
+        public static string[] questString;
 
         #endregion
 
@@ -172,10 +171,7 @@ namespace Plugin
                     Delay(2500);
                     break;
                 case SceneMgr.Mode.HUB:
-                    if (!needsToSetQuestSet)
-                        Delay(5000);
-                    else
-                        Delay(2500);
+                    Delay(5000);
                     DoHub();
                     break;
                 case SceneMgr.Mode.GAMEPLAY:
@@ -269,29 +265,55 @@ namespace Plugin
             BotStatus = BotStatusList.OnHub;
         }
 
-        public static void FindTotalDominance()
+        public static void FindQuests()
         {
-            string race = questString.Split(' ')[0];
+            Log.debug("Levanto las quests activas.");
             List<Achievement> list = AchieveManager.Get().GetActiveQuests();
-            if (list.Count == 0 || !AchieveManager.Get().CanCancelQuest(list[0].ID))
+            if (list.Count == 0)
             {
                 Plugin.StopBot(null, null, null);
                 return;
             }
-            if (list[0].Name.Contains(race) && list[0].Name.Contains("Dominance"))
+            foreach (Achievement ach in list)
             {
-                Plugin.StopBot(null, null, null);
-                return;
+                Log.debug("Veo si encuentro la quest " + ach.Name);
+                if (!AchieveManager.Get().CanCancelQuest(ach.ID))
+                {
+                    Log.debug("La quest " + ach.Name + " no se puede cancelar");
+                    Plugin.StopBot(null, null, null);
+                    return;
+                }
+                bool matchedQuest = false;
+                for (int i = 0; i < Plugin.questString.Length; i++)
+                {
+                    if (Plugin.questString[i] == null || Plugin.questString[i] == "")
+                        break;
+                    Log.debug("Comparo si la questString " + Plugin.questString[i] + " es igual al achievement Name " + ach.Name);
+                    if (ach.Name.Contains(Plugin.questString[i]) && ach.Name.Contains("Dominance"))
+                    {
+                        Log.debug("Son iguales!!!!");
+                        matchedQuest = true;
+                        break;
+                    }
+                }
+                if (!matchedQuest)
+                {
+                    Log.debug("No encontró la quest " + ach.Name + " doy otra vuelta");
+                    Plugin.Delay(2000);
+                    AchieveManager.Get().CancelQuest(ach.ID);
+                    return;
+                }
             }
-            Log.debug("Cancelling " + list[0].Name);
-            AchieveManager.Get().CancelQuest(list[0].ID);
+            Log.debug("Encontró la quest!!!!!");
+            Plugin.StopBot(null, null, null);
         }
 
         private void DoHub()
         {
+            Log.debug("2");
             if (needsToSetQuestSet)
             {
-                FindTotalDominance();
+                FindQuests();
                 return;
             }
             if (playVsHumans)
@@ -325,8 +347,9 @@ namespace Plugin
                         return;
                     }
                 }
+
             }
-            if (GameFunctions.gs.IsGameOver())
+            else if (GameFunctions.gs.IsGameOver())
             {
                 try
                 {
@@ -340,6 +363,7 @@ namespace Plugin
                     EndGameScreen.Get().m_hitbox.TriggerRelease();
                     saidHi = false;
                     saidGG = false;
+                    GameFunctions.canWinThisTurn = false;
                     return;
                 }
                 catch (Exception ex)
@@ -348,31 +372,34 @@ namespace Plugin
                     return;
                 }
             }
-            if (!GameFunctions.gs.IsLocalPlayerTurn())
+            else if (!GameFunctions.gs.IsLocalPlayerTurn())
             {
                 Plugin.BotStatus = Plugin.BotStatusList.OnMatchTurnEnemy;
                 return;
             }
-            try
+            else
             {
-                Plugin.BotStatus = Plugin.BotStatusList.OnMatchTurnOwn;
-                if (GameState.Get().IsBlockingServer())
-                    Thread.Sleep(500);
-                GameFunctions.PopulateZones();
-                BruteAI.SendEmoMessages();
-                if (BruteAI.BruteHand())
-                    ++BruteAI.loops;
-                else
+                try
                 {
-                    if (BruteAI.BruteAttack())
-                        return;
-                    GameFunctions.DoEndTurn();
-                    BruteAI.loops = 0;
+                    Plugin.BotStatus = Plugin.BotStatusList.OnMatchTurnOwn;
+                    if (GameState.Get().IsBlockingServer())
+                        Thread.Sleep(500);
+                    GameFunctions.PopulateZones();
+                    BruteAI.SendEmoMessages();
+                    if (BruteAI.BruteHand())
+                        ++BruteAI.loops;
+                    else
+                    {
+                        if (BruteAI.BruteAttack())
+                            return;
+                        GameFunctions.DoEndTurn();
+                        BruteAI.loops = 0;
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                Log.error(ex);
+                catch (Exception ex)
+                {
+                    Log.error(ex);
+                }
             }
         }
 
@@ -439,7 +466,7 @@ namespace Plugin
             if (selDeck != null)
                 File.AppendAllText("stat.txt", "[Date]" + DateTime.Now.ToString() + "[ID]" + selDeck.DeckId.ToString() + "[Name]" + selDeck.Alias.ToString() + "[Result]" + win.ToString() + Environment.NewLine);
             else
-                File.AppendAllText("stat.txt", "[Date]" + DateTime.Now.ToString() + "[ID]El bot fue detenido[Name]El bot fue detenido[Result]" + win.ToString() + Environment.NewLine);
+                File.AppendAllText("stat.txt", "[Date]" + DateTime.Now.ToString() + "[ID]0[Name]El bot fue detenido[Result]" + win.ToString() + Environment.NewLine);
         }
 
         #endregion

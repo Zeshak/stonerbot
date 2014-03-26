@@ -17,6 +17,8 @@ namespace Plugin
         public static List<Card> massiveAttackList;
         public static Card massiveAttackAttackee;
         public static TurnStates? turnState;
+        public static bool canWinThisTurn = false;
+        public static bool canWinThisTurnFirstTimeDone = false;
         public enum TurnStates
         {
             CHECK_CANWIN,
@@ -421,6 +423,7 @@ namespace Plugin
 
             foreach (Card card in swap)
                 MulliganManager.Get().ToggleHoldState(card);
+            Log.debug("End Mulligan for real");
             MulliganManager.Get().EndMulligan();
             GameFunctions.DoEndTurn();
             return true;
@@ -429,6 +432,7 @@ namespace Plugin
         public static void DoEndTurn()
         {
             InputManager.Get().DoEndTurnButton();
+            GameFunctions.canWinThisTurnFirstTimeDone = false;
             GameFunctions.turnState = null;
         }
 

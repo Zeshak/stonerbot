@@ -59,8 +59,15 @@ namespace Plugin
                         {
                             int length = Convert.ToInt32(message.Substring(5, 2));
                             string messageSay = message.Substring(7, length);
-                            Log.debug(messageSay);
-                            Plugin.questString = messageSay;
+                            string[] quests = messageSay.Split(' ');
+                            Plugin.questString = new string[(quests.Length / 2)];
+                            Log.debug("questString lenght  = " + Plugin.questString.Length.ToString());
+                            int cont = 0;
+                            for (int i = 0; i < quests.Length; i += 2)
+                            {
+                                Plugin.questString[cont] = quests[i];
+                                cont++;
+                            }
                             Plugin.needsToSetQuestSet = true;
                             Plugin.StartBotVsAI(null, null, null);
                             break;

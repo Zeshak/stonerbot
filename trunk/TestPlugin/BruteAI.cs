@@ -63,10 +63,17 @@ namespace Plugin
                 }
                 else
                 {
-                    /*if (BruteAI.CanWinThisTurn())
+                    if (!GameFunctions.canWinThisTurnFirstTimeDone && BruteAI.CanWinThisTurn())
                     {
-                        Log.debug("Este turno puedo ganar");
-                    }*/
+                        GameFunctions.canWinThisTurnFirstTimeDone = true;
+                        GameFunctions.canWinThisTurn = true;
+                        Log.debug("Puedo ganar este turno");
+                    }
+                    else
+                    {
+                        GameFunctions.canWinThisTurnFirstTimeDone = true;
+                        GameFunctions.canWinThisTurn = false;
+                    }
                 }
                 Card cardToPlay = new Card();
                 CardDetails targetCardDetails = NeedsToPlayDisableDestroySilence();
@@ -76,8 +83,8 @@ namespace Plugin
                     cardToPlay = NextDisableDestroySilence(targetCardDetails);
                     if (cardToPlay != null)
                     {
-                        Plugin.Delay(5000);
                         return GameFunctions.DoDrop(cardToPlay, targetCardDetails.Card.GetEntity());
+                        Plugin.Delay(5000);
                     }
                 }
                 if (BruteAI.tryToPlayCoin())
@@ -120,7 +127,7 @@ namespace Plugin
                 if (hisEntity.HasTaunt())
                     tauntCards.Add(hisCard);
             }
-            List<Card> remainingCards = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
+            List<Card> remainingCards = new List<Card>(GameFunctions.myPlayer.GetBattlefieldZone().GetCards());
             foreach (Card hisCard in tauntCards)
             {
                 Entity myEntity = hisCard.GetEntity();
@@ -399,6 +406,10 @@ namespace Plugin
             return card;
         }
 
+        /// <summary>
+        /// Realiza el ataque con las cartas y setea ataques conjuntos de ser necesario.
+        /// </summary>
+        /// <returns>true si hay que seguir entrando acá, false si se terminaron los ataques.</returns>
         public static bool BruteAttack()
         {
             Log.debug("**************Brute Attack****************");
@@ -406,8 +417,11 @@ namespace Plugin
             {
                 GameFunctions.massiveAttackList = new List<Card>();
                 GameFunctions.massiveAttackAttackee = BruteAI.GetBestAttackee();
+                if (GameFunctions.massiveAttackAttackee == null)
+                    return false;
                 Log.debug("El attackee resultó ser: " + GameFunctions.massiveAttackAttackee.ToString());
-                GameFunctions.massiveAttackList = BruteAI.GetBestAttackerCombination(GameFunctions.massiveAttackAttackee, GameFunctions.myPlayer.GetBattlefieldZone().GetCards());
+                GameFunctions.massiveAttackList = BruteAI.GetBestAttackerCombination(GameFunctions.massiveAttackAttackee, GameFunctions.myPlayer.GetBattlefieldZone().GetCards(), GameFunctions.canWinThisTurn);
+                Log.debug("5");
                 if (GameFunctions.massiveAttackAttackee == null || GameFunctions.massiveAttackList == null || GameFunctions.massiveAttackList.Count == 0)
                 {
                     Log.debug("massiveAttackList está vacía");
@@ -517,20 +531,25 @@ namespace Plugin
             {
                 //Sino ataca al heroe primero con el héroe si puede
                 Entity hero = GameFunctions.myPlayer.GetHero();
-                if (hero != null && GameFunctions.CanBeUsed(hero.GetCard())  && GameFunctions.CanAttack(hero.GetCard()))
+                if (hero != null && GameFunctions.CanBeUsed(hero.GetCard()) && GameFunctions.CanAttack(hero.GetCard()))
                 {
                     eligibleCards.Add(hero.GetCard());
                     return eligibleCards;
                 }
             }
+            Log.debug("Empezando ataque con todas las cartas");
+            eligibleCards = new List<Card>();
             foreach (Card c in listCardsInMyBF)
             {
                 //Sino empieza a atacar al héroe de manera random con todos los minions que se vaya pudiendo
                 c.GetEntity();
+                Log.debug("1");
                 if (GameFunctions.CanAttack(c))
                 {
+                    Log.debug("2");
                     if (new System.Random().NextDouble() > 0.5)
                     {
+                        Log.debug("3");
                         eligibleCards.Clear();
                         eligibleCards.Add(c);
                         return eligibleCards;
@@ -538,6 +557,7 @@ namespace Plugin
                     eligibleCards.Add(c);
                 }
             }
+            Log.debug("4");
             if (eligibleCards != null && eligibleCards.Count > 0)
                 return eligibleCards;
             else
