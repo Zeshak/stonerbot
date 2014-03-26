@@ -7,11 +7,15 @@ namespace Plugin
 {
     public class Log
     {
-        public static string logPath = @"log.txt";
+        public static string logPath;
         public static string module = "";
 
         static Log()
         {
+            Microsoft.Win32.RegistryKey key;
+            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("StonerBot");
+            string rootPath = key.GetValue("RootPath").ToString();
+            logPath = Path.Combine(rootPath, "log.txt");
         }
 
         public static void newLog()
@@ -30,7 +34,9 @@ namespace Plugin
             {
                 Log.log("ERROR MESSAGE: " + ex.Message);
                 Log.log("ERROR STACKTRACE: " + ex.StackTrace);
-                Log.log("ERROR SOURCE: " + ex.Source);
+                int linenum = 0;
+                linenum = Convert.ToInt32(ex.StackTrace.Substring(ex.StackTrace.LastIndexOf(":line") + 5));
+                Log.log("ERROR LINE: " + linenum);
             }
             catch
             {

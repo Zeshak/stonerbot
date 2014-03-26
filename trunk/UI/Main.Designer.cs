@@ -57,12 +57,12 @@
             this.cmbDecks = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.btnGetQuest = new System.Windows.Forms.Button();
+            this.label10 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.cmbQuests = new System.Windows.Forms.ComboBox();
-            this.label10 = new System.Windows.Forms.Label();
-            this.btnGetQuest = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabMain.SuspendLayout();
             this.tabStat.SuspendLayout();
@@ -365,6 +365,26 @@
             this.tabPage1.Text = "Quests";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // btnGetQuest
+            // 
+            this.btnGetQuest.Location = new System.Drawing.Point(66, 115);
+            this.btnGetQuest.Name = "btnGetQuest";
+            this.btnGetQuest.Size = new System.Drawing.Size(308, 23);
+            this.btnGetQuest.TabIndex = 5;
+            this.btnGetQuest.Text = "Get that quest!";
+            this.btnGetQuest.UseVisualStyleBackColor = true;
+            this.btnGetQuest.Click += new System.EventHandler(this.btnGetQuest_Click);
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(14, 41);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(397, 13);
+            this.label10.TabIndex = 4;
+            this.label10.Text = "this means that maybe you cant get Total Dominance twice in a less than 3-4 days." +
+    "";
+            // 
             // label9
             // 
             this.label9.AutoSize = true;
@@ -400,26 +420,6 @@
             this.cmbQuests.Size = new System.Drawing.Size(308, 21);
             this.cmbQuests.TabIndex = 0;
             // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(14, 41);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(397, 13);
-            this.label10.TabIndex = 4;
-            this.label10.Text = "this means that maybe you cant get Total Dominance twice in a less than 3-4 days." +
-    "";
-            // 
-            // btnGetQuest
-            // 
-            this.btnGetQuest.Location = new System.Drawing.Point(66, 115);
-            this.btnGetQuest.Name = "btnGetQuest";
-            this.btnGetQuest.Size = new System.Drawing.Size(308, 23);
-            this.btnGetQuest.TabIndex = 5;
-            this.btnGetQuest.Text = "Get that quest!";
-            this.btnGetQuest.UseVisualStyleBackColor = true;
-            this.btnGetQuest.Click += new System.EventHandler(this.btnGetQuest_Click);
-            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -429,6 +429,7 @@
             this.ForeColor = System.Drawing.Color.Black;
             this.Name = "Main";
             this.Text = "StonerBot";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Main_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.tabControl1.ResumeLayout(false);
             this.tabMain.ResumeLayout(false);

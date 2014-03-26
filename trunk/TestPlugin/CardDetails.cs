@@ -14,9 +14,9 @@ namespace Plugin
         {
             public static int MyMaxCardsInPlay = 2;
             public static int MyMaxCardsDestroyed = 1;
-            public static int EnemyMinCardsInPlay = 3;
+            public static int EnemyMinCardsInPlay = 2;
             public static int CardDamage = 5;
-            public static int CardsDestroyed = 3;
+            public static int CardsDestroyed = 2;
         }
         #endregion
         #region -[ Hunter ]-
@@ -179,7 +179,7 @@ namespace Plugin
         public static void SetCardDetails()
         {
             CardDetails cd;
-            
+
             #region -[ Cartas Enemigas ]-
             #region -[ Abomination ]-
             cd = new CardDetails();
@@ -201,7 +201,7 @@ namespace Plugin
             cd.CardId = "EX1_298";
             cd.CardName = "Ragnaros";
             cd.DisableThis = true;
-            cd.KillThisEXTREME = true;
+            cd.DestroyThis = true;
             ListCardDetails.Add(cd);
             #endregion
             #region -[ Questing Adventurer ]-
@@ -235,7 +235,7 @@ namespace Plugin
             cd.CardName = "Ysera";
             cd.SilenceThis = true;
             cd.DisableThis = true;
-            cd.KillThis = true;
+            cd.DestroyThis = true;
             ListCardDetails.Add(cd);
             #endregion
             #region -[ Warsong Commander ]-
@@ -254,8 +254,31 @@ namespace Plugin
             cd.KillThisEXTREME = true;
             ListCardDetails.Add(cd);
             #endregion
+            #region -[ Northshire Cleric ]-
+            cd = new CardDetails();
+            cd.CardId = "CS2_235";
+            cd.CardName = "Northshire Cleric";
+            cd.KillThis = true;
+            cd.KillThisEXTREME = true;
+            ListCardDetails.Add(cd);
             #endregion
-            
+            #region -[ Starving Buzzard ]-
+            cd = new CardDetails();
+            cd.CardId = "CS2_237";
+            cd.CardName = "Starving Buzzard";
+            cd.KillThis = true;
+            cd.SilenceThis = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #region -[ Mana Wyrm ]-
+            cd = new CardDetails();
+            cd.CardId = "NEW1_012U";
+            cd.CardName = "Mana Wyrm";
+            cd.KillThis = true;
+            ListCardDetails.Add(cd);
+            #endregion
+            #endregion
+
             cd = new CardDetails();
             cd.CardId = "CS2_182";
             cd.CardName = "sdsa";
@@ -285,7 +308,7 @@ namespace Plugin
         {
             //Si la carta no se puede jugar ni me gasto...
             if (!GameFunctions.CanBeUsed(myCard))
-                return false;            
+                return false;
             switch (myCard.GetEntity().GetCardId())
             {
                 #region -[ Common ]-
@@ -336,11 +359,12 @@ namespace Plugin
                 #region -[ Arcane Golem ]-
                 case "EX1_089":
                     {
-                        if (GameFunctions.gameTurn > 6 && GameFunctions.turnState == GameFunctions.TurnStates.DROP_MINIONS)
+                        Log.debug("Turnos en juego: " + GameState.Get().GetTurn().ToString().ToString());
+                        if (GameState.Get().GetTurn() > 12 && GameFunctions.turnState == GameFunctions.TurnStates.DROP_MINIONS)
                             return true;
                         return false;
                     }
-                #endregion                   
+                #endregion
                 #endregion
                 #region -[ Hunter ]-
                 #region -[ Explosive Trap ]-
@@ -486,6 +510,18 @@ namespace Plugin
                 case "CS2_062":
                     return CommonMultipleSpellDamageALL(Hellfire.CardDamage, Hellfire.CardsDestroyed, Hellfire.EnemyMinCardsInPlay, Hellfire.MyMaxCardsInPlay, Hellfire.MyMaxCardsDestroyed);
                 #endregion
+                #region -[ Siphon Soul ]-
+                case "EX1_309":
+                    {
+                        if (specialParameter == null)
+                            return false;
+                        CardDetails targetEntity = (CardDetails)specialParameter;
+                        bool targetIsEnemy = GameFunctions.IsEnemyCard(targetEntity.Card);
+                        if (targetEntity.DestroyThis && targetIsEnemy)
+                            return true;
+                        return false;
+                    }
+                #endregion
                 #endregion
                 #region -[ Warrior ]-
                 #region -[ Whirlwind ]-
@@ -529,7 +565,7 @@ namespace Plugin
         /// <returns>Devuelve si cumple la condición.</returns>
         private static bool CommonMultipleSpellDamageALL(int CardDamage, int CardsDestroyed, int EnemyMinCardsInPlay, int MyMaxCardsInPlay, int MyMaxCardsDestroyed)
         {
-            if (GameFunctions.ePlayer.GetBattlefieldZone().GetCardCount() <= MyMaxCardsInPlay)
+            if (MyMaxCardsInPlay <= GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount())
             {
                 int count = 0;
                 foreach (Card card in GameFunctions.myPlayer.GetBattlefieldZone().GetCards())
@@ -550,6 +586,7 @@ namespace Plugin
             int currHP = entity.GetRealTimeRemainingHP();
             int origATK = entity.GetOriginalATK();
             int origHP = entity.GetOriginalHealth();
+            //TODO mejorar esto, permitir a una función pasarle daño minimo, vida minima, buffs minimos, y permitir pasarle 0 si no tienen que contar.
             if (currATK - currHP > 1 && currHP < 4)
             {
                 //Si el bicho tiene dif de atk/vida mayor a 1, y tiene menos de 4 de vida, trato de matarlo perdiendo poco (ej: 5-3)
@@ -557,6 +594,11 @@ namespace Plugin
                 cd.KillThis = true;
                 if (currATK > 5)
                     cd.DisableThis = true;
+            }
+            if (currATK > origATK + 1 && currHP > 2 && currATK > 4)
+            {
+                //Si el bicho tiene dif de atk/vida mayor a 1, y tiene mas de 2 de vida, lo silencio (ej: 5-3)
+                cd.SilenceThis = true;
             }
             if (entity.HasTaunt())
             {
@@ -570,25 +612,33 @@ namespace Plugin
                     {
                         cd.SilenceThis = true;
                         cd.DisableThis = true;
+                        cd.DestroyThis = true;
                     }
                 }
                 else
                 {
                     //Bicho con taunt a partir de 3-6 o 5-3 le tiro spell si tengo
                     if ((currATK > 2 && currHP > 5) || (currHP > 2 && currATK > 4))
+                    {
                         cd.DisableThis = true;
+                        cd.DestroyThis = true;
+                    }
                 }
             }
             if (currATK > 4 && currHP > 4)
             {
                 //Si es bicho fuerte, 5-5 en adelante, trato de tirarle spell
                 cd.DisableThis = true;
+                cd.DestroyThis = true;
             }
             if (entity.HasDivineShield())
             {
                 //Bicho relativamente fuerte, en adelante que pueda o no estar buffeado o tenga taunt con divine shield. Ej: Sunwalker
                 if ((currATK > 3 && currHP > 1) || (currATK > origATK + 1) || (currHP > origHP + 1) || (entity.HasTaunt()))
+                {
                     cd.DisableThis = true;
+                    cd.DestroyThis = true;
+                }
 
                 //Bicho originalmente débil, Escudera argenta o alguno con shield que haya sido buffeado, me conviene silenciarlo.
                 if ((origATK <= 2 && origHP <= 2) && ((currATK > origATK + 1) || (currHP > origHP + 1)))
@@ -597,5 +647,7 @@ namespace Plugin
             if (entity.HasWindfury())
                 cd.KillThisEXTREME = true;
         }
+
+        //private bool CardDetailsSatisfyConditions(int myRealTimeAttack, int myRealTimeHP, int my
     }
 }

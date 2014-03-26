@@ -135,6 +135,27 @@ namespace UI
             Inject();
         }
 
+        private void btnGetQuest_Click(object sender, EventArgs e)
+        {
+            string message = "quest" + cmbQuests.SelectedItem.ToString().Length.ToString().PadLeft(2, '0') + cmbQuests.SelectedItem.ToString();
+            int length = Convert.ToInt32(message.Substring(5, 2));
+            string messageSay = message.Substring(7, length);
+            SendConnectCmd("quest" + cmbQuests.SelectedItem.ToString().Length.ToString().PadLeft(2, '0') + cmbQuests.SelectedItem.ToString());
+        }
+
+        private void Main_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            socketThread.Abort();
+            client.Close();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            this.lblStatus.Text = "Awaiting";
+            this.lblBotStatus.Text = "No status";
+            this.lblLastCommand.Text = string.Empty;
+        }
+
         #endregion
 
         private void Inject()
@@ -207,13 +228,6 @@ namespace UI
             {
                 int num2 = (int)MessageBox.Show("You have to select the HearthStone main path before injecting!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            this.lblStatus.Text = "Awaiting";
-            this.lblBotStatus.Text = "No status";
-            this.lblLastCommand.Text = string.Empty;
         }
 
         private void UpdateBotStatus()
@@ -363,14 +377,6 @@ namespace UI
             cmbDecks.DataSource = listDecks;
             cmbDecks.ValueMember = "DeckId";
             cmbDecks.DisplayMember = "Alias";
-        }
-
-        private void btnGetQuest_Click(object sender, EventArgs e)
-        {
-            string message = "quest" + cmbQuests.SelectedItem.ToString().Length.ToString().PadLeft(2, '0') + cmbQuests.SelectedItem.ToString();
-            int length = Convert.ToInt32(message.Substring(5, 2));
-            string messageSay = message.Substring(7, length);
-            SendConnectCmd("quest" + cmbQuests.SelectedItem.ToString().Length.ToString().PadLeft(2, '0') + cmbQuests.SelectedItem.ToString());
         }
     }
 }

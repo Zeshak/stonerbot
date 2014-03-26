@@ -31,6 +31,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mono.Cecil">
       <HintPath>..\ext\Mono.Cecil.dll</HintPath>
@@ -95,7 +98,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y $(TargetPath) $(SolutionDir)\Release
+    <PostBuildEvent>copy /Y $(TargetPath) $(SolutionDir)Release
 copy /Y $(SolutionDir)ext\ $(SolutionDir)Release\ext\
 copy /Y $(SolutionDir)plugins\ $(SolutionDir)Release\plugins\</PostBuildEvent>
   </PropertyGroup>
