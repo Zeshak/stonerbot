@@ -1,0 +1,20 @@
+c:\users\gaston\documents\visual studio 2012\Projects\WindowsFormsApplication3\WindowsFormsApplication3\bin\Debug\WindowsFormsApplication3.exe.config
+c:\users\gaston\documents\visual studio 2012\Projects\WindowsFormsApplication3\WindowsFormsApplication3\bin\Debug\WindowsFormsApplication3.exe
+c:\users\gaston\documents\visual studio 2012\Projects\WindowsFormsApplication3\WindowsFormsApplication3\bin\Debug\WindowsFormsApplication3.pdb
+c:\users\gaston\documents\visual studio 2012\Projects\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\Login.csprojResolveAssemblyReference.cache
+c:\users\gaston\documents\visual studio 2012\Projects\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\WindowsFormsApplication3.Properties.Resources.resources
+c:\users\gaston\documents\visual studio 2012\Projects\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\Login.csproj.GenerateResource.Cache
+c:\users\gaston\documents\visual studio 2012\Projects\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\WindowsFormsApplication3.exe
+c:\users\gaston\documents\visual studio 2012\Projects\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\WindowsFormsApplication3.pdb
+c:\users\gaston\documents\visual studio 2012\Projects\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\Login.LoginApp.resources
+G:\stonerbot\LoginUI\LoginUI\bin\Debug\WindowsFormsApplication3.exe.config
+G:\stonerbot\LoginUI\LoginUI\obj\Debug\WindowsFormsApplication3.exe
+G:\stonerbot\LoginUI\LoginUI\obj\Debug\WindowsFormsApplication3.pdb
+G:\stonerbot\LoginUI\LoginUI\bin\Debug\WindowsFormsApplication3.exe
+G:\stonerbot\LoginUI\LoginUI\bin\Debug\WindowsFormsApplication3.pdb
+G:\stonerbot\LoginUI\LoginUI\bin\Debug\UI.exe
+G:\stonerbot\LoginUI\LoginUI\bin\Debug\UI.pdb
+G:\stonerbot\LoginUI\LoginUI\obj\Debug\Login.csprojResolveAssemblyReference.cache
+G:\stonerbot\LoginUI\LoginUI\obj\Debug\Login.LoginApp.resources
+G:\stonerbot\LoginUI\LoginUI\obj\Debug\Login.csproj.GenerateResource.Cache
+G:\stonerbot\LoginUI\LoginUI\obj\Debug\Login.Properties.Resources.resources
