@@ -190,7 +190,7 @@
             this.btnSay.Name = "btnSay";
             this.btnSay.Size = new System.Drawing.Size(144, 23);
             this.btnSay.TabIndex = 12;
-            this.btnSay.Text = "Say";
+            this.btnSay.Text = "Send command";
             this.btnSay.UseVisualStyleBackColor = true;
             this.btnSay.Click += new System.EventHandler(this.btnSay_Click);
             // 

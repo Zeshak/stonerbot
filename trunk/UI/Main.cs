@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows;
 using System.Timers;
+using System.Runtime.InteropServices;
 
 
 namespace UI
@@ -22,7 +23,6 @@ namespace UI
     public partial class Main : Form
     {
         public string HSpath;
-        private string extPath;
         public string rootPath;
         public Deck selDeck;
         public static TcpClient client;
@@ -48,7 +48,6 @@ namespace UI
             socketThread = new Thread(new ThreadStart(UpdateBotStatus));
             socketThread.Start();
             InitializeComponent();
-            this.extPath = "ext";
             string exePath = Assembly.GetExecutingAssembly().CodeBase;
             rootPath = exePath.Substring(0, exePath.LastIndexOf("/") + 1).Replace("file:///", "");
             if (rootPath.Contains("bin/Debug"))
@@ -171,70 +170,103 @@ namespace UI
 
         #endregion
 
+        private void CopyInjectDLL(bool renew = false)
+        {
+            if (renew)
+                DeleteOldDLL();
+            string path = Path.Combine(rootPath, "ext/Injector.exe");
+            if (!File.Exists(path))
+            {
+                MessageBox.Show("Error: Injector not found (ext/Injector.exe)!" + Environment.NewLine + "The bot instalation is not correct.");
+                return;
+            }
+            string str = Path.Combine(rootPath, "ext/Assembly-CSharp.orig.dll");
+            if (!File.Exists(str))
+            {
+                try
+                {
+                    File.Copy(Path.Combine(HSpath, "/Hearthstone_Data/Managed/Assembly-CSharp.dll"), str, true);
+                    lblStatus.Text = "Getting the new Assembly-CSharp.dll";
+                }
+                catch (IOException ex)
+                {
+                    MessageBox.Show("Error: Unable to find Assembly-CSharp.dll" + Environment.NewLine + "Check that Hearthstone folder is correctly set.");
+                    return;
+                }
+            }
+            Process process = new Process();
+            process.StartInfo.FileName = path;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.CreateNoWindow = true;
+            process.StartInfo.WorkingDirectory = Path.Combine(rootPath, "ext");
+            lblStatus.Text = "Creating injection file...";
+            process.Start();
+            process.WaitForExit();
+            if (process.ExitCode != 0)
+            {
+                MessageBox.Show("Error: Unsuccessfull injection file creation (Error code = " + (object)process.ExitCode + ")!");
+                return;
+            }
+            else
+                lblStatus.Text = "Injection file created.";
+        }
+
+        private void DeleteOldDLL()
+        {
+            string path1 = "ext/Assembly-CSharp.dll";
+            if (File.Exists(path1))
+                File.Delete(path1);
+            string path2 = "ext/Assembly-CSharp.original.dll";
+            if (!File.Exists(path2))
+                return;
+            File.Delete(path2);
+        }
+
         private void Inject()
         {
             if (!this.HSpath.Equals(""))
             {
-                string injPath = Path.Combine(rootPath + extPath + "/Injector.exe");
+                string injPath = Path.Combine(rootPath, "ext/Injector.exe");
                 if (File.Exists(injPath))
                 {
-                    try
+                    IntPtr hwnd = FindWindow(null, "Battle.net");
+                    if (hwnd == IntPtr.Zero)
                     {
-                        string destAssemblyPath = Path.Combine(this.HSpath, "Hearthstone_Data\\Managed\\Assembly-CSharp.dll");
-                        string destAssemblyUnity = Path.Combine(this.HSpath, "Hearthstone_Data\\Managed\\UnityEngine.dll");
-                        string destMonoCecil = Path.Combine(this.HSpath, "Hearthstone_Data\\Managed\\Mono.Cecil.dll");
-                        string destHearthstone = Path.Combine(this.HSpath, "Hearthstone_Data\\Managed\\Hearthstone.dll");
-                        string assemblyMonoCecil = Path.Combine(rootPath, extPath, "Mono.Cecil.dll");
-                        string assemblyUnityExt = Path.Combine(rootPath, extPath, "UnityEngine.dll");
-                        string assemblyCSharpExtOrig = Path.Combine(rootPath, extPath, "Assembly-CSharp.orig.dll");
-                        string assemblyCSharpExtPatched = Path.Combine(rootPath, extPath, "Assembly-CSharp.dll");
-                        string assemblyHearthstoneExt = Path.Combine(rootPath, extPath, "Hearthstone.dll");
-
-                        if (File.Exists(destAssemblyPath) && File.Exists(destAssemblyUnity))
+                        MessageBox.Show("Battle.net launcher is not opened. Open it first.");
+                        this.lblStatus.Text = "Injection Failed.";
+                        return;
+                    }
+                    if (!File.Exists(Path.Combine(rootPath, "injector/Assembly-CSharp.dll")))
+                        CopyInjectDLL(false);
+                    if (!File.Exists(Path.Combine(HSpath, "Hearthstone_Data/Managed/Assembly-CSharp.dll")))
+                    {
+                        MessageBox.Show("Error: Unable to detect Hearthstone file to replace (Assembly-CSharp.dll)!" + Environment.NewLine + "The game may be corrupted or the bot is outdated.");
+                        this.lblStatus.Text = "Injection Failed.";
+                        return;
+                    }
+                    this.lblStatus.Text = "Injecting files.";
+                    IEnumerable<string> source = Directory.EnumerateFiles(Path.Combine(rootPath, "ext"), "*.dll");
+                    foreach (string str in source)
+                    {
+                        string destFileName = HSpath + "/Hearthstone_Data/Managed/" + Path.GetFileName(str);
+                        try
                         {
-                            if (!File.Exists(assemblyCSharpExtOrig) || !File.Exists(assemblyUnityExt))
-                            {
-                                this.lblStatus.Text = "Copying files...";
-                                File.Copy(destAssemblyPath, assemblyCSharpExtOrig, true);
-                                File.Copy(destAssemblyUnity, assemblyUnityExt, true);
-                            }
-                            Process process = new Process();
-                            process.StartInfo.FileName = injPath;
-                            process.StartInfo.UseShellExecute = false;
-                            process.StartInfo.CreateNoWindow = true;
-                            process.StartInfo.WorkingDirectory = Path.Combine(rootPath + extPath + "/");
-                            process.Start();
-                            this.lblStatus.Text = "Injecting...";
-                            process.WaitForExit();
-                            if (process.ExitCode == 0)
-                            {
-                                File.Copy(assemblyHearthstoneExt, destHearthstone, true);
-                                File.Copy(assemblyCSharpExtPatched, destAssemblyPath, true);
-                                File.Copy(assemblyMonoCecil, destMonoCecil, true);
-                                File.WriteAllText(Path.Combine(this.HSpath, "plugins.txt"), Path.Combine(rootPath, "plugins"));
-                                this.lblStatus.Text = "Injection done";
-                            }
-                            else
-                                this.lblStatus.Text = "Error " + (object)process.ExitCode + " , check log file...";
+                            File.Copy(str, destFileName, true);
                         }
-                        else
+                        catch (IOException ex)
                         {
-                            int num = (int)MessageBox.Show("Impossible to locate some game DLLS..." + Environment.NewLine + "Please select right Hearthstone path in Edit menu." + Environment.NewLine
-                                + "The selected folder MUST contains both 'Data' and 'Hearthstone_Data' folders..." + Environment.NewLine + this.HSpath + "/Hearthstone_Data/Managed/Assembly-CSharp.dll", "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                            MessageBox.Show("Error: Unable to copy/inject files into Hearthstone!" + Environment.NewLine + "Maybe the game is running?");
+                            this.lblStatus.Text = "Injection Failed.";
+                            return;
                         }
                     }
-                    catch (IOException ex)
-                    {
-                        int num = (int)MessageBox.Show("Error during file copy. Maybe the game is running ?", "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
-                    }
-                    catch (Exception ex)
-                    {
-                        int num = (int)MessageBox.Show(ex.StackTrace);
-                    }
+                    this.lblStatus.Text = "Injection Done.";
+                    //MessageBox.Show("Injected " + Enumerable.Count<string>(source).ToString() + " files" + Environment.NewLine + "Ready to launch Hearthstone");
+                    SetForegroundWindow(hwnd);
                 }
                 else
                 {
-                    int num1 = (int)MessageBox.Show("Impossible to find " + Path.Combine(rootPath + extPath + "/Injector.exe"), "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                    int num1 = (int)MessageBox.Show("Impossible to find " + Path.Combine(rootPath + "ext/Injector.exe"), "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
                 }
             }
             else
@@ -242,6 +274,12 @@ namespace UI
                 int num2 = (int)MessageBox.Show("You have to select the HearthStone main path before injecting!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
         }
+
+        [DllImport("USER32.DLL", CharSet = CharSet.Unicode)]
+        public static extern IntPtr FindWindow(String lpClassName, String lpWindowName);
+
+        [DllImport("USER32.DLL")]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
 
         private void UpdateBotStatus()
         {
@@ -276,7 +314,7 @@ namespace UI
             }
             catch (Exception e)
             {
-                UpdateBotStatusLabels("Error");
+                UpdateBotStatusLabels("disco");
             }
         }
 
@@ -318,6 +356,7 @@ namespace UI
                     }
                 case "disco":
                     lblBotStatus.Text = "Disconnected";
+                    UpdateButtons(false);
                     break;
                 default:
                     lblBotStatus.Text = responseData;
