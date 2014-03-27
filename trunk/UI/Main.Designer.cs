@@ -65,6 +65,7 @@
             this.label8 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.cmbQuests1 = new System.Windows.Forms.ComboBox();
+            this.btnRenew = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabMain.SuspendLayout();
             this.tabStat.SuspendLayout();
@@ -227,6 +228,7 @@
             // 
             // tabMain
             // 
+            this.tabMain.Controls.Add(this.btnRenew);
             this.tabMain.Controls.Add(this.lblLastCommand);
             this.tabMain.Controls.Add(this.label7);
             this.tabMain.Controls.Add(this.btnInject);
@@ -440,6 +442,16 @@
             this.cmbQuests1.Size = new System.Drawing.Size(308, 21);
             this.cmbQuests1.TabIndex = 0;
             // 
+            // btnRenew
+            // 
+            this.btnRenew.Location = new System.Drawing.Point(6, 35);
+            this.btnRenew.Name = "btnRenew";
+            this.btnRenew.Size = new System.Drawing.Size(144, 23);
+            this.btnRenew.TabIndex = 21;
+            this.btnRenew.Text = "Renew HS Files";
+            this.btnRenew.UseVisualStyleBackColor = true;
+            this.btnRenew.Click += new System.EventHandler(this.btnRenew_Click);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -501,6 +513,7 @@
         private System.Windows.Forms.Button btnGetQuest;
         private System.Windows.Forms.ComboBox cmbQuests3;
         private System.Windows.Forms.ComboBox cmbQuests2;
+        private System.Windows.Forms.Button btnRenew;
     }
 }
 
