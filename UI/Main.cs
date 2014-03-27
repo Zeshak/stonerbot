@@ -48,13 +48,21 @@ namespace UI
             socketThread = new Thread(new ThreadStart(UpdateBotStatus));
             socketThread.Start();
             InitializeComponent();
-            string exePath = Assembly.GetExecutingAssembly().CodeBase;
-            rootPath = exePath.Substring(0, exePath.LastIndexOf("/") + 1).Replace("file:///", "");
-            if (rootPath.Contains("bin/Debug"))
-                rootPath = rootPath.Replace("/UI/bin/Debug", "");
 
             Microsoft.Win32.RegistryKey key;
             key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("StonerBot");
+            if (key == null)
+            {
+                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("StonerBot");
+                key.SetValue("RootPath", rootPath);
+                key.Close();
+            }
+            else
+            {
+                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("StonerBot");
+                rootPath = (string)key.GetValue("RootPath");
+                key.Close();
+            }
             string[] quests = new string[]
             {
                 "",
@@ -72,12 +80,6 @@ namespace UI
             cmbQuests1.DataSource = quests.Clone();
             cmbQuests2.DataSource = quests.Clone();
             cmbQuests3.DataSource = quests.Clone();
-            if (key == null)
-            {
-                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("StonerBot");
-                key.SetValue("RootPath", rootPath);
-                key.Close();
-            }
             if (File.Exists(Path.Combine(rootPath, "Config.cfg")))
             {
                 HSpath = File.ReadAllText(Path.Combine(rootPath, "Config.cfg"));
