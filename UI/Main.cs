@@ -170,6 +170,11 @@ namespace UI
             this.lblLastCommand.Text = string.Empty;
         }
 
+        private void btnRenew_Click(object sender, EventArgs e)
+        {
+            CopyInjectDLL(true);
+        }
+
         #endregion
 
         private void CopyInjectDLL(bool renew = false)
@@ -215,10 +220,10 @@ namespace UI
 
         private void DeleteOldDLL()
         {
-            string path1 = "ext/Assembly-CSharp.dll";
+            string path1 = Path.Combine(rootPath, "ext/Assembly-CSharp.dll");
             if (File.Exists(path1))
                 File.Delete(path1);
-            string path2 = "ext/Assembly-CSharp.original.dll";
+            string path2 = Path.Combine(rootPath, "ext/Assembly-CSharp.orig.dll");
             if (!File.Exists(path2))
                 return;
             File.Delete(path2);
