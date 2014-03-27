@@ -98,8 +98,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y $(TargetPath) $(SolutionDir)Release
-copy /Y $(SolutionDir)ext\ $(SolutionDir)Release\ext\
+    <PostBuildEvent>copy /Y $(SolutionDir)ext\ $(SolutionDir)Release\ext\
 copy /Y $(SolutionDir)plugins\ $(SolutionDir)Release\plugins\</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
