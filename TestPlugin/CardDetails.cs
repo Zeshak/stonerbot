@@ -436,6 +436,12 @@ namespace Plugin
                         return true;
                     return false;
                 #endregion
+                #region -[ Pyroblast ]-
+                case "EX1_279":
+                    if (GameFunctions.ePlayer.GetRealTimeRemainingHP() <= 10)
+                        return true;
+                    return false;
+                #endregion
                 #endregion
                 #region -[ Priest ]-
                 #region -[ Holy Nova ]-

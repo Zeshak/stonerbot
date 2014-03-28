@@ -105,7 +105,7 @@
             this.Controls.Add(this.txtuser);
             this.Controls.Add(this.btnlogin);
             this.Name = "LoginApp";
-            this.Text = "Form1";
+            this.Text = "Stonerbot";
             this.Load += new System.EventHandler(this.LoginApp_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
