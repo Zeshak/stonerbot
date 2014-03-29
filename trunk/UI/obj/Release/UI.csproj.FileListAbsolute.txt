@@ -12,3 +12,4 @@ G:\stonerbot\UI\obj\Release\UI.Properties.Resources.resources
 G:\stonerbot\UI\obj\Release\UI.csproj.GenerateResource.Cache
 G:\stonerbot\UI\obj\Release\UI.exe
 G:\stonerbot\UI\obj\Release\UI.pdb
+G:\stonerbot\UI\obj\Release\Login.LoginApp.resources

@@ -65,7 +65,7 @@ namespace Login
 
         private void playSimpleSound()
         {
-            SoundPlayer simpleSound = new SoundPlayer(@"G:\stonerbot\LoginUI\murloc sound.wav");
+            SoundPlayer simpleSound = new SoundPlayer(@"G:\stonerbot\murloc sound.wav");
             simpleSound.Play();
         }
 
