@@ -76,10 +76,11 @@ namespace Plugin
                     }
                 }
                 Card cardToPlay = new Card();
-                CardDetails targetCardDetails = NeedsToPlayDisableDestroySilence();
+                GameFunctions.turnState = GameFunctions.TurnStates.CHECK_DISABLEDESTROYSILENCE;
+                CardDetails targetCardDetails = GetTargetToDisableDestroySilence();
                 if (targetCardDetails != null)
                 {
-                    GameFunctions.turnState = GameFunctions.TurnStates.DROP_FIRSTSPELL;
+                    GameFunctions.turnState = GameFunctions.TurnStates.DROP_DISABLEDESTROYSILENCE;
                     cardToPlay = NextDisableDestroySilence(targetCardDetails);
                     if (cardToPlay != null)
                     {
@@ -110,7 +111,7 @@ namespace Plugin
                     return GameFunctions.DoDrop(cardToPlay);
                 else
                 {
-                    GameFunctions.turnState = GameFunctions.TurnStates.DROP_WEAPONS;
+                    GameFunctions.turnState = GameFunctions.TurnStates.DO_HEROPOWER;
                     return LaunchHeroPower();
                 }
             }
@@ -198,7 +199,9 @@ namespace Plugin
         {
             foreach (Card card in GameFunctions.myPlayer.GetHandZone().GetCards())
             {
-                if (card.GetEntity().GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && GameFunctions.CanBeUsed(card) && CardDetails.IsViableToPlay(card, targetCardDetails, true))
+                if (card.GetEntity().GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() 
+                    && GameFunctions.CanBeUsed(card) 
+                    && CardDetails.IsViableToPlay(card, targetCardDetails, true))
                     return card;
             }
             return null;
@@ -208,7 +211,7 @@ namespace Plugin
         /// Verifica si es necesario jugar un spell antes que otra carta, siempre con prioridad en spell y luego en silence
         /// </summary>
         /// <returns>El CardDetails a la cual le apuntamos el spell</returns>
-        private static CardDetails NeedsToPlayDisableDestroySilence()
+        private static CardDetails GetTargetToDisableDestroySilence()
         {
             List<CardDetails> listCards = GameFunctions.GetBattlefieldCardDetails();
             bool spellPriority = false;

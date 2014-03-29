@@ -132,7 +132,7 @@ namespace Plugin
 
         public static List<CardDetails> ListCardDetails = new List<CardDetails>();
         public Card Card;
-        
+
 
         public string CardId = "";
         public string CardName = "";
@@ -432,14 +432,48 @@ namespace Plugin
                 #endregion
                 #region -[ Fireball ]-
                 case "CS2_029":
-                    if (GameFunctions.ePlayer.GetRealTimeRemainingHP() < 7)
-                        return true;
+                    switch (GameFunctions.turnState)
+                    {
+                    
+                        case GameFunctions.TurnStates.DROP_DISABLEDESTROYSILENCE:
+                            if (specialParameter == null)
+                                return false;
+                            CardDetails targetEntity = (CardDetails)specialParameter;
+                            bool targetIsEnemy = GameFunctions.IsEnemyCard(targetEntity.Card);
+                            if ((targetEntity.Card.GetEntity().GetRealTimeRemainingHP() >= 6) 
+                                || targetEntity.DestroyThis
+                                || GameFunctions.ePlayer.GetRealTimeRemainingHP() <= 6)
+                                return true;
+                            break;
+                        case GameFunctions.TurnStates.DROP_SECONDSPELL:
+                            //TODO: Checkear si nos conviene más tirar el fireball o si nos conviene tirar el hero power y quizás otra carta de la mano.
+                            return true;
+                        default:
+                            break;
+                    }
                     return false;
                 #endregion
                 #region -[ Pyroblast ]-
                 case "EX1_279":
-                    if (GameFunctions.ePlayer.GetRealTimeRemainingHP() <= 10)
-                        return true;
+                    switch (GameFunctions.turnState)
+                    {
+
+                        case GameFunctions.TurnStates.DROP_DISABLEDESTROYSILENCE:
+                            if (specialParameter == null)
+                                return false;
+                            CardDetails targetEntity = (CardDetails)specialParameter;
+                            bool targetIsEnemy = GameFunctions.IsEnemyCard(targetEntity.Card);
+                            if ((targetEntity.Card.GetEntity().GetRealTimeRemainingHP() >= 10)
+                                || targetEntity.DestroyThis
+                                || GameFunctions.ePlayer.GetRealTimeRemainingHP() <= 10)
+                                return true;
+                            break;
+                        case GameFunctions.TurnStates.DROP_SECONDSPELL:
+                            //TODO: Checkear si nos conviene más tirar el fireball o si nos conviene tirar el hero power y quizás otra carta de la mano.
+                            return true;
+                        default:
+                            break;
+                    }
                     return false;
                 #endregion
                 #endregion
@@ -547,12 +581,14 @@ namespace Plugin
                 #endregion
                 #region -[ Execute ]-
                 case "CS2_108":
-                   {
+                    {
+                        if (specialParameter == null)
+                            return false;
                         CardDetails targetEntity = (CardDetails)specialParameter;
-                       if (targetEntity.Card.GetEntity().GetHealth() != targetEntity.Card.GetEntity().GetOriginalHealth())
-                         return true;
-                      return false;
-                   }
+                        if (targetEntity.Card.GetEntity().GetHealth() > targetEntity.Card.GetEntity().GetRealTimeRemainingHP() && targetEntity.DestroyThis)
+                            return true;
+                        return false;
+                    }
                 #endregion
                 #endregion
                 default:
