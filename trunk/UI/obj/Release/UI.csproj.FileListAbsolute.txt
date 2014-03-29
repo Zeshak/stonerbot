@@ -1,0 +1,14 @@
+G:\stonerbot\UI\bin\Release\UI.exe.config
+G:\stonerbot\UI\bin\Release\UI.exe
+G:\stonerbot\UI\bin\Release\UI.pdb
+G:\stonerbot\UI\bin\Release\Hearthstone.dll
+G:\stonerbot\UI\bin\Release\Injector.exe
+G:\stonerbot\UI\bin\Release\Mono.Cecil.dll
+G:\stonerbot\UI\bin\Release\Hearthstone.pdb
+G:\stonerbot\UI\bin\Release\Injector.pdb
+G:\stonerbot\UI\obj\Release\UI.csprojResolveAssemblyReference.cache
+G:\stonerbot\UI\obj\Release\UI.Main.resources
+G:\stonerbot\UI\obj\Release\UI.Properties.Resources.resources
+G:\stonerbot\UI\obj\Release\UI.csproj.GenerateResource.Cache
+G:\stonerbot\UI\obj\Release\UI.exe
+G:\stonerbot\UI\obj\Release\UI.pdb
