@@ -22,7 +22,8 @@ namespace Plugin
         public enum TurnStates
         {
             CHECK_CANWIN,
-            DROP_FIRSTSPELL,
+            CHECK_DISABLEDESTROYSILENCE,
+            DROP_DISABLEDESTROYSILENCE,
             DROP_MINIONS,
             DROP_SECRETS,
             DROP_WEAPONS,
