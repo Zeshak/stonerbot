@@ -170,7 +170,7 @@ namespace Plugin
                 InputManager input_man = InputManager.Get();
                 if (input_man.heldObject == null)
                 {
-                    Log.log("Nothing held, when trying to drop");
+                    Log.debug("Nothing held, when trying to drop");
                     return false;
                 }
                 ZonePlay m_myPlayZone = ReflectionFunctions.get_m_myPlayZone();
@@ -206,6 +206,7 @@ namespace Plugin
                 bool is_minion = myCardEntity.IsMinion();
                 bool is_weapon = myCardEntity.IsWeapon();
 
+                Log.debug("Drop card continued");
                 if (is_minion || is_weapon)
                 {
                     Zone destinationZone = (!is_weapon) ? (Zone)m_myPlayZone : (Zone)m_myHandZone;
@@ -310,7 +311,11 @@ namespace Plugin
                 }
                 GameFunctions.myHandZone.UpdateLayout(-1, true);
                 GameFunctions.myPlayZone.SortWithSpotForHeldCard(-1);
-                Plugin.Delay(3000);
+                CardDetails cd = CardDetails.FindInCardDetails(myCard);
+                if (cd != null && cd.CardDelay != 0)
+                    Plugin.Delay(cd.CardDelay);
+                else
+                    Plugin.Delay(3000);
 
                 if (needsTargeting)
                 {
@@ -342,6 +347,7 @@ namespace Plugin
                         EnemyActionHandler.Get().NotifyOpponentOfCardDropped();
                     }
                 }
+                Log.debug("Drop card finished");
                 return true;
             }
             catch (Exception ex)
@@ -417,14 +423,10 @@ namespace Plugin
         {
             if (MulliganManager.Get().GetMulliganButton() == null || !MulliganManager.Get().GetMulliganButton().IsEnabled())
                 return false;
-            List<Card> swap = new List<Card>();
             foreach (Card card in GameFunctions.myPlayer.GetHandZone().GetCards())
-                if (card.GetEntity().GetCost() >= 4)
-                    swap.Add(card);
+                if (card.GetEntity().GetCost() >= 4 || !card.GetEntity().IsMinion())
+                    MulliganManager.Get().ToggleHoldState(card);
 
-            foreach (Card card in swap)
-                MulliganManager.Get().ToggleHoldState(card);
-            Log.debug("End Mulligan for real");
             MulliganManager.Get().EndMulligan();
             GameFunctions.DoEndTurn();
             return true;
@@ -433,7 +435,6 @@ namespace Plugin
         public static void DoEndTurn()
         {
             InputManager.Get().DoEndTurnButton();
-            GameFunctions.canWinThisTurnFirstTimeDone = false;
             GameFunctions.turnState = null;
         }
 

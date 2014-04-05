@@ -53,28 +53,29 @@ namespace Plugin
             }
             else
             {
-                if (GameFunctions.massiveDropList != null && GameFunctions.massiveDropList.Count > 0)
+                /*if (GameFunctions.massiveDropList != null && GameFunctions.massiveDropList.Count > 0)
                 {
-                    Log.debug("**************massiveDropList****************");
                     GameFunctions.DoDrop(GameFunctions.massiveDropList[0]);
                     GameFunctions.massiveDropList.RemoveAt(0);
-                    Log.debug("**************EndmassiveDropList****************");
                     return true;
                 }
                 else
                 {
-                    if (!GameFunctions.canWinThisTurnFirstTimeDone && BruteAI.CanWinThisTurn())
+                    if (!GameFunctions.canWinThisTurnFirstTimeDone)
                     {
-                        GameFunctions.canWinThisTurnFirstTimeDone = true;
-                        GameFunctions.canWinThisTurn = true;
-                        Log.debug("Puedo ganar este turno");
+                        if (BruteAI.CanWinThisTurn())
+                        {
+                            GameFunctions.canWinThisTurnFirstTimeDone = true;
+                            GameFunctions.canWinThisTurn = true;
+                            Log.debug("Puedo ganar este turno");
+                        }
+                        else
+                        {
+                            GameFunctions.canWinThisTurnFirstTimeDone = true;
+                            GameFunctions.canWinThisTurn = false;
+                        }
                     }
-                    else
-                    {
-                        GameFunctions.canWinThisTurnFirstTimeDone = true;
-                        GameFunctions.canWinThisTurn = false;
-                    }
-                }
+                }*/
                 Card cardToPlay = new Card();
                 GameFunctions.turnState = GameFunctions.TurnStates.CHECK_DISABLEDESTROYSILENCE;
                 CardDetails targetCardDetails = GetTargetToDisableDestroySilence();
@@ -84,8 +85,10 @@ namespace Plugin
                     cardToPlay = NextDisableDestroySilence(targetCardDetails);
                     if (cardToPlay != null)
                     {
-                        return GameFunctions.DoDrop(cardToPlay, targetCardDetails.Card.GetEntity());
+                        bool returned = GameFunctions.DoDrop(cardToPlay, targetCardDetails.Card.GetEntity());
                         Plugin.Delay(5000);
+                        Log.debug("Return 1 " + returned.ToString());
+                        return returned;
                     }
                 }
                 if (BruteAI.tryToPlayCoin())
@@ -93,26 +96,44 @@ namespace Plugin
                 GameFunctions.turnState = GameFunctions.TurnStates.DROP_SECRETS;
                 cardToPlay = NextBestSecret();
                 if (cardToPlay != null)
-                    return GameFunctions.DoDrop(cardToPlay);
+                {
+                    bool returned = GameFunctions.DoDrop(cardToPlay);
+                    Log.debug("Return 2 " + returned.ToString());
+                    return returned;
+                }
 
                 GameFunctions.turnState = GameFunctions.TurnStates.DROP_WEAPONS;
                 cardToPlay = NextBestWeapon();
                 if (cardToPlay != null)
-                    return GameFunctions.DoDrop(cardToPlay);
+                {
+                    bool returned = GameFunctions.DoDrop(cardToPlay);
+                    Log.debug("Return 3 " + returned.ToString());
+                    return returned;
+                }
 
                 GameFunctions.turnState = GameFunctions.TurnStates.DROP_MINIONS;
                 cardToPlay = NextBestMinionDrop();
                 if (cardToPlay != null)
-                    return GameFunctions.DoDrop(cardToPlay);
+                {
+                    bool returned = GameFunctions.DoDrop(cardToPlay);
+                    Log.debug("Return 4 " + returned.ToString());
+                    return returned;
+                }
 
                 GameFunctions.turnState = GameFunctions.TurnStates.DROP_SECONDSPELL;
                 cardToPlay = NextBestSpell();
                 if (cardToPlay != null)
-                    return GameFunctions.DoDrop(cardToPlay);
+                {
+                    bool returned = GameFunctions.DoDrop(cardToPlay);
+                    Log.debug("Return 5 " + returned.ToString());
+                    return returned;
+                }
                 else
                 {
+                    bool returned = LaunchHeroPower();
                     GameFunctions.turnState = GameFunctions.TurnStates.DO_HEROPOWER;
-                    return LaunchHeroPower();
+                    Log.debug("Return 6 " + returned.ToString());
+                    return returned;
                 }
             }
         }
@@ -237,6 +258,8 @@ namespace Plugin
         {
             foreach (Card c in GameFunctions.myPlayer.GetHandZone().GetCards())
             {
+                if (!(CardDetails.IsViableToPlay(c, null, true)))
+                    continue;
                 Entity entity = c.GetEntity();
                 if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSecret() && GameFunctions.CanBeUsed(c))
                     return c;
@@ -249,7 +272,7 @@ namespace Plugin
             foreach (Card c in Enumerable.ToList<Card>(GameFunctions.myPlayer.GetHandZone().GetCards()))
             {
                 CardDetails cd = CardDetails.FindInCardDetails(c);
-                if (!(CardDetails.IsViableToPlay(c, null, true)))
+                if (!(CardDetails.IsViableToPlay(c, null, false)))
                     continue;
                 Entity entity = c.GetEntity();
                 if (entity.GetCost() <= GameFunctions.myPlayer.GetNumAvailableResources() && entity.IsSpell())
@@ -275,8 +298,8 @@ namespace Plugin
         {
             if (GameFunctions.myPlayer.GetNumAvailableResources() < GameFunctions.myPlayer.GetHeroPower().GetCost()
                 || GameFunctions.myPlayer.GetHeroPower().IsExhausted()
-                || (GameFunctions.myPlayer.GetHeroPower().IsBusy()
-                || !GameFunctions.myPlayer.GetHeroPower().CanAttack())
+                || GameFunctions.myPlayer.GetHeroPower().IsBusy()
+                || !GameFunctions.myPlayer.GetHeroPower().CanAttack()
                 || !GameFunctions.CanBeUsed(GameFunctions.myPlayer.GetHeroPower().GetCard()))
                 return false;
 
@@ -327,7 +350,7 @@ namespace Plugin
             foreach (Card card in Enumerable.ToList<Card>((IEnumerable<Card>)GameFunctions.myPlayer.GetHandZone().GetCards()))
             {
                 Entity entity = card.GetEntity();
-                if (entity.GetCost() == GameFunctions.myPlayer.GetNumAvailableResources() + 1)
+                if (entity.GetCost() == GameFunctions.myPlayer.GetNumAvailableResources() + 1 && entity.IsMinion())
                     flag = true;
                 if (entity.GetCardId() == "GAME_005")
                     c = card;
@@ -415,16 +438,15 @@ namespace Plugin
         /// <returns>true si hay que seguir entrando acá, false si se terminaron los ataques.</returns>
         public static bool BruteAttack()
         {
-            Log.debug("**************Brute Attack****************");
             if (GameFunctions.massiveAttackList == null || GameFunctions.massiveAttackList.Count == 0)
             {
+                Log.debug("massiveAttackList estaba vacía");
                 GameFunctions.massiveAttackList = new List<Card>();
                 GameFunctions.massiveAttackAttackee = BruteAI.GetBestAttackee();
                 if (GameFunctions.massiveAttackAttackee == null)
                     return false;
                 Log.debug("El attackee resultó ser: " + GameFunctions.massiveAttackAttackee.ToString());
                 GameFunctions.massiveAttackList = BruteAI.GetBestAttackerCombination(GameFunctions.massiveAttackAttackee, GameFunctions.myPlayer.GetBattlefieldZone().GetCards(), GameFunctions.canWinThisTurn);
-                Log.debug("5");
                 if (GameFunctions.massiveAttackAttackee == null || GameFunctions.massiveAttackList == null || GameFunctions.massiveAttackList.Count == 0)
                 {
                     Log.debug("massiveAttackList está vacía");
@@ -434,6 +456,7 @@ namespace Plugin
             }
             else
             {
+                Log.debug("massiveAttackList no estaba vacía");
                 if (GameFunctions.massiveAttackAttackee == null)
                     return true;
                 GameFunctions.DoAttack(GameFunctions.massiveAttackList[0], GameFunctions.massiveAttackAttackee);
@@ -443,7 +466,6 @@ namespace Plugin
 
         public static List<Card> GetBestAttackerCombination(Card hisCardInPlay, List<Card> listCardsInMyBF, bool maximizeDamage = false)
         {
-            Log.debug("**************GetBestAttackerComb****************");
             List<Card> eligibleCards = new List<Card>();
             if (hisCardInPlay == null)
                 return null;
@@ -528,7 +550,10 @@ namespace Plugin
                 }
 
                 if (eligibleCards != null && eligibleCards.Count > 0)
+                {
+                    Log.debug("Devuelve algo...");
                     return eligibleCards;
+                }
             }
             else
             {
@@ -546,13 +571,10 @@ namespace Plugin
             {
                 //Sino empieza a atacar al héroe de manera random con todos los minions que se vaya pudiendo
                 c.GetEntity();
-                Log.debug("1");
                 if (GameFunctions.CanAttack(c))
                 {
-                    Log.debug("2");
                     if (new System.Random().NextDouble() > 0.5)
                     {
-                        Log.debug("3");
                         eligibleCards.Clear();
                         eligibleCards.Add(c);
                         return eligibleCards;
@@ -560,7 +582,6 @@ namespace Plugin
                     eligibleCards.Add(c);
                 }
             }
-            Log.debug("4");
             if (eligibleCards != null && eligibleCards.Count > 0)
                 return eligibleCards;
             else
@@ -569,7 +590,6 @@ namespace Plugin
 
         public static List<Card> GetCombinatedAttackersThatKill(Card hisCard, bool maximizeDamage)
         {
-            Log.debug("**************GetCombinatedAttackersThatKill****************");
             List<Card> myCardsInBF = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
             if (myCardsInBF == null || myCardsInBF.Count == 0)
                 return new List<Card>();
@@ -584,16 +604,15 @@ namespace Plugin
             int thisGroupCardsDamage = 0;
             int thisGroupDamageTaken = 0;
             bool first = true;
-            Log.debug("****Cartas para jugar en Combinated****");
+            /*Log.debug("****Cartas para jugar en Combinated****");
             Log.debug("Su carta es: " + hisCard.ToString() + " ATK: " + hisCard.GetEntity().GetRealTimeAttack() + " HP: " + hisCard.GetEntity().GetRealTimeRemainingHP());
             Log.debug("Tengo " + myCardsInBF.Count.ToString() + " cartas en juego");
             Log.debug("Puedo hacer " + listOfCardCombinations.Count.ToString() + " combinaciones");
             Log.debug("En juego tengo:");
             foreach (Card c in myCardsInBF)
-                Log.debug(c.ToString() + " ATK: " + c.GetEntity().GetRealTimeAttack() + " HP: " + c.GetEntity().GetRealTimeRemainingHP());
+                Log.debug(c.ToString() + " ATK: " + c.GetEntity().GetRealTimeAttack() + " HP: " + c.GetEntity().GetRealTimeRemainingHP());*/
             foreach (List<Card> thisList in listOfCardCombinations)
             {
-                Log.debug("Marcando cuantas veces pasa por acá");
                 thisGroupCardsDead = 0;
                 thisGroupCardsDamage = 0;
                 thisGroupDamageTaken = 0;
@@ -648,9 +667,9 @@ namespace Plugin
                         bestCards.Add(card);
                 }
             }
-            foreach (Card c in bestCards)
-                Log.debug("Mis atacantes: " + c.ToString());
-            Log.debug("***************************************");
+            //foreach (Card c in bestCards)
+            //    Log.debug("Mis atacantes: " + c.ToString());
+            //Log.debug("***************************************");
 
             return bestCards;
         }
@@ -711,91 +730,6 @@ namespace Plugin
                 GameFunctions.DoAttack(hero.GetCard(), attackee);
         }
 
-        /*public static Card GetBestAttacker(Card attackee)
-        {
-            if (attackee == null)
-                return null;
-            List<Card> myCardsInPlay = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
-            int hisCardATK = attackee.GetEntity().GetRealTimeAttack();
-            int hisCardHP = attackee.GetEntity().GetRealTimeRemainingHP();
-            if (attackee != GameFunctions.ePlayer.GetHeroCard())
-            {
-                Card selectedCard = null;
-                int bestSum = 0;
-                int thisSum = 0;
-                bool canSurvive = false;
-                bool willDie = false;
-                foreach (Card myCard in myCardsInPlay)
-                {
-                    if (!GameFunctions.CanBeUsed(myCard))
-                        continue;
-                    Entity myCardEntity = myCard.GetEntity();
-                    CardDetails cd = CardDetails.FindInCardDetails(myCard);
-                    int myCardHP = myCardEntity.GetRealTimeRemainingHP();
-                    int myCardATK = myCardEntity.GetRealTimeAttack();
-                    //Para los que no son extreme, y no tienen taunt, sólo los ataco con esa si el ataque de la carta es mayor a la HP y si el bicho me mataría
-                    if (cd != null && !cd.KillThisEXTREME && !attackee.GetEntity().HasTaunt() && myCardHP <= hisCardATK)
-                        continue;
-                    if (!attackee.GetEntity().HasDivineShield())
-                    {
-                        if (myCardATK >= hisCardHP && myCardHP > hisCardATK)
-                            return myCard;
-                        thisSum = myCardATK + myCardHP;
-                        if (myCardATK >= hisCardHP && (thisSum < bestSum || bestSum == 0))
-                        {
-                            selectedCard = myCard;
-                            bestSum = thisSum;
-                        }
-                    }
-                    else
-                    {
-                        //Mejorar esto, tendria que comprobar si lo puedo matar con Divine Shield.
-                        if (myCardHP <= hisCardATK && !canSurvive)
-                        {
-                            thisSum = myCardATK;
-                            if (thisSum < bestSum || bestSum == 0)
-                            {
-                                selectedCard = myCard;
-                                bestSum = thisSum;
-                                willDie = true;
-                            }
-                        }
-                        else
-                        {
-                            thisSum = myCardATK;
-                            if (thisSum < bestSum || bestSum == 0 || willDie)
-                            {
-                                selectedCard = myCard;
-                                bestSum = thisSum;
-                                canSurvive = true;
-                            }
-                        }
-                    }
-                }
-                if (selectedCard != null)
-                    return selectedCard;
-            }
-            else
-            {
-                Entity hero = GameFunctions.myPlayer.GetHero();
-                if (hero != null && GameFunctions.CanBeUsed(hero.GetCard()))
-                    return hero.GetCard();
-            }
-            Card card = null;
-            foreach (Card c in myCardsInPlay)
-            {
-                c.GetEntity();
-                if (GameFunctions.CanBeUsed(c))
-                {
-                    if (new System.Random().NextDouble() > 0.5)
-                        return c;
-                    card = c;
-                }
-            }
-            return card;
-        }*/
-
-
         public static Card GetBestAttackee()
         {
             return GetBestAttackee(0);
@@ -803,7 +737,6 @@ namespace Plugin
 
         public static Card GetBestAttackee(int hisMaxATK)
         {
-            Log.debug("**************GetBestAttackee****************");
             List<Card> hisCardListInPlay = GameFunctions.ePlayer.GetBattlefieldZone().GetCards();
             Card attackee = null;
             bool selHasTaunt = false;
@@ -838,23 +771,26 @@ namespace Plugin
                                 if (cd.KillThisEXTREME)
                                 {
                                     selEXTREME = true;
+                                    selHasTaunt = true;
                                     attackee = card;
                                 }
                                 else if (cd.KillThis && !selEXTREME)
                                 {
                                     selKillThis = true;
+                                    selHasTaunt = true;
                                     attackee = card;
                                 }
                                 else if (!selEXTREME && !selKillThis)
                                 {
                                     selKillThis = true;
+                                    selHasTaunt = true;
                                     attackee = card;
                                 }
                             }
                         }
                     }
                 }
-                if (cd != null)
+                if (cd != null && !selHasTaunt)
                 {
                     if (cd.KillThis)
                     {
@@ -868,7 +804,7 @@ namespace Plugin
                     }
                     if (cd.KillThisEXTREME)
                     {
-                        if (attackee == null || !selHasTaunt)
+                        if (attackee == null)
                         {
                             selEXTREME = true;
                             attackee = card;
@@ -896,10 +832,7 @@ namespace Plugin
             Entity targetEntity = null;
             var eHero = GameFunctions.ePlayer.GetHeroCard().GetEntity();
             if (GameFunctions.gs.IsValidOptionTarget(eHero))
-            {
-                Log.debug("Can attack hero");
                 targetEntity = eHero;
-            }
 
             List<Card> myPlayedCards = GameFunctions.myPlayer.GetBattlefieldZone().GetCards();
             if (myPlayedCards.Count > 0 && targetEntity == null)
@@ -908,15 +841,7 @@ namespace Plugin
                 {
                     var e = card.GetEntity();
                     if (GameFunctions.gs.IsValidOptionTarget(e))
-                    {
-                        Log.debug("is valid target: " + e.GetName());
-                        Log.debug("considering for battlecry: " + e.GetName());
                         targetEntity = e;
-                    }
-                    else
-                    {
-                        Log.debug("is NOT valid target: " + e.GetName());
-                    }
                 }
             }
 
@@ -927,9 +852,7 @@ namespace Plugin
                 {
                     var e = card.GetEntity();
                     if (GameFunctions.gs.IsValidOptionTarget(e))
-                    {
                         targetEntity = e;
-                    }
                 }
             }
             return targetEntity;

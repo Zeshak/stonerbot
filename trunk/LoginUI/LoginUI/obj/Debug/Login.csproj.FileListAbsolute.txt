@@ -18,3 +18,15 @@ G:\stonerbot\LoginUI\LoginUI\obj\Debug\Login.csprojResolveAssemblyReference.cach
 G:\stonerbot\LoginUI\LoginUI\obj\Debug\Login.LoginApp.resources
 G:\stonerbot\LoginUI\LoginUI\obj\Debug\Login.csproj.GenerateResource.Cache
 G:\stonerbot\LoginUI\LoginUI\obj\Debug\Login.Properties.Resources.resources
+D:\StonerBot\LoginUI\LoginUI\bin\Debug\WindowsFormsApplication3.exe.config
+D:\StonerBot\LoginUI\LoginUI\obj\Debug\WindowsFormsApplication3.exe
+D:\StonerBot\LoginUI\LoginUI\obj\Debug\WindowsFormsApplication3.pdb
+D:\StonerBot\LoginUI\LoginUI\obj\Debug\Login.csprojResolveAssemblyReference.cache
+D:\StonerBot\LoginUI\LoginUI\obj\Debug\Login.LoginApp.resources
+D:\StonerBot\LoginUI\LoginUI\obj\Debug\Login.Properties.Resources.resources
+D:\StonerBot\LoginUI\LoginUI\obj\Debug\Login.csproj.GenerateResource.Cache
+D:\StonerBot\LoginUI\LoginUI\bin\Debug\WindowsFormsApplication3.exe
+D:\StonerBot\LoginUI\LoginUI\bin\Debug\WindowsFormsApplication3.pdb
+D:\StonerBot\LoginUI\LoginUI\bin\Debug\MySql.Data.dll
+D:\StonerBot\LoginUI\LoginUI\bin\Debug\UI.exe
+D:\StonerBot\LoginUI\LoginUI\bin\Debug\UI.pdb
