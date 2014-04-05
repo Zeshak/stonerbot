@@ -192,7 +192,7 @@ namespace UI
             {
                 try
                 {
-                    File.Copy(Path.Combine(HSpath, "/Hearthstone_Data/Managed/Assembly-CSharp.dll"), str, true);
+                    File.Copy(Path.Combine(HSpath, "Hearthstone_Data/Managed/Assembly-CSharp.dll"), str, true);
                     lblStatus.Text = "Getting the new Assembly-CSharp.dll";
                 }
                 catch (IOException ex)
@@ -255,7 +255,7 @@ namespace UI
                     IEnumerable<string> source = Directory.EnumerateFiles(Path.Combine(rootPath, "ext"), "*.dll");
                     foreach (string str in source)
                     {
-                        string destFileName = HSpath + "/Hearthstone_Data/Managed/" + Path.GetFileName(str);
+                        string destFileName = Path.Combine(HSpath, "Hearthstone_Data/Managed/" + Path.GetFileName(str));
                         try
                         {
                             File.Copy(str, destFileName, true);

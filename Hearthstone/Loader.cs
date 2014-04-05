@@ -11,7 +11,6 @@ namespace Hearthstone
     {
         public void exec(string path) // creates shadow copy
         {
-            Log.debug("Loader.exec called for " + path);
             string tempPath = System.IO.Path.GetTempFileName();
 
             // rewrite name to let us load a different version of the same library
@@ -31,7 +30,6 @@ namespace Hearthstone
             var t = a.GetType("Plugin.Plugin");
             var c = Activator.CreateInstance(t);
             t.InvokeMember("init", BindingFlags.InvokeMethod, null, c, new object[] { });
-            Log.debug("Loader.runAssembly ran Plugin.Plugin.init for " + trueName);
         }
     }
 }

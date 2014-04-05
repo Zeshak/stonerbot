@@ -45,7 +45,6 @@ namespace Login
 
         private void LogIn()
         {
-            MessageBox.Show("Entro!");
             this.playSimpleSound();
             UI.Main main = new UI.Main();
             this.Hide();
@@ -55,7 +54,20 @@ namespace Login
 
         private void LoginApp_Load(object sender, EventArgs e)
         {
-
+            Microsoft.Win32.RegistryKey key;
+            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("StonerBot");
+            if (key == null)
+            {
+                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("StonerBot");
+                key.SetValue("RootPath", rootPath);
+                key.Close();
+            }
+            else
+            {
+                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("StonerBot");
+                rootPath = (string)key.GetValue("RootPath");
+                key.Close();
+            }
         }
 
         private void button1_Click_1(object sender, EventArgs e)
@@ -65,10 +77,12 @@ namespace Login
 
         private void playSimpleSound()
         {
-            SoundPlayer simpleSound = new SoundPlayer(@"G:\stonerbot\LoginUI\murloc sound.wav");
-            simpleSound.Play();
-        }
-
-       
+            string soundPath = Path.Combine(rootPath, "sound1.wav");
+            if (!File.Exists(soundPath))
+            {
+                SoundPlayer simpleSound = new SoundPlayer(soundPath);
+                simpleSound.Play();
+            }
+        }       
     }
 }

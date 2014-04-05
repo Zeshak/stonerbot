@@ -110,10 +110,10 @@ namespace Plugin
         #region -[ Warlock ]-
         private class Hellfire
         {
-            public static int MyMaxCardsInPlay = 1;
-            public static int MyMaxCardsDestroyed = 0;
-            public static int EnemyMinCardsInPlay = 2;
-            public static int CardDamage = 2;
+            public static int MyMaxCardsInPlay = 3;
+            public static int MyMaxCardsDestroyed = 1;
+            public static int EnemyMinCardsInPlay = 3;
+            public static int CardDamage = 3;
             public static int CardsDestroyed = 2;
         }
         #endregion
@@ -136,6 +136,7 @@ namespace Plugin
 
         public string CardId = "";
         public string CardName = "";
+        public int CardDelay = 0;
 
         //Propiedades más usadas para minions y cartas enemigas
         public bool KillThis = false;
@@ -180,6 +181,16 @@ namespace Plugin
         public static void SetCardDetails()
         {
             CardDetails cd;
+
+            #region -[ Delay al jugar cartas propias ]-
+            #region -[ Coldlight Oracle ]-
+            cd = new CardDetails();
+            cd.CardId = "EX1_050";
+            cd.CardName = "Coldlight Oracle";
+            cd.CardDelay = 6000;
+            ListCardDetails.Add(cd);
+            #endregion
+            #endregion
 
             #region -[ Cartas Enemigas ]-
             #region -[ Abomination ]-
@@ -279,12 +290,6 @@ namespace Plugin
             ListCardDetails.Add(cd);
             #endregion
             #endregion
-
-            cd = new CardDetails();
-            cd.CardId = "CS2_182";
-            cd.CardName = "sdsa";
-            cd.DisableThis = true;
-            ListCardDetails.Add(cd);
         }
 
         /// <summary>
@@ -374,8 +379,6 @@ namespace Plugin
                         return false;
                     }
                 #endregion
-
-
                 #endregion
                 #region -[ Hunter ]-
                 #region -[ Explosive Trap ]-
@@ -514,6 +517,18 @@ namespace Plugin
                 #endregion
                 #endregion
                 #region -[ Rogue ]-
+                #region -[ Sap ]-
+                case "EX1_581":
+                    {
+                        if (specialParameter == null)
+                            return false;
+                        CardDetails targetEntity = (CardDetails)specialParameter;
+                        bool targetIsEnemy = GameFunctions.IsEnemyCard(targetEntity.Card);
+                        if (targetEntity.DisableThis && targetIsEnemy)
+                            return true;
+                        return false;
+                    }
+                #endregion
                 #region -[ Assassinate ]-
                 case "CS2_076":
                     {
@@ -627,7 +642,7 @@ namespace Plugin
         /// <returns>Devuelve si cumple la condición.</returns>
         private static bool CommonMultipleSpellDamageALL(int CardDamage, int CardsDestroyed, int EnemyMinCardsInPlay, int MyMaxCardsInPlay, int MyMaxCardsDestroyed)
         {
-            if (MyMaxCardsInPlay >= GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount())
+            if (MyMaxCardsInPlay <= GameFunctions.myPlayer.GetBattlefieldZone().GetCardCount())
             {
                 int count = 0;
                 foreach (Card card in GameFunctions.myPlayer.GetBattlefieldZone().GetCards())

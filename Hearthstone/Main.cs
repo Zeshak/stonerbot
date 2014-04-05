@@ -17,7 +17,6 @@ namespace Hearthstone
         {
             var w = new Watchdog();
             w.startWatch();
-            Log.debug("Sigmund online");
             w.RunPlugin("TestPlugin");
         }
     }

@@ -53,8 +53,12 @@
     <Reference Include="Mono.Cecil">
       <HintPath>..\ext\Mono.Cecil.dll</HintPath>
     </Reference>
-    <Reference Include="MySql.Data, Version=6.8.3.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL" />
-    <Reference Include="SkinSoft.VisualStyler, Version=2.4.0.0, Culture=neutral, PublicKeyToken=0fda9f423e1d9830, processorArchitecture=MSIL" />
+    <Reference Include="MySql.Data">
+      <HintPath>.\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="SkinSoft.VisualStyler">
+      <HintPath>.\SkinSoft.VisualStyler.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
@@ -86,6 +90,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="LoginApp.resx">
       <DependentUpon>LoginApp.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
@@ -144,8 +149,12 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y $(SolutionDir)ext\ $(SolutionDir)Release\ext\
-copy /Y $(SolutionDir)plugins\ $(SolutionDir)Release\plugins\</PostBuildEvent>
+    <PostBuildEvent>copy /Y $(TargetPath) $(SolutionDir)Release
+copy /Y $(SolutionDir)ext\ $(SolutionDir)Release\ext\
+copy /Y $(SolutionDir)plugins\ $(SolutionDir)Release\plugins\
+copy /Y $(SolutionDir)UI\MySql.Data.dll $(SolutionDir)Release\MySql.Data.dll
+copy /Y $(SolutionDir)UI\SkinSoft.VisualStyler.dll $(SolutionDir)Release\SkinSoft.VisualStyler.dll
+copy /Y $(SolutionDir)UI\sound1.wav $(SolutionDir)Release\sound1.wav</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

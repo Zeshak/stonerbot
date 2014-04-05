@@ -375,6 +375,8 @@ namespace Plugin
             else if (!GameFunctions.gs.IsLocalPlayerTurn())
             {
                 Plugin.BotStatus = Plugin.BotStatusList.OnMatchTurnEnemy;
+                BruteAI.loops = 0;
+                GameFunctions.canWinThisTurnFirstTimeDone = false;
                 return;
             }
             else
@@ -387,13 +389,15 @@ namespace Plugin
                     GameFunctions.PopulateZones();
                     BruteAI.SendEmoMessages();
                     if (BruteAI.BruteHand())
+                    {
+                        Log.debug("BruteAI.loops++");
                         ++BruteAI.loops;
+                    }
                     else
                     {
                         if (BruteAI.BruteAttack())
                             return;
                         GameFunctions.DoEndTurn();
-                        BruteAI.loops = 0;
                     }
                 }
                 catch (Exception ex)
