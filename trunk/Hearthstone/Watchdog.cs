@@ -19,12 +19,12 @@ namespace Hearthstone
             Microsoft.Win32.RegistryKey key;
             key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("StonerBot");
             string rootPath = key.GetValue("RootPath").ToString();
-            pluginDirectory = Path.Combine(rootPath, "plugins");
+            pluginDirectory = Path.Combine(rootPath, "ext");
             // init
             loader = new Loader();
 
             // If a plugin is modified, reload it
-            FileSystemWatcher fsw = new FileSystemWatcher(pluginDirectory, "*.dll");
+            FileSystemWatcher fsw = new FileSystemWatcher(pluginDirectory, "Murloc.dll");
             fsw.NotifyFilter = NotifyFilters.LastWrite;
             fsw.Changed += new FileSystemEventHandler(onChange_raw);
             fsw.Created += new FileSystemEventHandler(onChange_raw);
