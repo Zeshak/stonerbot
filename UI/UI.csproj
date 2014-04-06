@@ -151,7 +151,6 @@
   <PropertyGroup>
     <PostBuildEvent>copy /Y $(TargetPath) $(SolutionDir)Release
 copy /Y $(SolutionDir)ext\ $(SolutionDir)Release\ext\
-copy /Y $(SolutionDir)plugins\ $(SolutionDir)Release\plugins\
 copy /Y $(SolutionDir)UI\MySql.Data.dll $(SolutionDir)Release\MySql.Data.dll
 copy /Y $(SolutionDir)UI\SkinSoft.VisualStyler.dll $(SolutionDir)Release\SkinSoft.VisualStyler.dll
 copy /Y $(SolutionDir)UI\sound1.wav $(SolutionDir)Release\sound1.wav</PostBuildEvent>

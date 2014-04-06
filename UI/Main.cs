@@ -160,7 +160,8 @@ namespace UI
         private void Main_FormClosed(object sender, FormClosedEventArgs e)
         {
             socketThread.Abort();
-            client.Close();
+            if (client != null)
+                client.Close();
         }
 
         private void Form1_Load(object sender, EventArgs e)

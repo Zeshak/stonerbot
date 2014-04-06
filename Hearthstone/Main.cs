@@ -17,7 +17,7 @@ namespace Hearthstone
         {
             var w = new Watchdog();
             w.startWatch();
-            w.RunPlugin("TestPlugin");
+            w.RunPlugin("Murloc");
         }
     }
 }
