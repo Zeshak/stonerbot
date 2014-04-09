@@ -1,0 +1,10 @@
+G:\stonerbot\SharpUpdate\bin\Release\SharpUpdate.dll
+G:\stonerbot\SharpUpdate\bin\Release\SharpUpdate.pdb
+G:\stonerbot\SharpUpdate\obj\Release\SharpUpdate.csprojResolveAssemblyReference.cache
+G:\stonerbot\SharpUpdate\obj\Release\SharpUpdate.Properties.Resources.resources
+G:\stonerbot\SharpUpdate\obj\Release\SharpUpdate.SharpUpdateAcceptForm.resources
+G:\stonerbot\SharpUpdate\obj\Release\SharpUpdate.SharpUpdateDownloadForm.resources
+G:\stonerbot\SharpUpdate\obj\Release\SharpUpdate.SharpUpdateInfoForm.resources
+G:\stonerbot\SharpUpdate\obj\Release\SharpUpdate.csproj.GenerateResource.Cache
+G:\stonerbot\SharpUpdate\obj\Release\SharpUpdate.dll
+G:\stonerbot\SharpUpdate\obj\Release\SharpUpdate.pdb
