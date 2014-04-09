@@ -434,7 +434,9 @@ namespace Plugin
 
         public static void DoEndTurn()
         {
+            Log.debug("Intenta pasar el turno 2");
             InputManager.Get().DoEndTurnButton();
+            Log.debug("Apretó el botón.");
             GameFunctions.turnState = null;
         }
 

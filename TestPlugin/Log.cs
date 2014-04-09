@@ -13,7 +13,7 @@ namespace Plugin
         static Log()
         {
             Microsoft.Win32.RegistryKey key;
-            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("StonerBot");
+            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("MurlocBot");
             string rootPath = key.GetValue("RootPath").ToString();
             logPath = Path.Combine(rootPath, "log.txt");
         }

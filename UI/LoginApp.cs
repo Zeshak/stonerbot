@@ -48,7 +48,7 @@ namespace Login
         private void LogIn()
         {
             this.playSimpleSound();
-            UI.Main main = new UI.Main();
+            MurlocBot.Main main = new MurlocBot.Main();
             this.Hide();
             main.ShowDialog();
             this.Close();
@@ -57,16 +57,16 @@ namespace Login
         private void LoginApp_Load(object sender, EventArgs e)
         {
             Microsoft.Win32.RegistryKey key;
-            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("StonerBot");
+            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("MurlocBot");
             if (key == null)
             {
-                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("StonerBot");
+                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("MurlocBot");
                 key.SetValue("RootPath", rootPath);
                 key.Close();
             }
             else
             {
-                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("StonerBot");
+                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("MurlocBot");
                 rootPath = (string)key.GetValue("RootPath");
                 key.Close();
             }
