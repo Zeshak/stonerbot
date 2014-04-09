@@ -7,8 +7,8 @@
     <ProjectGuid>{BDDEE89E-5AB7-4CA7-9605-BA11DBBA7C02}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>UI</RootNamespace>
-    <AssemblyName>UI</AssemblyName>
+    <RootNamespace>MurlocBot</RootNamespace>
+    <AssemblyName>MurlocBot</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <PublishUrl>publicar\</PublishUrl>
@@ -49,15 +49,16 @@
   <PropertyGroup>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>
+    </ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mono.Cecil">
       <HintPath>..\ext\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="MySql.Data">
       <HintPath>.\MySql.Data.dll</HintPath>
-    </Reference>
-    <Reference Include="SkinSoft.VisualStyler">
-      <HintPath>.\SkinSoft.VisualStyler.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -103,6 +104,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="Properties\DataSources\Hearthstone.Main.datasource" />
     <None Include="Properties\Settings.settings">
@@ -152,7 +154,6 @@
     <PostBuildEvent>copy /Y $(TargetPath) $(SolutionDir)Release
 copy /Y $(SolutionDir)ext\ $(SolutionDir)Release\ext\
 copy /Y $(SolutionDir)UI\MySql.Data.dll $(SolutionDir)Release\MySql.Data.dll
-copy /Y $(SolutionDir)UI\SkinSoft.VisualStyler.dll $(SolutionDir)Release\SkinSoft.VisualStyler.dll
 copy /Y $(SolutionDir)UI\sound1.wav $(SolutionDir)Release\sound1.wav</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Murloc", "TestPlugin\Murloc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hearthstone", "Hearthstone\Hearthstone.csproj", "{007A96FA-BFF6-4622-BC76-D9D7BF4D066E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI", "UI\UI.csproj", "{BDDEE89E-5AB7-4CA7-9605-BA11DBBA7C02}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MurlocBot", "UI\MurlocBot.csproj", "{BDDEE89E-5AB7-4CA7-9605-BA11DBBA7C02}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

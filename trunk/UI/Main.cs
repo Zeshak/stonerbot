@@ -18,7 +18,7 @@ using System.Timers;
 using System.Runtime.InteropServices;
 
 
-namespace UI
+namespace MurlocBot
 {
     public partial class Main : Form
     {
@@ -50,16 +50,16 @@ namespace UI
             InitializeComponent();
 
             Microsoft.Win32.RegistryKey key;
-            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("StonerBot");
+            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("MurlocBot");
             if (key == null)
             {
-                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("StonerBot");
+                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("MurlocBot");
                 key.SetValue("RootPath", rootPath);
                 key.Close();
             }
             else
             {
-                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("StonerBot");
+                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software", true).CreateSubKey("MurlocBot");
                 rootPath = (string)key.GetValue("RootPath");
                 key.Close();
             }

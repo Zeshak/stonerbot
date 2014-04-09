@@ -17,7 +17,7 @@ namespace Hearthstone
         public void startWatch()
         {
             Microsoft.Win32.RegistryKey key;
-            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("StonerBot");
+            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("MurlocBot");
             string rootPath = key.GetValue("RootPath").ToString();
             pluginDirectory = Path.Combine(rootPath, "ext");
             // init
