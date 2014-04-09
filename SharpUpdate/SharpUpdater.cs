@@ -128,6 +128,23 @@ namespace SharpUpdate
             Info.CreateNoWindow = true;
             Info.FileName = "cmd.exe";
             Process.Start(Info);
+
+            try
+            {
+                foreach (System.Diagnostics.Process process in System.Diagnostics.Process.GetProcessesByName("UI.vshost"))
+                {
+                    if (process.MainModule.ModuleName.Equals("UI.vshost.exe"))
+                    {
+                        process.Kill();
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Problema al cerrar .exe asociado a la aplicacion en curso, verificar si no se cambio el nombre de proceso UI.vshost.exe" + ex);
+            }
+            
         }
     }
 }
