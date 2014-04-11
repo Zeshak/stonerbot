@@ -438,5 +438,12 @@ namespace MurlocBot
             cmbDecks.ValueMember = "DeckId";
             cmbDecks.DisplayMember = "Alias";
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            UpdateApp.AutoUpdater au = new UpdateApp.AutoUpdater();
+            //this.Hide();
+            au.ShowDialog();
+        }
     }
 }

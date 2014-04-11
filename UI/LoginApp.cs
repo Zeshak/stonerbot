@@ -13,16 +13,18 @@ using System.Management;
 using System.IO;
 
 
-
 namespace Login
 {
     public partial class LoginApp : Form
     {
+       
+
         public string rootPath;
 
         public LoginApp()
         {
             InitializeComponent();
+            
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -47,7 +49,7 @@ namespace Login
 
         private void LogIn()
         {
-            this.playSimpleSound();
+            //this.playSimpleSound();
             MurlocBot.Main main = new MurlocBot.Main();
             this.Hide();
             main.ShowDialog();

@@ -92,6 +92,10 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click_1);
             // 
+
+         
+            // 
+
             // LoginApp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -108,6 +112,7 @@
             this.Name = "LoginApp";
             this.Text = "MurlocBot";
             this.Load += new System.EventHandler(this.LoginApp_Load);
+
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -121,6 +126,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button button1;
+
     }
 }
 

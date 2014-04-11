@@ -73,6 +73,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AutoUpdater.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AutoUpdater.Designer.cs">
+      <DependentUpon>AutoUpdater.cs</DependentUpon>
+    </Compile>
     <Compile Include="Conexion.cs" />
     <Compile Include="HIDManagement.cs" />
     <Compile Include="LoginApp.cs">
@@ -89,6 +95,9 @@
     </Compile>
     <Compile Include="Program1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="AutoUpdater.resx">
+      <DependentUpon>AutoUpdater.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="LoginApp.resx">
       <DependentUpon>LoginApp.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -131,6 +140,10 @@
       <Project>{13bd70d1-91ee-4b7d-891c-d9e235698274}</Project>
       <Name>Injector</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SharpUpdate\SharpUpdate.csproj">
+      <Project>{811c1d69-764f-4335-8363-b93a1d106268}</Project>
+      <Name>SharpUpdate</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">
@@ -148,6 +161,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="sound1.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

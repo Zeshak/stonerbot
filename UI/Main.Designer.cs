@@ -46,6 +46,7 @@
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabMain = new System.Windows.Forms.TabPage();
+            this.btnRenew = new System.Windows.Forms.Button();
             this.lblLastCommand = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.tabStat = new System.Windows.Forms.TabPage();
@@ -65,11 +66,13 @@
             this.label8 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.cmbQuests1 = new System.Windows.Forms.ComboBox();
-            this.btnRenew = new System.Windows.Forms.Button();
+            this.configuration = new System.Windows.Forms.TabPage();
+            this.OpenAutoUpdater = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabMain.SuspendLayout();
             this.tabStat.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.configuration.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnStartBot
@@ -220,6 +223,7 @@
             this.tabControl1.Controls.Add(this.tabMain);
             this.tabControl1.Controls.Add(this.tabStat);
             this.tabControl1.Controls.Add(this.tabPage1);
+            this.tabControl1.Controls.Add(this.configuration);
             this.tabControl1.Location = new System.Drawing.Point(1, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -253,6 +257,16 @@
             this.tabMain.TabIndex = 0;
             this.tabMain.Text = "Main";
             this.tabMain.UseVisualStyleBackColor = true;
+            // 
+            // btnRenew
+            // 
+            this.btnRenew.Location = new System.Drawing.Point(6, 35);
+            this.btnRenew.Name = "btnRenew";
+            this.btnRenew.Size = new System.Drawing.Size(144, 23);
+            this.btnRenew.TabIndex = 21;
+            this.btnRenew.Text = "Renew HS Files";
+            this.btnRenew.UseVisualStyleBackColor = true;
+            this.btnRenew.Click += new System.EventHandler(this.btnRenew_Click);
             // 
             // lblLastCommand
             // 
@@ -442,15 +456,25 @@
             this.cmbQuests1.Size = new System.Drawing.Size(308, 21);
             this.cmbQuests1.TabIndex = 0;
             // 
-            // btnRenew
+            // configuration
             // 
-            this.btnRenew.Location = new System.Drawing.Point(6, 35);
-            this.btnRenew.Name = "btnRenew";
-            this.btnRenew.Size = new System.Drawing.Size(144, 23);
-            this.btnRenew.TabIndex = 21;
-            this.btnRenew.Text = "Renew HS Files";
-            this.btnRenew.UseVisualStyleBackColor = true;
-            this.btnRenew.Click += new System.EventHandler(this.btnRenew_Click);
+            this.configuration.Controls.Add(this.OpenAutoUpdater);
+            this.configuration.Location = new System.Drawing.Point(4, 22);
+            this.configuration.Name = "configuration";
+            this.configuration.Size = new System.Drawing.Size(461, 381);
+            this.configuration.TabIndex = 3;
+            this.configuration.Text = "Configuration";
+            this.configuration.UseVisualStyleBackColor = true;
+            // 
+            // OpenAutoUpdater
+            // 
+            this.OpenAutoUpdater.Location = new System.Drawing.Point(24, 25);
+            this.OpenAutoUpdater.Name = "OpenAutoUpdater";
+            this.OpenAutoUpdater.Size = new System.Drawing.Size(75, 44);
+            this.OpenAutoUpdater.TabIndex = 0;
+            this.OpenAutoUpdater.Text = "Open Autoupdater";
+            this.OpenAutoUpdater.UseVisualStyleBackColor = true;
+            this.OpenAutoUpdater.Click += new System.EventHandler(this.button1_Click);
             // 
             // Main
             // 
@@ -470,6 +494,7 @@
             this.tabStat.PerformLayout();
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
+            this.configuration.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -514,6 +539,8 @@
         private System.Windows.Forms.ComboBox cmbQuests3;
         private System.Windows.Forms.ComboBox cmbQuests2;
         private System.Windows.Forms.Button btnRenew;
+        private System.Windows.Forms.TabPage configuration;
+        private System.Windows.Forms.Button OpenAutoUpdater;
     }
 }
 
