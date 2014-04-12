@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Hearthstone
 {
-    public class Loader
+    internal class Loader
     {
         public void exec(string path) // creates shadow copy
         {

@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace Hearthstone
 {
-    public class Watchdog
+    internal class Watchdog
     {
         static string pluginDirectory;
         Loader loader;

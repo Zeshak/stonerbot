@@ -106,6 +106,7 @@
             this.Controls.Add(this.txtpass);
             this.Controls.Add(this.txtuser);
             this.Controls.Add(this.btnlogin);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "LoginApp";
             this.Text = "MurlocBot";
             this.Load += new System.EventHandler(this.LoginApp_Load);

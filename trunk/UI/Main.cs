@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 
 namespace MurlocBot
 {
-    public partial class Main : Form
+    internal partial class Main : Form
     {
         public string HSpath;
         public string rootPath;

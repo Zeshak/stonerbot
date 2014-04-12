@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Plugin
 {
-    public class ReflectionFunctions
+    internal class ReflectionFunctions
     {
         public static void ForceManaUpdate(Entity entity)
         {

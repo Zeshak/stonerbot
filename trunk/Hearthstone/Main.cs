@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Hearthstone
 {
-    public class Main
+    internal class Main
     {
         public static void Start()
         {

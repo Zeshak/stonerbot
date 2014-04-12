@@ -9,7 +9,7 @@ using System.Net;
 
 namespace Plugin
 {
-    public class SocketHandler
+    internal class SocketHandler
     {
         public static TcpListener tcpListener;
         public static NetworkStream stream;

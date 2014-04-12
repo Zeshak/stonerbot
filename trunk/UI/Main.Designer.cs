@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.btnStartBot = new System.Windows.Forms.Button();
             this.btnInject = new System.Windows.Forms.Button();
             this.lblStatus = new System.Windows.Forms.Label();
@@ -46,6 +47,7 @@
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabMain = new System.Windows.Forms.TabPage();
+            this.label11 = new System.Windows.Forms.Label();
             this.btnRenew = new System.Windows.Forms.Button();
             this.lblLastCommand = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
@@ -232,6 +234,7 @@
             // 
             // tabMain
             // 
+            this.tabMain.Controls.Add(this.label11);
             this.tabMain.Controls.Add(this.btnRenew);
             this.tabMain.Controls.Add(this.lblLastCommand);
             this.tabMain.Controls.Add(this.label7);
@@ -257,6 +260,16 @@
             this.tabMain.TabIndex = 0;
             this.tabMain.Text = "Main";
             this.tabMain.UseVisualStyleBackColor = true;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(7, 61);
+            this.label11.MaximumSize = new System.Drawing.Size(142, 0);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(132, 39);
+            this.label11.TabIndex = 22;
+            this.label11.Text = "Use renew after every HS update or when the bot is not working";
             // 
             // btnRenew
             // 
@@ -463,16 +476,16 @@
             this.configuration.Name = "configuration";
             this.configuration.Size = new System.Drawing.Size(461, 381);
             this.configuration.TabIndex = 3;
-            this.configuration.Text = "Configuration";
+            this.configuration.Text = "Update";
             this.configuration.UseVisualStyleBackColor = true;
             // 
             // OpenAutoUpdater
             // 
-            this.OpenAutoUpdater.Location = new System.Drawing.Point(24, 25);
+            this.OpenAutoUpdater.Location = new System.Drawing.Point(20, 21);
             this.OpenAutoUpdater.Name = "OpenAutoUpdater";
-            this.OpenAutoUpdater.Size = new System.Drawing.Size(75, 44);
+            this.OpenAutoUpdater.Size = new System.Drawing.Size(418, 337);
             this.OpenAutoUpdater.TabIndex = 0;
-            this.OpenAutoUpdater.Text = "Open Autoupdater";
+            this.OpenAutoUpdater.Text = "Open Autoupdater. Yes, the button is this big.";
             this.OpenAutoUpdater.UseVisualStyleBackColor = true;
             this.OpenAutoUpdater.Click += new System.EventHandler(this.button1_Click);
             // 
@@ -483,6 +496,7 @@
             this.ClientSize = new System.Drawing.Size(469, 404);
             this.Controls.Add(this.tabControl1);
             this.ForeColor = System.Drawing.Color.Black;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Main";
             this.Text = "MurlocBot";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Main_FormClosed);
@@ -541,6 +555,7 @@
         private System.Windows.Forms.Button btnRenew;
         private System.Windows.Forms.TabPage configuration;
         private System.Windows.Forms.Button OpenAutoUpdater;
+        private System.Windows.Forms.Label label11;
     }
 }
 

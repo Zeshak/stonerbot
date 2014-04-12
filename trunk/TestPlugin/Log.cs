@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace Plugin
 {
-    public class Log
+    internal class Log
     {
         public static string logPath;
         public static string module = "";
