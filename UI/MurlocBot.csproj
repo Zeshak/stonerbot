@@ -50,8 +50,7 @@
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon>MurlocBot.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mono.Cecil">
@@ -163,6 +162,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="MurlocBot.ico" />
     <Content Include="sound1.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

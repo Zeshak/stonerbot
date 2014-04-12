@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Plugin
 {
-    public class CardDetails
+    internal class CardDetails
     {
         #region -[ Sección variables que pondremos en un XML ]-
 

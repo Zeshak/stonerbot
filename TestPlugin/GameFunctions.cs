@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Plugin
 {
-    public static class GameFunctions
+    internal static class GameFunctions
     {
         public static GameState gs;
         public static Player myPlayer;
@@ -126,7 +126,7 @@ namespace Plugin
             }
         }
 
-        public static List<CardDetails> GetBattlefieldCardDetails()
+        internal static List<CardDetails> GetBattlefieldCardDetails()
         {
             List<CardDetails> listCards = new List<CardDetails>();
             foreach (Card card in GameFunctions.ePlayer.GetBattlefieldZone().GetCards())

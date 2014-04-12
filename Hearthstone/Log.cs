@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace Hearthstone
 {
-    public class Log
+    internal class Log
     {
         public static string logPath = @"log2.txt";
         public static string module = "";

@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Plugin
 {
-    public class Plugin : MonoBehaviour
+    internal class Plugin : MonoBehaviour
     {
         #region -[ Attributes ]-
 
