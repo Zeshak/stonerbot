@@ -92,12 +92,9 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click_1);
             // 
-
-         
-            // 
-
             // LoginApp
             // 
+            this.AcceptButton = this.btnlogin;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("$this.BackgroundImage")));
@@ -112,7 +109,6 @@
             this.Name = "LoginApp";
             this.Text = "MurlocBot";
             this.Load += new System.EventHandler(this.LoginApp_Load);
-
             this.ResumeLayout(false);
             this.PerformLayout();
 

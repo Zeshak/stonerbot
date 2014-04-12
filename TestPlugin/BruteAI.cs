@@ -12,6 +12,8 @@ namespace Plugin
         public static int loops = 0;
         public static int maxLoops = 10;
         private static int maxSelfDamageWithWeapon = 3;
+        public static int loopsAttackCombinated = 0;
+        public static int maxLoopsAttackCombinated = 10;
 
         static BruteAI()
         {
@@ -456,10 +458,19 @@ namespace Plugin
             }
             else
             {
-                Log.debug("massiveAttackList no estaba vacía");
-                if (GameFunctions.massiveAttackAttackee == null)
-                    return true;
-                GameFunctions.DoAttack(GameFunctions.massiveAttackList[0], GameFunctions.massiveAttackAttackee);
+                loopsAttackCombinated++;
+                if (loopsAttackCombinated > maxLoopsAttackCombinated)
+                {
+                    GameFunctions.massiveAttackList = new List<Card>();
+                    Log.debug("Vacío massiveAttackList, bugged?");
+                }
+                else
+                {
+                    Log.debug("massiveAttackList no estaba vacía");
+                    if (GameFunctions.massiveAttackAttackee == null)
+                        return true;
+                    GameFunctions.DoAttack(GameFunctions.massiveAttackList[0], GameFunctions.massiveAttackAttackee);
+                }
                 return true;
             }
         }
